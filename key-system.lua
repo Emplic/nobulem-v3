@@ -55,13 +55,17 @@ for _, name in {"ObsidianKeySystem", "ObsidianKeyNotification"} do
         CoreGui[name]:Destroy()
     end
 end
+if not LoaderConfig.LuaProtScriptId then
+    warn("[nobulem.wtf] keysystem.lua loaded without LoaderConfig - run loader.lua first")
+    return
+end
 local config = {
-    File = LoaderConfig.SaveFile or "nobulem_savedkey.txt",
+    File = LoaderConfig.SaveFile or "nobulem_key.txt",
     Title = "nobulem.wtf",
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
     Description = "Get your free key below to access the script.",
-    GetKeyUrl = LoaderConfig.GetKeyUrl or "https://luaprot.net/getkey/REPLACE_ME",
-    LuaProtScriptId = LoaderConfig.LuaProtScriptId or "86208614899459006798",
+    GetKeyUrl = LoaderConfig.GetKeyUrl or "https://nobulem.wtf/key",
+    LuaProtScriptId = LoaderConfig.LuaProtScriptId,
     LuaProtSdkUrl = "https://sdk.luaprot.net/",
     Logo = "138831083704120",
     DiscordInvite = "https://discord.gg/nobulem",
@@ -174,11 +178,7 @@ local function LoadSavedKey()
     return nil
 end
 local function IsValidKeyFormat(key)
-    if type(key) ~= "string" then return false end
-    key = key:gsub("%s", "")
-    if #key < 12 or #key > 128 then return false end
-    if not key:match("^[%w%-_]+$") then return false end
-    return true
+    return type(key) == "string" and #key:gsub("%s", "") > 0
 end
 local LuaProtSDK
 local function LoadLuaProtSDK()
@@ -196,11 +196,14 @@ end
 local ScriptLoaded = false
 local function ServerValidateKey(key)
     local sdk = LoadLuaProtSDK()
-    if not sdk then return false, "sdk" end
+    if not sdk then return false, "SDK failed to load" end
     local ok, result = pcall(function() return sdk:checkKey(key) end)
-    if not ok or not result then return false, "network" end
+    if not ok then return false, "Network error: " .. tostring(result) end
+    if not result then return false, "No response from LuaProt" end
     if result.status == "VALID" then return true end
-    return false, result.status or "invalid"
+    local detail = result.status or "INVALID"
+    if result.message then detail = detail .. " - " .. tostring(result.message) end
+    return false, detail
 end
 local function TryExecuteWithKey(key)
     if not IsValidKeyFormat(key) then return false, "format" end
@@ -419,15 +422,15 @@ local function HandleKeyObtained(key)
             _G.ScriptKey = nil
             getgenv().Key = nil
             DeleteFile(config.File)
-            local msg = "Invalid key. The script did not load."
+            local msg
             if reason == "format" then
                 msg = "Invalid key format."
-            elseif reason == "invalid" then
-                msg = "Key not found or expired."
             elseif reason == "loader" then
                 msg = "Loader failed to execute."
+            else
+                msg = tostring(reason or "Unknown error")
             end
-            Notify("Error", msg, 5, Scheme.RedColor)
+            Notify("Error", msg, 8, Scheme.RedColor)
             SetStatus(msg, Scheme.RedColor)
         end
     end)
