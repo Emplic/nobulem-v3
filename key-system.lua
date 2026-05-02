@@ -379,8 +379,9 @@ local ScreenGui = nil
 local MainFrame = nil
 local StatusLabel = nil
 local KeyTextBox = nil
-local WINDOW_WIDTH = IsMobile and 520 or 640
+local WINDOW_WIDTH = IsMobile and 530 or 655
 local WINDOW_HEIGHT = 560
+local CONTENT_RIGHT_PAD = IsMobile and 10 or 15
 local SIDEBAR_WIDTH = 180
 local function SetStatus(text, color)
     if StatusLabel then
@@ -1294,7 +1295,7 @@ local function BuildUI()
     New("UIPadding", {
         PaddingBottom = UDim.new(0, 4),
         PaddingLeft = UDim.new(0, 2),
-        PaddingRight = UDim.new(0, 2),
+        PaddingRight = UDim.new(0, 2 + CONTENT_RIGHT_PAD),
         PaddingTop = UDim.new(0, 4),
         Parent = AuthBoxHolder,
     })
