@@ -67,6 +67,7 @@ local config = {
     GetKeyUrl = LoaderConfig.GetKeyUrl or "https://nobulem.wtf/key",
     LuaProtScriptId = LoaderConfig.LuaProtScriptId,
     LuaProtSdkUrl = "https://sdk.luaprot.net/",
+    LuaProtLoaderUrlFormat = "https://luaprot.net/api/v2/loaders/get/%s",
     Logo = "138831083704120",
     DiscordInvite = "https://discord.gg/nobulem",
     BuyUrl = "https://nobulem.wtf/buy",
@@ -211,12 +212,16 @@ local function TryExecuteWithKey(key)
     if not valid then return false, reason or "invalid" end
     _G.ScriptKey = key
     getgenv().Key = key
-    local sdk = LoadLuaProtSDK()
-    local loadOk = sdk and pcall(function() sdk:loadScript() end)
+    getgenv().lp_key = key
+    local loaderUrl = string.format(config.LuaProtLoaderUrlFormat, config.LuaProtScriptId)
+    local loadOk, loadErr = pcall(function()
+        loadstring(game:HttpGet(loaderUrl))()
+    end)
     if not loadOk then
         _G.ScriptKey = nil
         getgenv().Key = nil
-        return false, "loader"
+        getgenv().lp_key = nil
+        return false, "loader: " .. tostring(loadErr)
     end
     return true, nil
 end
