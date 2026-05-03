@@ -40,6 +40,18 @@ local Games = {
         LuaProtScriptId = "49408082951445804304",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    [6847090259] = {
+        GameName        = "Bulked Up",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "91444182629983667670",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    [136801880565837] = {
+        GameName        = "Flick",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "69056539903019355219",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local ObsidianLibrary
