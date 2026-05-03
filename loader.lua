@@ -4,55 +4,93 @@ getgenv().nobulem_loader_started = true
 local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/key-system.lua")
 
 local Games = {
-    [87018676608089] = {
+    {
+        PlaceIds        = { 87018676608089 },
         GameName        = "Pistol Arena",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "69589197133432135098",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
-    [85207102870777] = {
+    {
+        PlaceIds        = { 85207102870777 },
         GameName        = "One Tap",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "30705437441887937520",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
-    [99342262733194] = {
+    {
+        PlaceIds        = { 99342262733194 },
         GameName        = "Randomizer Redux",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "29407075271633530921",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
-    [5307215810] = {
+    {
+        PlaceIds        = { 5307215810 },
         GameName        = "Randomizer Legacy",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "38307661723468074678",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
-    [119259569670784] = {
+    {
+        PlaceIds        = { 119259569670784 },
         GameName        = "Sniper Arena",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "72877165672068346715",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
-    [4639625707] = {
+    {
+        PlaceIds        = { 4639625707 },
         GameName        = "War Tycoon",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "49408082951445804304",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
-    [6847090259] = {
+    {
+        PlaceIds        = { 6847090259 },
         GameName        = "Bulked Up",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "91444182629983667670",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
-    [136801880565837] = {
+    {
+        PlaceIds        = { 136801880565837 },
         GameName        = "Flick",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "69056539903019355219",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 98927955463992, 114204398207377 },
+        GameName        = "Survive Zombie Arena",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "51125809171480663668",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
+        PlaceIds        = { 134558434771720 },
+        GameName        = "Arcade Basketball",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "50947502008710067489",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
+        PlaceIds        = { 13997264379, 13997018456 },
+        GameName        = "Operations Siege",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "23032188996693215788",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
+
+local function ResolveGame(placeId)
+    for _, entry in ipairs(Games) do
+        for _, id in ipairs(entry.PlaceIds) do
+            if id == placeId then return entry end
+        end
+    end
+    return nil
+end
 
 local ObsidianLibrary
 local function LoadObsidian()
@@ -88,7 +126,7 @@ local function Notify(title, text, duration)
     warn(("[nobulem.wtf] %s: %s"):format(title, text))
 end
 
-local cfg = Games[game.PlaceId]
+local cfg = ResolveGame(game.PlaceId)
 if not cfg then
     Notify(
         "Unsupported Game",
@@ -106,6 +144,33 @@ getgenv().NobulemLoaderConfig = {
     LuaProtScriptId = cfg.LuaProtScriptId,
     GetKeyUrl       = cfg.GetKeyUrl,
 }
+
+local function InviteDiscord()
+    local HttpService = game:GetService("HttpService")
+    local isMobile = pcall(function()
+        local UIS = game:GetService("UserInputService")
+        return not UIS.KeyboardEnabled and not UIS.MouseEnabled
+    end)
+    if isMobile then
+        pcall(function() setclipboard("https://discord.gg/mugcSRnpuG") end)
+        Notify("nobulem.wtf", "Discord invite copied to clipboard!", 5)
+    else
+        pcall(function()
+            request({
+                Url = "http://127.0.0.1:6463/rpc?v=1",
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json", Origin = "https://discord.com" },
+                Body = HttpService:JSONEncode({
+                    cmd = "INVITE_BROWSER",
+                    nonce = HttpService:GenerateGUID(false),
+                    args = { code = "mugcSRnpuG" }
+                })
+            })
+        end)
+    end
+end
+
+task.spawn(InviteDiscord)
 
 local ok, err = pcall(function()
     loadstring(game:HttpGet(KEYSYSTEM_URL))()
