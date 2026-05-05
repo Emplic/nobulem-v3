@@ -81,6 +81,13 @@ local Games = {
         LuaProtScriptId = "23032188996693215788",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 94590879393563, 98784084213911, 96076204236629, 82097489006022 },
+        GameName        = "Weird Gun Game",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "35186030186274132053",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local function ResolveGame(placeId)
