@@ -12,7 +12,7 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
-        PlaceIds        = { 85207102870777 },
+        PlaceIds        = { 85207102870777, 90568084448279 },
         GameName        = "One Tap",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "30705437441887937520",
@@ -75,7 +75,7 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
-        PlaceIds        = { 13997264379, 13997018456 },
+        PlaceIds        = { 13997264379, 13997018456, 13997531040 },
         GameName        = "Operations Siege",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "23032188996693215788",
@@ -100,6 +100,13 @@ local Games = {
         GameName        = "Dogs of War",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "79176565552022168009",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
+        PlaceIds        = { 10283665115579302067 },
+        GameName        = "Entrenched",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "36787615760000000000",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
 }
