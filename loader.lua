@@ -99,7 +99,7 @@ local Games = {
         PlaceIds        = { 15555246249, 107316497864340, 76759187707484, 74400058410183, 121395544767340, 116147279609754, 70816182080869, 117482669510587 },
         GameName        = "Dogs of War",
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "12139554476734000000",
+        LuaProtScriptId = "79176565552022168009",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
 }
