@@ -206,10 +206,13 @@ local function ServerValidateKey(key)
     if result.message then detail = detail .. " - " .. tostring(result.message) end
     return false, detail
 end
-local function TryExecuteWithKey(key)
+local function ValidateKey(key)
     if not IsValidKeyFormat(key) then return false, "format" end
     local valid, reason = ServerValidateKey(key)
     if not valid then return false, reason or "invalid" end
+    return true, nil
+end
+local function ExecuteScript(key)
     _G.ScriptKey = key
     getgenv().Key = key
     getgenv().lp_key = key
@@ -224,6 +227,11 @@ local function TryExecuteWithKey(key)
         return false, "loader: " .. tostring(loadErr)
     end
     return true, nil
+end
+local function TryExecuteWithKey(key)
+    local ok, reason = ValidateKey(key)
+    if not ok then return false, reason end
+    return ExecuteScript(key)
 end
 local function GetHWID()
     local ok, id = pcall(function()
@@ -404,6 +412,10 @@ local function CloseUI()
             ScreenGui:Destroy()
             ScreenGui = nil
         end
+        if NotifGui then
+            pcall(function() NotifGui:Destroy() end)
+            NotifGui = nil
+        end
     end)
 end
 local function HandleKeyObtained(key)
@@ -416,14 +428,17 @@ local function HandleKeyObtained(key)
     Notify(config.Title, "Verifying key with server...", 4, Scheme.AccentColor)
     SetStatus("Verifying key...", Scheme.WarningColor)
     task.spawn(function()
-        local success, reason = TryExecuteWithKey(key)
+        local success, reason = ValidateKey(key)
         if success then
             ScriptLoaded = true
             SaveKey(key)
-            Notify("Success", "Key valid! Script loaded.", 5, Scheme.SuccessColor)
             SetStatus("Key valid!", Scheme.SuccessColor)
-            task.wait(1)
             CloseUI()
+            task.wait(0.5)
+            local execOk, execErr = ExecuteScript(key)
+            if not execOk then
+                Notify("Error", tostring(execErr), 8, Scheme.RedColor)
+            end
         else
             _G.ScriptKey = nil
             getgenv().Key = nil
@@ -1565,12 +1580,17 @@ local function BuildUI()
 end
 local savedKey = LoadSavedKey()
 if savedKey then
-    Notify(config.Title, "Saved key found, verifying...", 4, Scheme.AccentColor)
-    task.wait(0.5)
-    local success = TryExecuteWithKey(savedKey)
+    local success = ValidateKey(savedKey)
     if success then
         ScriptLoaded = true
-        Notify(config.Title, "Key valid! Script loaded.", 4, Scheme.SuccessColor)
+        if NotifGui then
+            pcall(function() NotifGui:Destroy() end)
+            NotifGui = nil
+        end
+        local execOk, execErr = ExecuteScript(savedKey)
+        if not execOk then
+            warn("[KeySystem] Loader failed: " .. tostring(execErr))
+        end
         return
     else
         DeleteFile(config.File)
