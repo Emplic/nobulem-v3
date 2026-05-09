@@ -82,10 +82,24 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
+        PlaceIds        = { 100040622766961 },
+        GameName        = "Hypershot",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "10004062276696100000",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
         PlaceIds        = { 94590879393563, 98784084213911, 96076204236629, 82097489006022 },
         GameName        = "Weird Gun Game",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "35186030186274132053",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
+        PlaceIds        = { 15555246249, 107316497864340, 76759187707484, 74400058410183, 121395544767340, 116147279609754, 70816182080869, 117482669510587 },
+        GameName        = "Dogs of War",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "12139554476734000000",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
 }
