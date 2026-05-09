@@ -103,10 +103,10 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
-        PlaceIds        = { 10283665115579302067 },
+        PlaceIds        = { 3678761576 },
         GameName        = "Entrenched",
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "36787615760000000000",
+        LuaProtScriptId = "10283665115579302067",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
 }
