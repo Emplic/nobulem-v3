@@ -175,10 +175,10 @@ getgenv().NobulemLoaderConfig = {
 
 local function InviteDiscord()
     local HttpService = game:GetService("HttpService")
-    local isMobile = pcall(function()
-        local UIS = game:GetService("UserInputService")
-        return not UIS.KeyboardEnabled and not UIS.MouseEnabled
-    end)
+    local UserInputService = game:GetService("UserInputService")
+    
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled and not UserInputService.MouseEnabled
+    
     if isMobile then
         pcall(function() setclipboard("https://discord.gg/mugcSRnpuG") end)
         Notify("nobulem.wtf", "Discord invite copied to clipboard!", 5)
