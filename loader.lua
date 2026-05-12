@@ -68,7 +68,7 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
-        PlaceIds        = { 134558434771720 },
+        PlaceIds        = { 134558434771720, 130736793665498, 91654345256890, 92216849541624, 95439417741900, 108281974227624, 124085311761907 },
         GameName        = "Arcade Basketball",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "50947502008710067489",
