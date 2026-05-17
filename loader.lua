@@ -109,6 +109,27 @@ local Games = {
         LuaProtScriptId = "10283665115579302067",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 95721658376580 },
+        GameName        = "Multicrew Tank Combat",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "00000000000000000000",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
+        PlaceIds        = { 6804602922 },
+        GameName        = "1B Boxing",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "00000000000000000000",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
+        PlaceIds        = { 17625359962, 129604661913557, 133215910299950, 117398147513099, 18126510175, 71874690745115 },
+        GameName        = "Rivals",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "13863774256428152037",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local function ResolveGame(placeId)
