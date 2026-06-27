@@ -129,6 +129,14 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "13863774256428152037",
         GetKeyUrl       = "https://nobulem.wtf/key",
+        Discontinued    = true,
+    },
+    {
+        PlaceIds        = { 98800969324557 },
+        GameName        = "Storage Hunters: Open World",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "09574318442573634463",
+        GetKeyUrl       = "https://nobulem.wtf/key",
     },
 }
 
@@ -180,6 +188,16 @@ if not cfg then
     Notify(
         "Unsupported Game",
         ("nobulem.wtf does not currently support this game (PlaceId: %d)."):format(game.PlaceId),
+        10
+    )
+    getgenv().nobulem_loader_started = nil
+    return
+end
+
+if cfg.Discontinued then
+    Notify(
+        cfg.GameName,
+        ("%s is currently discontinued for nobulem at this time. Please try again later."):format(cfg.GameName),
         10
     )
     getgenv().nobulem_loader_started = nil
