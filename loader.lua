@@ -75,6 +75,13 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
+        PlaceIds        = { 120189115846709 },
+        GameName        = "TTK Testing",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "50947502008710067489",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
         PlaceIds        = { 13997264379, 13997018456, 13997531040 },
         GameName        = "Operations Siege",
         SaveFile        = "nobulem_key.txt",
