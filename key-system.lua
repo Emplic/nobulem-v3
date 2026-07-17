@@ -1,5 +1,11 @@
 repeat task.wait() until game:IsLoaded()
-local LoaderConfig = (getgenv and getgenv().NobulemLoaderConfig) or {}
+local PassedLoaderConfig = ...
+local LoaderConfig =
+    (type(PassedLoaderConfig) == "table" and PassedLoaderConfig)
+    or (getgenv and getgenv().NobulemLoaderConfig)
+    or (_G and _G.NobulemLoaderConfig)
+    or (type(shared) == "table" and shared.NobulemLoaderConfig)
+    or {}
 local wait = task.wait
 local spawn = task.spawn
 local CoreGui = cloneref(game:GetService("CoreGui")) or game:GetService("CoreGui")
@@ -60,7 +66,7 @@ if not LoaderConfig.SyscureLoaderUrl then
     return
 end
 local config = {
-    File = LoaderConfig.SaveFile or "nobulem_key.txt",
+    File = LoaderConfig.SaveFile or "nobulem_syscure_key.txt",
     Title = "nobulem.wtf",
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
     Description = "Get your free key below to access the script.",
@@ -178,12 +184,15 @@ local function LoadSavedKey()
     return nil
 end
 local function IsValidKeyFormat(key)
-    return type(key) == "string" and #key:gsub("%s", "") > 0
+    if type(key) ~= "string" then return false end
+
+    local cleaned = key:gsub("%s", "")
+    local token = cleaned:match("^syscure%-([%w]+)$")
+
+    return token ~= nil and #token == 32
 end
 local ScriptLoaded = false
 
--- Syscure performs authentication inside the protected script selected by its
--- loader. The owner session token is deliberately not used or embedded here.
 local function ValidateKey(key)
     if not IsValidKeyFormat(key) then return false, "format" end
     return true, nil
@@ -403,8 +412,8 @@ end
 local function HandleKeyObtained(key)
     if ScriptLoaded then return end
     if not IsValidKeyFormat(key) then
-        Notify("Error", "Invalid key format.", 5, Scheme.RedColor)
-        SetStatus("Invalid key format", Scheme.RedColor)
+        Notify("Error", "Key must start with syscure- and end with 32 letters/numbers.", 5, Scheme.RedColor)
+        SetStatus("Invalid Syscure key format", Scheme.RedColor)
         return
     end
     Notify(config.Title, "Starting Syscure authentication...", 4, Scheme.AccentColor)
@@ -1538,8 +1547,8 @@ local function BuildUI()
         if KeyTextBox.Text == "" or ScriptLoaded then return end
         local cleaned = KeyTextBox.Text:gsub("%s", "")
         if not IsValidKeyFormat(cleaned) then
-            Notify("Error", "Invalid key, please try again.", 4, Scheme.RedColor)
-            SetStatus("Invalid key", Scheme.RedColor)
+            Notify("Error", "Key must start with syscure- and end with 32 letters/numbers.", 4, Scheme.RedColor)
+            SetStatus("Invalid Syscure key format", Scheme.RedColor)
             KeyTextBox.Text = ""
             return
         end
