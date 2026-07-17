@@ -3,133 +3,113 @@ getgenv().nobulem_loader_started = true
 
 local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/key-system.lua")
 
-local SYSCURE_LOADER_ID = "b210d4a5705efb0abe7c5590"
-
 local Games = {
     {
         PlaceIds        = { 87018676608089 },
         GameName        = "Pistol Arena",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "01bc0f3823687285163faffbeb067d2d",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 85207102870777, 90568084448279 },
         GameName        = "One Tap",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- TODO: set Syscure script id (falls back to loader for now)
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 99342262733194 },
         GameName        = "Randomizer Redux",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "9ee29cc37d1d4c3e312f43949ec7a2df",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 5307215810 },
         GameName        = "Randomizer Legacy",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "08ed99116c0e69c4290e68919377a606",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 119259569670784, 122446657157717, 126042865144779, 119259569670784, 96216501849190, 124955530864032, 114188007571146, 101571206862372, 90165746516953, 74424488747487, 119661268047775, 111189101942839, 113390337779988, 115517196855730, 109094919875208, 102220551718323, 90625015569871, 112261221918322, 92726474449929, 125154235269776 },
         GameName        = "Sniper Arena",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- TODO: set Syscure script id (falls back to loader for now)
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 4639625707 },
         GameName        = "War Tycoon",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "96238e0f794ec730e3de4c2afa4d8580",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 6847090259 },
         GameName        = "Bulked Up",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "5e3826c57929f479384580b4137dda3f",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 136801880565837 },
         GameName        = "Flick",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "a0a831b0d8d2454f25daa9a2c24c29b0",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 98927955463992, 114204398207377 },
         GameName        = "Survive Zombie Arena",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- TODO: set Syscure script id (falls back to loader for now)
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 134558434771720, 130736793665498, 91654345256890, 92216849541624, 95439417741900, 108281974227624, 124085311761907 },
         GameName        = "Arcade Basketball",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "cb4633aaf263a27ccf13d586fcd7a3db",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 13997264379, 13997018456, 13997531040 },
         GameName        = "Operations Siege",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- TODO: set Syscure script id (falls back to loader for now)
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 100040622766961 },
         GameName        = "Hypershot",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- TODO: set Syscure script id (falls back to loader for now)
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 94590879393563, 98784084213911, 96076204236629, 82097489006022 },
         GameName        = "Weird Gun Game",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "c592797c51688d86168011ffda1ba8f7",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 15555246249, 107316497864340, 76759187707484, 74400058410183, 121395544767340, 116147279609754, 70816182080869, 117482669510587 },
         GameName        = "Dogs of War",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "4ca227c9e7e22605eb34ccb7c9e97c1b",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 3678761576 },
         GameName        = "Entrenched",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "729eb5b11da0991b0b5bc4f93405c5f2",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 95721658376580 },
         GameName        = "Multicrew Tank Combat",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- TODO: set Syscure script id (falls back to loader for now)
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 6804602922 },
         GameName        = "1B Boxing",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- TODO: set Syscure script id (falls back to loader for now)
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
         PlaceIds        = { 17625359962, 129604661913557, 133215910299950, 117398147513099, 18126510175, 71874690745115 },
         GameName        = "Rivals",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "", -- discontinued
         GetKeyUrl       = "https://nobulem.wtf/key",
         Discontinued    = true,
     },
@@ -137,7 +117,6 @@ local Games = {
         PlaceIds        = { 98800969324557 },
         GameName        = "Storage Hunters: Open World",
         SaveFile        = "nobulem_key.txt",
-        SyscureScriptId = "33bc8a7b09972be09286fab9bc919d89",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
 }
@@ -187,13 +166,13 @@ end
 
 local cfg = ResolveGame(game.PlaceId)
 if not cfg then
-    Notify(
-        "Unsupported Game",
-        ("nobulem.wtf does not currently support this game (PlaceId: %d)."):format(game.PlaceId),
-        10
-    )
-    getgenv().nobulem_loader_started = nil
-    return
+    -- Syscure is the routing source of truth. Unknown places are passed to its
+    -- loader, which can use a newly-added mapping or its configured fallback.
+    cfg = {
+        GameName  = game.Name or ("Place " .. tostring(game.PlaceId)),
+        SaveFile  = "nobulem_key.txt",
+        GetKeyUrl = "https://nobulem.wtf/key",
+    }
 end
 
 if cfg.Discontinued then
@@ -207,14 +186,12 @@ if cfg.Discontinued then
 end
 
 getgenv().NobulemLoaderConfig = {
-    PlaceId         = game.PlaceId,
-    GameName        = cfg.GameName,
-    SaveFile        = cfg.SaveFile,
-    -- Syscure targets. keysystem.lua prefers SyscureScriptId (direct obf script);
-    -- if it is blank it falls back to SyscureLoaderId (server-side game resolver).
-    SyscureScriptId = cfg.SyscureScriptId,
-    SyscureLoaderId = SYSCURE_LOADER_ID,
-    GetKeyUrl       = cfg.GetKeyUrl,
+    PlaceId          = game.PlaceId,
+    GameName         = cfg.GameName,
+    SaveFile         = cfg.SaveFile,
+    GetKeyUrl        = cfg.GetKeyUrl,
+    SyscureLoaderId  = "b210d4a5705efb0abe7c5590",
+    SyscureLoaderUrl = "https://auth.syscure.vip/loader/b210d4a5705efb0abe7c5590.lua",
 }
 
 local function InviteDiscord()
