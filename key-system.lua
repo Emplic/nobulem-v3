@@ -55,8 +55,8 @@ for _, name in {"ObsidianKeySystem", "ObsidianKeyNotification"} do
         CoreGui[name]:Destroy()
     end
 end
-if not LoaderConfig.LuaProtScriptId then
-    warn("[nobulem.wtf] keysystem.lua loaded without LoaderConfig - run loader.lua first")
+if not LoaderConfig.SyscureLoaderUrl then
+    warn("[nobulem.wtf] keysystem.lua loaded without Syscure loader configuration - run loader.lua first")
     return
 end
 local config = {
@@ -65,9 +65,8 @@ local config = {
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
     Description = "Get your free key below to access the script.",
     GetKeyUrl = LoaderConfig.GetKeyUrl or "https://nobulem.wtf/key",
-    LuaProtScriptId = LoaderConfig.LuaProtScriptId,
-    LuaProtSdkUrl = "https://sdk.luaprot.net/",
-    LuaProtLoaderUrlFormat = "https://luaprot.net/api/v2/loaders/get/%s",
+    SyscureLoaderId = LoaderConfig.SyscureLoaderId,
+    SyscureLoaderUrl = LoaderConfig.SyscureLoaderUrl,
     Logo = "138831083704120",
     DiscordInvite = "https://discord.gg/nobulem",
     BuyUrl = "https://nobulem.wtf/buy",
@@ -181,53 +180,36 @@ end
 local function IsValidKeyFormat(key)
     return type(key) == "string" and #key:gsub("%s", "") > 0
 end
-local LuaProtSDK
-local function LoadLuaProtSDK()
-    if LuaProtSDK then return LuaProtSDK end
-    local ok, sdk = pcall(function()
-        return loadstring(game:HttpGet(config.LuaProtSdkUrl))()
-    end)
-    if ok and sdk then
-        sdk.scriptId = config.LuaProtScriptId
-        LuaProtSDK = sdk
-        return sdk
-    end
-    return nil
-end
 local ScriptLoaded = false
-local function ServerValidateKey(key)
-    local sdk = LoadLuaProtSDK()
-    if not sdk then return false, "SDK failed to load" end
-    local ok, result = pcall(function() return sdk:checkKey(key) end)
-    if not ok then return false, "Network error: " .. tostring(result) end
-    if not result then return false, "No response from LuaProt" end
-    if result.status == "VALID" then return true end
-    local detail = result.status or "INVALID"
-    if result.message then detail = detail .. " - " .. tostring(result.message) end
-    return false, detail
-end
+
+-- Syscure performs authentication inside the protected script selected by its
+-- loader. The owner session token is deliberately not used or embedded here.
 local function ValidateKey(key)
     if not IsValidKeyFormat(key) then return false, "format" end
-    local valid, reason = ServerValidateKey(key)
-    if not valid then return false, reason or "invalid" end
     return true, nil
 end
+
 local function ExecuteScript(key)
     _G.ScriptKey = key
+    getgenv().ScriptKey = key
     getgenv().Key = key
-    getgenv().lp_key = key
-    local loaderUrl = string.format(config.LuaProtLoaderUrlFormat, config.LuaProtScriptId)
+
     local loadOk, loadErr = pcall(function()
-        loadstring(game:HttpGet(loaderUrl))()
+        local source = game:HttpGet(config.SyscureLoaderUrl)
+        local chunk, compileErr = loadstring(source)
+        if not chunk then error("compile: " .. tostring(compileErr)) end
+        chunk()
     end)
+
     if not loadOk then
         _G.ScriptKey = nil
+        getgenv().ScriptKey = nil
         getgenv().Key = nil
-        getgenv().lp_key = nil
-        return false, "loader: " .. tostring(loadErr)
+        return false, "Syscure loader: " .. tostring(loadErr)
     end
     return true, nil
 end
+
 local function TryExecuteWithKey(key)
     local ok, reason = ValidateKey(key)
     if not ok then return false, reason end
@@ -425,32 +407,21 @@ local function HandleKeyObtained(key)
         SetStatus("Invalid key format", Scheme.RedColor)
         return
     end
-    Notify(config.Title, "Verifying key with server...", 4, Scheme.AccentColor)
-    SetStatus("Verifying key...", Scheme.WarningColor)
+    Notify(config.Title, "Starting Syscure authentication...", 4, Scheme.AccentColor)
+    SetStatus("Starting Syscure...", Scheme.WarningColor)
     task.spawn(function()
-        local success, reason = ValidateKey(key)
+        local success, reason = TryExecuteWithKey(key)
         if success then
             ScriptLoaded = true
             SaveKey(key)
-            SetStatus("Key valid!", Scheme.SuccessColor)
+            SetStatus("Syscure loader started", Scheme.SuccessColor)
             CloseUI()
-            task.wait(0.5)
-            local execOk, execErr = ExecuteScript(key)
-            if not execOk then
-                Notify("Error", tostring(execErr), 8, Scheme.RedColor)
-            end
         else
             _G.ScriptKey = nil
+            getgenv().ScriptKey = nil
             getgenv().Key = nil
             DeleteFile(config.File)
-            local msg
-            if reason == "format" then
-                msg = "Invalid key format."
-            elseif reason == "loader" then
-                msg = "Loader failed to execute."
-            else
-                msg = tostring(reason or "Unknown error")
-            end
+            local msg = reason == "format" and "Invalid key format." or tostring(reason or "Unknown error")
             Notify("Error", msg, 8, Scheme.RedColor)
             SetStatus(msg, Scheme.RedColor)
         end
@@ -1580,24 +1551,21 @@ local function BuildUI()
 end
 local savedKey = LoadSavedKey()
 if savedKey then
-    local success = ValidateKey(savedKey)
-    if success then
+    local execOk, execErr = TryExecuteWithKey(savedKey)
+    if execOk then
         ScriptLoaded = true
         if NotifGui then
             pcall(function() NotifGui:Destroy() end)
             NotifGui = nil
         end
-        local execOk, execErr = ExecuteScript(savedKey)
-        if not execOk then
-            warn("[KeySystem] Loader failed: " .. tostring(execErr))
-        end
         return
-    else
-        DeleteFile(config.File)
-        _G.ScriptKey = nil
-        getgenv().Key = nil
-        Notify(config.Title, "Saved key expired or invalid. Please get a new key.", 5, Scheme.RedColor)
     end
+
+    DeleteFile(config.File)
+    _G.ScriptKey = nil
+    getgenv().ScriptKey = nil
+    getgenv().Key = nil
+    Notify(config.Title, "Saved key could not start Syscure: " .. tostring(execErr), 7, Scheme.RedColor)
 end
 local buildOk, buildErr = pcall(BuildUI)
 if not buildOk then
