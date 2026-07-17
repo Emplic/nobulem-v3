@@ -187,7 +187,7 @@ local function IsValidKeyFormat(key)
     if type(key) ~= "string" then return false end
 
     local cleaned = key:gsub("%s", "")
-    local token = cleaned:match("^syscure%-([%w]+)$")
+    local token = cleaned:match("^syscure%-([%w_]+)$")
 
     return token ~= nil and #token == 32
 end
@@ -412,7 +412,7 @@ end
 local function HandleKeyObtained(key)
     if ScriptLoaded then return end
     if not IsValidKeyFormat(key) then
-        Notify("Error", "Key must start with syscure- and end with 32 letters/numbers.", 5, Scheme.RedColor)
+        Notify("Error", "Key must start with syscure- and end with 32 letters, numbers, or underscores.", 5, Scheme.RedColor)
         SetStatus("Invalid Syscure key format", Scheme.RedColor)
         return
     end
@@ -1547,7 +1547,7 @@ local function BuildUI()
         if KeyTextBox.Text == "" or ScriptLoaded then return end
         local cleaned = KeyTextBox.Text:gsub("%s", "")
         if not IsValidKeyFormat(cleaned) then
-            Notify("Error", "Key must start with syscure- and end with 32 letters/numbers.", 4, Scheme.RedColor)
+            Notify("Error", "Key must start with syscure- and end with 32 letters, numbers, or underscores.", 4, Scheme.RedColor)
             SetStatus("Invalid Syscure key format", Scheme.RedColor)
             KeyTextBox.Text = ""
             return
