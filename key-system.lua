@@ -1,7 +1,5 @@
 repeat task.wait() until game:IsLoaded()
 local PassedLoaderConfig = ...
--- Different executors may isolate the environment of loadstring() chunks.
--- Check all standard shared environments instead of relying only on getgenv().
 local LoaderConfig =
     (type(PassedLoaderConfig) == "table" and PassedLoaderConfig)
     or (getgenv and getgenv().NobulemLoaderConfig)
