@@ -70,12 +70,13 @@ local config = {
     Title = "nobulem.wtf",
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
     Description = "Get your free key below to access the script.",
-    GetKeyUrl = LoaderConfig.GetKeyUrl or "https://nobulem.wtf/key",
+    LinkvertiseUrl = LoaderConfig.LinkvertiseUrl or "https://luaprot.net/ad/8734d1ba",
+    WorkInkUrl = LoaderConfig.WorkInkUrl or "https://luaprot.net/ad/f77fb8ab",
     LuaProtScriptId = tostring(LoaderConfig.LuaProtScriptId),
     LuaProtSdkUrl = "https://sdk.luaprot.net/",
     Logo = "138831083704120",
     DiscordInvite = "https://discord.gg/nobulem",
-    BuyUrl = "https://nobulem.wtf/buy",
+    BuyUrl = "https://nobulem.wtf/pricing/",
     LifetimePrice = "$19.99",
     Prices = {
         { label = "Weekly",   price = "$3.50" },
@@ -1518,8 +1519,9 @@ local function BuildUI()
         end)
         return Btn
     end
-    local GetKeyBtn = CreateObsidianButton("Get Key", 1, ButtonRow)
-    local CheckStatusBtn = CreateObsidianButton("Validate Key", 2, ButtonRow)
+    local LinkvertiseBtn = CreateObsidianButton("Linkvertise", 1, ButtonRow)
+    local WorkInkBtn = CreateObsidianButton("Work.ink", 2, ButtonRow)
+    local CheckStatusBtn = CreateObsidianButton("Validate Key", 3, ButtonRow)
     local BottomBg = New("Frame", {
         AnchorPoint = Vector2.new(0, 1),
         BackgroundColor3 = GetBetterColor(Scheme.BackgroundColor, 4),
@@ -1553,14 +1555,20 @@ local function BuildUI()
         ZIndex = 4,
         Parent = MainFrame,
     })
-    GetKeyBtn.MouseButton1Click:Connect(function()
+    local function CopyKeyLink(provider, url)
         if setclipboard then
-            setclipboard(config.GetKeyUrl)
-            Notify("Link Copied", "Key link copied to clipboard. Open it in your browser.", 5, Scheme.AccentColor)
+            setclipboard(url)
+            Notify("Link Copied", provider .. " key link copied. Open it in your browser.", 5, Scheme.AccentColor)
         else
-            Notify("Get Key", config.GetKeyUrl, 10, Scheme.AccentColor)
+            Notify(provider .. " Key Link", url, 10, Scheme.AccentColor)
         end
-        SetStatus("Complete the link, then paste your key...", Scheme.WarningColor)
+        SetStatus("Complete the " .. provider .. " link, then paste your key...", Scheme.WarningColor)
+    end
+    LinkvertiseBtn.MouseButton1Click:Connect(function()
+        CopyKeyLink("Linkvertise", config.LinkvertiseUrl)
+    end)
+    WorkInkBtn.MouseButton1Click:Connect(function()
+        CopyKeyLink("Work.ink", config.WorkInkUrl)
     end)
     CheckStatusBtn.MouseButton1Click:Connect(function()
         if ScriptLoaded then return end
