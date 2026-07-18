@@ -138,6 +138,13 @@ local Games = {
         LuaProtScriptId = "09574318442573634463",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 13822562292, 78559386987387, 121510074321001, 139048751758942, 133327835421432 },
+        GameName        = "Midnight Chasers",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "29033528351307010725",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local function ResolveGame(placeId)
