@@ -1,5 +1,7 @@
 repeat task.wait() until game:IsLoaded()
 local PassedLoaderConfig = ...
+-- Different executors may isolate the environment of loadstring() chunks.
+-- Check all standard shared environments instead of relying only on getgenv().
 local LoaderConfig =
     (type(PassedLoaderConfig) == "table" and PassedLoaderConfig)
     or (getgenv and getgenv().NobulemLoaderConfig)
@@ -61,18 +63,18 @@ for _, name in {"ObsidianKeySystem", "ObsidianKeyNotification"} do
         CoreGui[name]:Destroy()
     end
 end
-if not LoaderConfig.SyscureLoaderUrl then
-    warn("[nobulem.wtf] keysystem.lua loaded without Syscure loader configuration - run loader.lua first")
+if not LoaderConfig.LuaProtScriptId or LoaderConfig.LuaProtScriptId == "" then
+    warn("[nobulem.wtf] keysystem.lua loaded without a LuaProt script ID - run loader.lua first")
     return
 end
 local config = {
-    File = LoaderConfig.SaveFile or "nobulem_syscure_key.txt",
+    File = LoaderConfig.SaveFile or "nobulem_key.txt",
     Title = "nobulem.wtf",
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
     Description = "Get your free key below to access the script.",
     GetKeyUrl = LoaderConfig.GetKeyUrl or "https://nobulem.wtf/key",
-    SyscureLoaderId = LoaderConfig.SyscureLoaderId,
-    SyscureLoaderUrl = LoaderConfig.SyscureLoaderUrl,
+    LuaProtScriptId = tostring(LoaderConfig.LuaProtScriptId),
+    LuaProtSdkUrl = "https://sdk.luaprot.net/",
     Logo = "138831083704120",
     DiscordInvite = "https://discord.gg/nobulem",
     BuyUrl = "https://nobulem.wtf/buy",
@@ -184,40 +186,77 @@ local function LoadSavedKey()
     return nil
 end
 local function IsValidKeyFormat(key)
-    return type(key) == "string" and key:lower():find("syscure", 1, true) ~= nil
+    if type(key) ~= "string" then return false end
+    local cleaned = key:gsub("%s", "")
+    return cleaned ~= "" and #cleaned <= 256
 end
 local ScriptLoaded = false
 
-local function ValidateKey(key)
-    if not IsValidKeyFormat(key) then return false, "format" end
-    return true, nil
+local function ClearKeyGlobals()
+    _G.ScriptKey = nil
+    _G.script_key = nil
+    getgenv().ScriptKey = nil
+    getgenv().script_key = nil
+    getgenv().Key = nil
 end
 
-local function ExecuteScript(key)
+local function CreateLuaProtSdk()
+    local source = game:HttpGet(config.LuaProtSdkUrl)
+    local chunk, compileErr = loadstring(source)
+    if not chunk then error("SDK compile: " .. tostring(compileErr)) end
+    local sdk = chunk()
+    if type(sdk) ~= "table" then error("SDK returned an invalid value") end
+    sdk.scriptId = config.LuaProtScriptId
+    return sdk
+end
+
+local function ValidateKey(key)
+    if not IsValidKeyFormat(key) then return false, "format" end
+
+    local sdkOk, sdkOrErr = pcall(CreateLuaProtSdk)
+    if not sdkOk then
+        return false, "LuaProt SDK: " .. tostring(sdkOrErr)
+    end
+
+    local sdk = sdkOrErr
+    local checkOk, result = pcall(function()
+        return sdk:checkKey(key)
+    end)
+    if not checkOk then
+        return false, "LuaProt key check: " .. tostring(result)
+    end
+    if type(result) ~= "table" then
+        return false, "LuaProt returned an invalid key-check response"
+    end
+    if result.status ~= "VALID" then
+        return false, tostring(result.message or result.status or "Invalid key")
+    end
+
+    return true, nil, sdk
+end
+
+local function ExecuteScript(key, sdk)
     _G.ScriptKey = key
+    _G.script_key = key
     getgenv().ScriptKey = key
+    getgenv().script_key = key
     getgenv().Key = key
 
     local loadOk, loadErr = pcall(function()
-        local source = game:HttpGet(config.SyscureLoaderUrl)
-        local chunk, compileErr = loadstring(source)
-        if not chunk then error("compile: " .. tostring(compileErr)) end
-        chunk()
+        sdk:loadScript()
     end)
 
     if not loadOk then
-        _G.ScriptKey = nil
-        getgenv().ScriptKey = nil
-        getgenv().Key = nil
-        return false, "Syscure loader: " .. tostring(loadErr)
+        ClearKeyGlobals()
+        return false, "LuaProt loader: " .. tostring(loadErr)
     end
     return true, nil
 end
 
 local function TryExecuteWithKey(key)
-    local ok, reason = ValidateKey(key)
+    local ok, reason, sdk = ValidateKey(key)
     if not ok then return false, reason end
-    return ExecuteScript(key)
+    return ExecuteScript(key, sdk)
 end
 local function GetHWID()
     local ok, id = pcall(function()
@@ -407,23 +446,21 @@ end
 local function HandleKeyObtained(key)
     if ScriptLoaded then return end
     if not IsValidKeyFormat(key) then
-        Notify("Error", "Key must contain syscure.", 5, Scheme.RedColor)
-        SetStatus("Invalid key", Scheme.RedColor)
+        Notify("Error", "Enter a valid LuaProt key.", 5, Scheme.RedColor)
+        SetStatus("Invalid LuaProt key format", Scheme.RedColor)
         return
     end
-    Notify(config.Title, "Starting Syscure authentication...", 4, Scheme.AccentColor)
-    SetStatus("Starting Syscure...", Scheme.WarningColor)
+    Notify(config.Title, "Checking LuaProt key...", 4, Scheme.AccentColor)
+    SetStatus("Checking LuaProt...", Scheme.WarningColor)
     task.spawn(function()
         local success, reason = TryExecuteWithKey(key)
         if success then
             ScriptLoaded = true
             SaveKey(key)
-            SetStatus("Syscure loader started", Scheme.SuccessColor)
+            SetStatus("LuaProt loader started", Scheme.SuccessColor)
             CloseUI()
         else
-            _G.ScriptKey = nil
-            getgenv().ScriptKey = nil
-            getgenv().Key = nil
+            ClearKeyGlobals()
             DeleteFile(config.File)
             local msg = reason == "format" and "Invalid key format." or tostring(reason or "Unknown error")
             Notify("Error", msg, 8, Scheme.RedColor)
@@ -1542,8 +1579,8 @@ local function BuildUI()
         if KeyTextBox.Text == "" or ScriptLoaded then return end
         local cleaned = KeyTextBox.Text:gsub("%s", "")
         if not IsValidKeyFormat(cleaned) then
-            Notify("Error", "Key must contain syscure.", 4, Scheme.RedColor)
-            SetStatus("Invalid key", Scheme.RedColor)
+            Notify("Error", "Enter a valid LuaProt key.", 4, Scheme.RedColor)
+            SetStatus("Invalid LuaProt key format", Scheme.RedColor)
             KeyTextBox.Text = ""
             return
         end
@@ -1566,10 +1603,8 @@ if savedKey then
     end
 
     DeleteFile(config.File)
-    _G.ScriptKey = nil
-    getgenv().ScriptKey = nil
-    getgenv().Key = nil
-    Notify(config.Title, "Saved key could not start Syscure: " .. tostring(execErr), 7, Scheme.RedColor)
+    ClearKeyGlobals()
+    Notify(config.Title, "Saved key could not start LuaProt: " .. tostring(execErr), 7, Scheme.RedColor)
 end
 local buildOk, buildErr = pcall(BuildUI)
 if not buildOk then
