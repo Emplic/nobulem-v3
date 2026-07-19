@@ -145,6 +145,13 @@ local Games = {
         LuaProtScriptId = "29033528351307010725",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 120189115846709 },
+        GameName        = "TTK Testing",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "75987669684536069929",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local function ResolveGame(placeId)
