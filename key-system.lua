@@ -265,7 +265,7 @@ local function GetHWID()
         end
         return tostring(plr.UserId) .. "-" .. tostring(game.JobId):sub(1, 8)
     end)
-    if ok and id then return tostring(id):sub(1, 16) .. "..." end
+    if ok and id then return tostring(id) end
     return "UNKNOWN"
 end
 local function GetExecutorName()
@@ -836,7 +836,7 @@ local function BuildUI()
         local HwidRow = New("Frame", {
             BackgroundTransparency = 1,
             LayoutOrder = 5,
-            Size = UDim2.new(1, 0, 0, 40),
+            Size = UDim2.new(1, 0, 0, 54),
             ZIndex = 3,
             Parent = UserContent,
         })
@@ -857,7 +857,7 @@ local function BuildUI()
         local HwidBox = New("Frame", {
             BackgroundColor3 = Scheme.MainColor,
             Position = UDim2.fromOffset(0, 13),
-            Size = UDim2.new(1, 0, 0, 24),
+            Size = UDim2.new(1, 0, 0, 38),
             ZIndex = 3,
             Parent = HwidRow,
         })
@@ -875,9 +875,11 @@ local function BuildUI()
             Size = UDim2.new(1, -44, 1, 0),
             Text = maskedText,
             TextColor3 = Scheme.FontColor,
-            TextSize = 11,
-            TextTruncate = Enum.TextTruncate.AtEnd,
+            TextSize = 10,
+            TextWrapped = true,
+            TextTruncate = Enum.TextTruncate.None,
             TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Center,
             ZIndex = 4,
             Parent = HwidBox,
         })
@@ -1630,13 +1632,13 @@ local function BuildUI()
             Parent = Card,
         })
         New("TextLabel", {
-            BackgroundColor3 = GetBetterColor(Scheme.AccentColor, -12),
+            BackgroundColor3 = Color3.fromRGB(8, 8, 8),
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
             Position = UDim2.fromOffset(24, 24),
             Size = UDim2.fromOffset(116, 24),
             Text = "LIFETIME ACCESS",
-            TextColor3 = Scheme.AccentColor,
+            TextColor3 = Scheme.WhiteColor,
             TextSize = 11,
             ZIndex = 32,
             Parent = Card,
