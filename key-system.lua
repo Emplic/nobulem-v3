@@ -78,6 +78,7 @@ local config = {
     DiscordInvite = "https://discord.gg/nobulem",
     BuyUrl = "https://nobulem.wtf/pricing/",
     LifetimePrice = "$19.99",
+    ShowPremiumPopup = LoaderConfig.ShowPremiumPopup ~= false,
     Prices = {
         { label = "Weekly",   price = "$3.50" },
         { label = "Monthly",  price = "$6.99" },
@@ -1065,7 +1066,7 @@ local function BuildUI()
         LayoutOrder = 1,
         RichText = true,
         Size = UDim2.new(1, 0, 0, 16),
-        Text = "<b>Go Lifetime</b>",
+        Text = "<b>Stop doing keys. Go Lifetime.</b>",
         TextColor3 = Scheme.AccentColor,
         TextSize = 15,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -1081,7 +1082,7 @@ local function BuildUI()
         AutomaticSize = Enum.AutomaticSize.Y,
         Size = UDim2.new(1, 0, 0, 0),
         TextWrapped = true,
-        Text = "No keys. No checkpoints. <b>Unlock every nobulem.wtf script</b> with one purchase.",
+        Text = "Pay once, skip every checkpoint, and <b>unlock every current and future nobulem.wtf script.</b>",
         TextColor3 = Scheme.FontColor,
         TextSize = 11,
         TextTransparency = 0.35,
@@ -1592,9 +1593,199 @@ local function BuildUI()
         end
         HandleKeyObtained(cleaned)
     end)
+    local function ShowPremiumOffer()
+        if not config.ShowPremiumPopup or not ScreenGui or not ScreenGui.Parent then return end
+
+        local Overlay = New("TextButton", {
+            AutoButtonColor = false,
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Size = UDim2.fromScale(1, 1),
+            Text = "",
+            ZIndex = 30,
+            Parent = ScreenGui,
+        })
+        local Card = New("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = GetBetterColor(Scheme.BackgroundColor, 2),
+            Position = UDim2.fromScale(0.5, 0.54),
+            Size = UDim2.fromOffset(IsMobile and 340 or 390, 330),
+            ZIndex = 31,
+            Parent = Overlay,
+        })
+        AddCorner(Card, 12)
+        New("UIStroke", {
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Color = Scheme.OutlineColor,
+            Thickness = 1,
+            Transparency = 0.1,
+            Parent = Card,
+        })
+        New("Frame", {
+            BackgroundColor3 = Scheme.AccentColor,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, 0, 0, 4),
+            ZIndex = 32,
+            Parent = Card,
+        })
+        New("TextLabel", {
+            BackgroundColor3 = GetBetterColor(Scheme.AccentColor, -12),
+            BorderSizePixel = 0,
+            FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(24, 24),
+            Size = UDim2.fromOffset(116, 24),
+            Text = "LIFETIME ACCESS",
+            TextColor3 = Scheme.AccentColor,
+            TextSize = 11,
+            ZIndex = 32,
+            Parent = Card,
+        })
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(24, 62),
+            RichText = true,
+            Size = UDim2.new(1, -48, 0, 34),
+            Text = "<b>Make this your last key.</b>",
+            TextColor3 = Scheme.FontColor,
+            TextSize = 24,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 32,
+            Parent = Card,
+        })
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(24, 102),
+            RichText = true,
+            Size = UDim2.new(1, -48, 0, 42),
+            Text = "Skip the ads and checkpoints forever. One purchase unlocks <b>every current and future script.</b>",
+            TextColor3 = Scheme.FontColor,
+            TextSize = 13,
+            TextTransparency = 0.22,
+            TextWrapped = true,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Top,
+            ZIndex = 32,
+            Parent = Card,
+        })
+
+        local benefits = {
+            "No keys or checkpoints",
+            "All games and future releases",
+            "Priority updates and support",
+        }
+        for i, text in benefits do
+            New("TextLabel", {
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                FontFace = Scheme.Font,
+                Position = UDim2.fromOffset(24, 151 + ((i - 1) * 24)),
+                Size = UDim2.new(1, -48, 0, 20),
+                Text = "+  " .. text,
+                TextColor3 = i == 1 and Scheme.SuccessColor or Scheme.FontColor,
+                TextSize = 13,
+                TextTransparency = i == 1 and 0 or 0.12,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = 32,
+                Parent = Card,
+            })
+        end
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(24, 228),
+            RichText = true,
+            Size = UDim2.new(1, -48, 0, 22),
+            Text = "One payment  •  <b>" .. config.LifetimePrice .. " lifetime</b>",
+            TextColor3 = Scheme.AccentColor,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 32,
+            Parent = Card,
+        })
+
+        local BuyNow = New("TextButton", {
+            AutoButtonColor = false,
+            BackgroundColor3 = Scheme.AccentColor,
+            BorderSizePixel = 0,
+            FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(24, 258),
+            RichText = true,
+            Size = UDim2.new(1, -142, 0, 44),
+            Text = "<b>Go keyless — " .. config.LifetimePrice .. "</b>",
+            TextColor3 = Scheme.WhiteColor,
+            TextSize = 14,
+            ZIndex = 32,
+            Parent = Card,
+        })
+        AddCorner(BuyNow, 8)
+        local ContinueFree = New("TextButton", {
+            AutoButtonColor = false,
+            BackgroundColor3 = Scheme.MainColor,
+            BorderSizePixel = 0,
+            FontFace = Scheme.Font,
+            Position = UDim2.new(1, -110, 0, 258),
+            Size = UDim2.fromOffset(86, 44),
+            Text = "Continue free",
+            TextColor3 = Scheme.FontColor,
+            TextSize = 12,
+            TextTransparency = 0.35,
+            ZIndex = 32,
+            Parent = Card,
+        })
+        AddCorner(ContinueFree, 8)
+
+        local closed = false
+        local function CloseOffer()
+            if closed then return end
+            closed = true
+            TweenService:Create(Overlay, TweenInfoDefault, { BackgroundTransparency = 1 }):Play()
+            TweenService:Create(Card, TweenInfoDefault, {
+                Position = UDim2.fromScale(0.5, 0.54),
+            }):Play()
+            task.delay(0.22, function()
+                if Overlay then Overlay:Destroy() end
+            end)
+        end
+        BuyNow.MouseEnter:Connect(function()
+            TweenService:Create(BuyNow, TweenInfoDefault, { BackgroundColor3 = GetBetterColor(Scheme.AccentColor, 8) }):Play()
+        end)
+        BuyNow.MouseLeave:Connect(function()
+            TweenService:Create(BuyNow, TweenInfoDefault, { BackgroundColor3 = Scheme.AccentColor }):Play()
+        end)
+        ContinueFree.MouseEnter:Connect(function()
+            TweenService:Create(ContinueFree, TweenInfoDefault, { TextTransparency = 0 }):Play()
+        end)
+        ContinueFree.MouseLeave:Connect(function()
+            TweenService:Create(ContinueFree, TweenInfoDefault, { TextTransparency = 0.35 }):Play()
+        end)
+        BuyNow.MouseButton1Click:Connect(function()
+            if setclipboard then
+                setclipboard(config.BuyUrl)
+                Notify("Lifetime Link Copied", "Open the checkout link to go keyless forever.", 6, Scheme.AccentColor)
+            else
+                Notify("Lifetime Checkout", config.BuyUrl, 10, Scheme.AccentColor)
+            end
+            CloseOffer()
+        end)
+        ContinueFree.MouseButton1Click:Connect(CloseOffer)
+
+        TweenService:Create(Overlay, TweenInfo.new(0.25), { BackgroundTransparency = 0.28 }):Play()
+        TweenService:Create(Card, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.fromScale(0.5, 0.5),
+        }):Play()
+    end
+
     TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.fromOffset(WINDOW_WIDTH, WINDOW_HEIGHT),
     }):Play()
+    task.delay(0.55, ShowPremiumOffer)
 end
 local savedKey = LoadSavedKey()
 if savedKey then
