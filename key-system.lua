@@ -72,6 +72,7 @@ local config = {
     Description = "Get your free key below to access the script.",
     LinkvertiseUrl = LoaderConfig.LinkvertiseUrl or "https://luaprot.net/ad/8734d1ba",
     WorkInkUrl = LoaderConfig.WorkInkUrl or "https://luaprot.net/ad/f77fb8ab",
+    LootLabsUrl = LoaderConfig.LootLabsUrl or "https://luaprot.net/ad/ad6e1a72",
     LuaProtScriptId = tostring(LoaderConfig.LuaProtScriptId),
     LuaProtSdkUrl = "https://sdk.luaprot.net/",
     Logo = "138831083704120",
@@ -1524,7 +1525,8 @@ local function BuildUI()
     end
     local LinkvertiseBtn = CreateObsidianButton("Linkvertise", 1, ButtonRow)
     local WorkInkBtn = CreateObsidianButton("Work.ink", 2, ButtonRow)
-    local CheckStatusBtn = CreateObsidianButton("Validate Key", 3, ButtonRow)
+    local LootLabsBtn = CreateObsidianButton("LootLabs", 3, ButtonRow)
+    local CheckStatusBtn = CreateObsidianButton("Validate Key", 4, ButtonRow)
     local BottomBg = New("Frame", {
         AnchorPoint = Vector2.new(0, 1),
         BackgroundColor3 = GetBetterColor(Scheme.BackgroundColor, 4),
@@ -1573,6 +1575,9 @@ local function BuildUI()
     WorkInkBtn.MouseButton1Click:Connect(function()
         CopyKeyLink("Work.ink", config.WorkInkUrl)
     end)
+    LootLabsBtn.MouseButton1Click:Connect(function()
+        CopyKeyLink("LootLabs", config.LootLabsUrl)
+    end)
     CheckStatusBtn.MouseButton1Click:Connect(function()
         if ScriptLoaded then return end
         local cleaned = (KeyTextBox.Text or ""):gsub("%s", "")
@@ -1612,7 +1617,7 @@ local function BuildUI()
             AnchorPoint = Vector2.new(0.5, 0.5),
             BackgroundColor3 = GetBetterColor(Scheme.BackgroundColor, 2),
             Position = UDim2.fromScale(0.5, 0.54),
-            Size = UDim2.fromOffset(IsMobile and 340 or 390, 300),
+            Size = UDim2.fromOffset(IsMobile and 340 or 390, 330),
             ZIndex = 31,
             Parent = Overlay,
         })
@@ -1632,10 +1637,22 @@ local function BuildUI()
             Parent = Card,
         })
         New("TextLabel", {
+            BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+            BorderSizePixel = 0,
+            FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(24, 24),
+            Size = UDim2.fromOffset(116, 24),
+            Text = "LIFETIME ACCESS",
+            TextColor3 = Scheme.WhiteColor,
+            TextSize = 11,
+            ZIndex = 32,
+            Parent = Card,
+        })
+        New("TextLabel", {
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.fromOffset(24, 28),
+            Position = UDim2.fromOffset(24, 62),
             RichText = true,
             Size = UDim2.new(1, -48, 0, 34),
             Text = "<b>Make this your last key.</b>",
@@ -1649,7 +1666,7 @@ local function BuildUI()
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.fromOffset(24, 68),
+            Position = UDim2.fromOffset(24, 102),
             RichText = true,
             Size = UDim2.new(1, -48, 0, 42),
             Text = "Skip the ads and checkpoints forever. One purchase unlocks <b>every current and future script.</b>",
@@ -1673,7 +1690,7 @@ local function BuildUI()
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 FontFace = Scheme.Font,
-                Position = UDim2.fromOffset(24, 117 + ((i - 1) * 24)),
+                Position = UDim2.fromOffset(24, 151 + ((i - 1) * 24)),
                 Size = UDim2.new(1, -48, 0, 20),
                 Text = "+  " .. text,
                 TextColor3 = i == 1 and Scheme.SuccessColor or Scheme.FontColor,
@@ -1689,7 +1706,7 @@ local function BuildUI()
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.fromOffset(24, 194),
+            Position = UDim2.fromOffset(24, 228),
             RichText = true,
             Size = UDim2.new(1, -48, 0, 22),
             Text = "One payment  •  <b>" .. config.LifetimePrice .. " lifetime</b>",
@@ -1705,7 +1722,7 @@ local function BuildUI()
             BackgroundColor3 = Scheme.AccentColor,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.fromOffset(24, 228),
+            Position = UDim2.fromOffset(24, 258),
             RichText = true,
             Size = UDim2.new(1, -142, 0, 44),
             Text = "<b>Go keyless — " .. config.LifetimePrice .. "</b>",
@@ -1720,7 +1737,7 @@ local function BuildUI()
             BackgroundColor3 = Scheme.MainColor,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.new(1, -110, 0, 228),
+            Position = UDim2.new(1, -110, 0, 258),
             Size = UDim2.fromOffset(86, 44),
             Text = "Continue free",
             TextColor3 = Scheme.FontColor,
