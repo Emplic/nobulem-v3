@@ -159,6 +159,13 @@ local Games = {
         LuaProtScriptId = "75987669684536069929",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 121918565917280 },
+        GameName        = "War Rivals",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "78341232169921354921",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local function ResolveGame(placeId)
