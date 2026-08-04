@@ -1,3 +1,4 @@
+
 repeat task.wait() until game:IsLoaded()
 
 if not LPH_OBFUSCATED then
@@ -356,7 +357,21 @@ do
 
     local drawing = Drawing
     LPH_NO_VIRTUALIZE(function()
-        drawing = _G.FORCE_REAL_DRAWING and Drawing or loadstring(readfile("juju recode/assets/api.lua"))()
+        if not _G.FORCE_REAL_DRAWING then
+            local ok, customDrawing = pcall(function()
+                local source = readfile("juju recode/assets/api.lua")
+                local chunk, compileError = loadstring(source)
+                if not chunk then error(compileError) end
+                return chunk()
+            end)
+            if ok and type(customDrawing) == "table" and type(customDrawing.new) == "function" then
+                drawing = customDrawing
+            else
+                drawing = Drawing
+                warn("[Juju UI] Custom Drawing API unavailable; using executor Drawing API")
+            end
+        end
+        assert(drawing and type(drawing.new) == "function", "Juju UI requires a Drawing.new implementation")
     end)()
 
     getgenv()["fake_drawing"] = drawing
@@ -7991,7 +8006,9 @@ do
                 setrawmetatable(instance, mt)
             end
 
-            old_drawing["_UNLOAD"]()
+            if old_drawing and type(old_drawing["_UNLOAD"]) == "function" then
+                old_drawing["_UNLOAD"]()
+            end
         end
 
         -- >> ( data )
