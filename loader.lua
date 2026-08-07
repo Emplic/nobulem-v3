@@ -166,6 +166,13 @@ local Games = {
         LuaProtScriptId = "78341232169921354921",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 84556640895285, 123232906198057 },
+        GameName        = "Deagle Arena",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "30461276598567529842",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local function ResolveGame(placeId)
