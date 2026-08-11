@@ -173,12 +173,59 @@ local Games = {
         LuaProtScriptId = "30461276598567529842",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 109265479748625, 86615638402765 },
+        GameName        = "Repair A Car",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "33318802143594971036",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
+
+local HttpService = game:GetService("HttpService")
+
+local function FetchSubplaceIds(rootPlaceId)
+    local okU, uniBody = pcall(function()
+        return game:HttpGet(("https://apis.roblox.com/universes/v1/places/%d/universe"):format(rootPlaceId))
+    end)
+    if not okU then return {} end
+    local okD, uniData = pcall(function() return HttpService:JSONDecode(uniBody) end)
+    if not okD or type(uniData) ~= "table" or not uniData.universeId then return {} end
+
+    local ids = {}
+    local cursor = nil
+    repeat
+        local url = ("https://develop.roblox.com/v1/universes/%d/places?sortOrder=Asc&limit=100"):format(uniData.universeId)
+        if cursor then url = url .. "&cursor=" .. cursor end
+        local okP, body = pcall(function() return game:HttpGet(url) end)
+        if not okP then break end
+        local okJ, decoded = pcall(function() return HttpService:JSONDecode(body) end)
+        if not okJ or type(decoded) ~= "table" then break end
+        for _, place in ipairs(decoded.data or {}) do
+            table.insert(ids, place.id)
+        end
+        cursor = decoded.nextPageCursor
+    until not cursor or cursor == ""
+    return ids
+end
+
+local SubplaceCache = {}
 
 local function ResolveGame(placeId)
     for _, entry in ipairs(Games) do
         for _, id in ipairs(entry.PlaceIds) do
             if id == placeId then return entry end
+        end
+    end
+    for _, entry in ipairs(Games) do
+        local rootId = entry.PlaceIds[1]
+        if rootId then
+            if not SubplaceCache[rootId] then
+                SubplaceCache[rootId] = FetchSubplaceIds(rootId)
+            end
+            for _, id in ipairs(SubplaceCache[rootId]) do
+                if id == placeId then return entry end
+            end
         end
     end
     return nil
