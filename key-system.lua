@@ -892,23 +892,62 @@ local function BuildUI()
             Position = UDim2.new(1, -34, 0.5, 0),
             Size = UDim2.fromOffset(20, 20),
             FontFace = Scheme.Font,
-            Text = "o",
+            Text = "",
             TextColor3 = Scheme.FontColor,
             TextSize = 11,
-            TextTransparency = 0.4,
             ZIndex = 5,
             Parent = HwidBox,
         })
+        local EyeOutline = New("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+            Position = UDim2.fromScale(0.5, 0.5),
+            Size = UDim2.fromOffset(13, 9),
+            ZIndex = 6,
+            Parent = EyeBtn,
+        })
+        New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = EyeOutline })
+        local EyeStroke = New("UIStroke", {
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Color = Scheme.FontColor,
+            Thickness = 1.2,
+            Transparency = 0.4,
+            Parent = EyeOutline,
+        })
+        local Pupil = New("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = Scheme.FontColor,
+            BackgroundTransparency = 0.4,
+            Position = UDim2.fromScale(0.5, 0.5),
+            Size = UDim2.fromOffset(3, 3),
+            ZIndex = 7,
+            Parent = EyeOutline,
+        })
+        New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Pupil })
+        local EyeSlash = New("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = Scheme.FontColor,
+            BackgroundTransparency = 0.4,
+            Position = UDim2.fromScale(0.5, 0.5),
+            Rotation = 45,
+            Size = UDim2.fromOffset(1.5, 17),
+            ZIndex = 8,
+            Parent = EyeBtn,
+        })
         EyeBtn.MouseEnter:Connect(function()
-            TweenService:Create(EyeBtn, TweenInfoDefault, { TextTransparency = 0 }):Play()
+            TweenService:Create(EyeStroke, TweenInfoDefault, { Transparency = 0 }):Play()
+            TweenService:Create(Pupil, TweenInfoDefault, { BackgroundTransparency = 0 }):Play()
+            TweenService:Create(EyeSlash, TweenInfoDefault, { BackgroundTransparency = 0 }):Play()
         end)
         EyeBtn.MouseLeave:Connect(function()
-            TweenService:Create(EyeBtn, TweenInfoDefault, { TextTransparency = 0.4 }):Play()
+            TweenService:Create(EyeStroke, TweenInfoDefault, { Transparency = 0.4 }):Play()
+            TweenService:Create(Pupil, TweenInfoDefault, { BackgroundTransparency = 0.4 }):Play()
+            TweenService:Create(EyeSlash, TweenInfoDefault, { BackgroundTransparency = 0.4 }):Play()
         end)
         EyeBtn.MouseButton1Click:Connect(function()
             hwidHidden = not hwidHidden
             HwidLabel.Text = hwidHidden and maskedText or hwidValue
-            EyeBtn.Text = hwidHidden and "o" or "x"
+            EyeSlash.Visible = hwidHidden
         end)
         local CopyBtn = New("TextButton", {
             AutoButtonColor = false,
@@ -918,77 +957,67 @@ local function BuildUI()
             Position = UDim2.new(1, -8, 0.5, 0),
             Size = UDim2.fromOffset(20, 20),
             FontFace = Scheme.Font,
-            Text = "c",
+            Text = "",
             TextColor3 = Scheme.FontColor,
             TextSize = 11,
-            TextTransparency = 0.4,
             ZIndex = 5,
             Parent = HwidBox,
         })
+        local CopyBack = New("Frame", {
+            AnchorPoint = Vector2.new(1, 0),
+            BackgroundTransparency = 1,
+            Position = UDim2.new(1, -1, 0, 3),
+            Size = UDim2.fromOffset(11, 11),
+            ZIndex = 6,
+            Parent = CopyBtn,
+        })
+        New("UICorner", { CornerRadius = UDim.new(0, 2), Parent = CopyBack })
+        local CopyBackStroke = New("UIStroke", {
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Color = Scheme.FontColor,
+            Thickness = 1.2,
+            Transparency = 0.6,
+            Parent = CopyBack,
+        })
+        local CopyFront = New("Frame", {
+            BackgroundColor3 = Scheme.MainColor,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(1, 6),
+            Size = UDim2.fromOffset(11, 11),
+            ZIndex = 7,
+            Parent = CopyBtn,
+        })
+        New("UICorner", { CornerRadius = UDim.new(0, 2), Parent = CopyFront })
+        local CopyFrontStroke = New("UIStroke", {
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Color = Scheme.FontColor,
+            Thickness = 1.2,
+            Transparency = 0.4,
+            Parent = CopyFront,
+        })
         CopyBtn.MouseEnter:Connect(function()
-            TweenService:Create(CopyBtn, TweenInfoDefault, { TextTransparency = 0 }):Play()
+            TweenService:Create(CopyFrontStroke, TweenInfoDefault, { Transparency = 0 }):Play()
+            TweenService:Create(CopyBackStroke, TweenInfoDefault, { Transparency = 0.25 }):Play()
         end)
         CopyBtn.MouseLeave:Connect(function()
-            TweenService:Create(CopyBtn, TweenInfoDefault, { TextTransparency = 0.4 }):Play()
+            TweenService:Create(CopyFrontStroke, TweenInfoDefault, { Transparency = 0.4 }):Play()
+            TweenService:Create(CopyBackStroke, TweenInfoDefault, { Transparency = 0.6 }):Play()
         end)
         CopyBtn.MouseButton1Click:Connect(function()
             if setclipboard then
                 setclipboard(hwidValue)
             end
+            TweenService:Create(CopyFrontStroke, TweenInfoDefault, { Color = Scheme.SuccessColor, Transparency = 0 }):Play()
+            TweenService:Create(CopyFront, TweenInfoDefault, { BackgroundColor3 = Scheme.SuccessColor }):Play()
+            TweenService:Create(CopyBackStroke, TweenInfoDefault, { Color = Scheme.SuccessColor, Transparency = 0.25 }):Play()
+            task.delay(1.2, function()
+                if CopyFront.Parent then
+                    TweenService:Create(CopyFrontStroke, TweenInfoDefault, { Color = Scheme.FontColor, Transparency = 0.4 }):Play()
+                    TweenService:Create(CopyFront, TweenInfoDefault, { BackgroundColor3 = Scheme.MainColor }):Play()
+                    TweenService:Create(CopyBackStroke, TweenInfoDefault, { Color = Scheme.FontColor, Transparency = 0.6 }):Play()
+                end
+            end)
             Notify("Copied", "HWID copied to clipboard.", 3, Scheme.SuccessColor)
-        end)
-        OnIconsReady(function()
-            local EyeIcon = New("ImageLabel", {
-                BackgroundTransparency = 1,
-                ImageColor3 = Scheme.FontColor,
-                ImageTransparency = 0.4,
-                Size = UDim2.fromScale(1, 1),
-                ScaleType = Enum.ScaleType.Fit,
-                ZIndex = 6,
-                Parent = EyeBtn,
-            })
-            if ApplyLucideIcon(EyeIcon, "eye-off") then
-                EyeBtn.Text = ""
-                EyeBtn.MouseEnter:Connect(function()
-                    TweenService:Create(EyeIcon, TweenInfoDefault, { ImageTransparency = 0 }):Play()
-                end)
-                EyeBtn.MouseLeave:Connect(function()
-                    TweenService:Create(EyeIcon, TweenInfoDefault, { ImageTransparency = 0.4 }):Play()
-                end)
-                EyeBtn.MouseButton1Click:Connect(function()
-                    ApplyLucideIcon(EyeIcon, hwidHidden and "eye-off" or "eye")
-                end)
-            else
-                EyeIcon:Destroy()
-            end
-            local CopyIcon = New("ImageLabel", {
-                BackgroundTransparency = 1,
-                ImageColor3 = Scheme.FontColor,
-                ImageTransparency = 0.4,
-                Size = UDim2.fromScale(1, 1),
-                ScaleType = Enum.ScaleType.Fit,
-                ZIndex = 6,
-                Parent = CopyBtn,
-            })
-            if ApplyLucideIcon(CopyIcon, "copy") then
-                CopyBtn.Text = ""
-                CopyBtn.MouseEnter:Connect(function()
-                    TweenService:Create(CopyIcon, TweenInfoDefault, { ImageTransparency = 0 }):Play()
-                end)
-                CopyBtn.MouseLeave:Connect(function()
-                    TweenService:Create(CopyIcon, TweenInfoDefault, { ImageTransparency = 0.4 }):Play()
-                end)
-                CopyBtn.MouseButton1Click:Connect(function()
-                    ApplyLucideIcon(CopyIcon, "check")
-                    task.delay(1.2, function()
-                        if CopyIcon and CopyIcon.Parent then
-                            ApplyLucideIcon(CopyIcon, "copy")
-                        end
-                    end)
-                end)
-            else
-                CopyIcon:Destroy()
-            end
         end)
     end
     New("Frame", {
