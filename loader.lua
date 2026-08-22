@@ -26,13 +26,6 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
-        PlaceIds        = { 5307215810 },
-        GameName        = "Randomizer Legacy",
-        SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "38307661723468074678",
-        GetKeyUrl       = "https://nobulem.wtf/key",
-    },
-    {
         PlaceIds        = { 119259569670784, 122446657157717, 126042865144779, 119259569670784, 96216501849190, 124955530864032, 114188007571146, 101571206862372, 90165746516953, 74424488747487, 119661268047775, 111189101942839, 113390337779988, 115517196855730, 109094919875208, 102220551718323, 90625015569871, 112261221918322, 92726474449929, 125154235269776 },
         GameName        = "Sniper Arena",
         SaveFile        = "nobulem_key.txt",
@@ -178,6 +171,13 @@ local Games = {
         GameName        = "Repair A Car",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "33318802143594971036",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
+    {
+        PlaceIds        = { 92637789841354, 100068273119174},
+        GameName        = "Clean All The Leaves",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "36302033676466107774",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
 }
