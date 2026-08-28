@@ -40,13 +40,6 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
-        PlaceIds        = { 6847090259 },
-        GameName        = "Bulked Up",
-        SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "91444182629983667670",
-        GetKeyUrl       = "https://nobulem.wtf/key",
-    },
-    {
         PlaceIds        = { 136801880565837 },
         GameName        = "Flick",
         SaveFile        = "nobulem_key.txt",
@@ -167,10 +160,16 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
-        PlaceIds        = { 109265479748625, 86615638402765 },
-        GameName        = "Repair A Car",
+        PlaceIds        = { 109265479748625, 86615638402765, 6847090259 },
+        GameName        = "Repair A Car & Bulked Up",
+        PlaceNames      = {
+            [109265479748625] = "Repair A Car",
+            [86615638402765]  = "Repair A Car",
+            [6847090259]      = "Bulked Up",
+        },
+        SubplaceRoots   = { 109265479748625, 6847090259 },
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "33318802143594971036",
+        LuaProtScriptId = "21527285222933854606",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
     {
@@ -218,13 +217,15 @@ local function ResolveGame(placeId)
         end
     end
     for _, entry in ipairs(Games) do
-        local rootId = entry.PlaceIds[1]
-        if rootId then
-            if not SubplaceCache[rootId] then
-                SubplaceCache[rootId] = FetchSubplaceIds(rootId)
-            end
-            for _, id in ipairs(SubplaceCache[rootId]) do
-                if id == placeId then return entry end
+        local roots = entry.SubplaceRoots or { entry.PlaceIds[1] }
+        for _, rootId in ipairs(roots) do
+            if rootId then
+                if not SubplaceCache[rootId] then
+                    SubplaceCache[rootId] = FetchSubplaceIds(rootId)
+                end
+                for _, id in ipairs(SubplaceCache[rootId]) do
+                    if id == placeId then return entry end
+                end
             end
         end
     end
@@ -276,10 +277,12 @@ if not cfg then
     return
 end
 
+local ResolvedName = (cfg.PlaceNames and cfg.PlaceNames[game.PlaceId]) or cfg.GameName
+
 if cfg.Discontinued then
     Notify(
-        cfg.GameName,
-        ("%s is currently discontinued for nobulem at this time. Please try again later."):format(cfg.GameName),
+        ResolvedName,
+        ("%s is currently discontinued for nobulem at this time. Please try again later."):format(ResolvedName),
         10
     )
     getgenv().nobulem_loader_started = nil
@@ -288,7 +291,7 @@ end
 
 getgenv().NobulemLoaderConfig = {
     PlaceId         = game.PlaceId,
-    GameName        = cfg.GameName,
+    GameName        = ResolvedName,
     SaveFile        = cfg.SaveFile,
     LuaProtScriptId = cfg.LuaProtScriptId,
     GetKeyUrl       = cfg.GetKeyUrl,
