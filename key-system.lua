@@ -67,18 +67,22 @@ if not LoaderConfig.LuaProtScriptId or LoaderConfig.LuaProtScriptId == "" then
 end
 local config = {
     File = LoaderConfig.SaveFile or "nobulem_key.txt",
+    Folder = "nobulem",
     Title = "nobulem.wtf",
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
-    Description = "Get your free key below to access the script.",
+    Description = "Free access needs a new key every time. Lifetime never asks again.",
     LinkvertiseUrl = LoaderConfig.LinkvertiseUrl or "https://luaprot.net/ad/8734d1ba",
     WorkInkUrl = LoaderConfig.WorkInkUrl or "https://luaprot.net/ad/f77fb8ab",
     LootLabsUrl = LoaderConfig.LootLabsUrl or "https://luaprot.net/ad/ad6e1a72",
     LuaProtScriptId = tostring(LoaderConfig.LuaProtScriptId),
     LuaProtSdkUrl = "https://sdk.luaprot.net/",
     Logo = "138831083704120",
-    DiscordInvite = "https://discord.gg/nobulem",
+    DiscordInvite = "https://discord.gg/mugcSRnpuG",
     BuyUrl = "https://nobulem.wtf/pricing/",
     LifetimePrice = "$19.99",
+    LifetimeValue = 19.99,
+    WeeklyValue = 3.50,
+    MinutesPerCheckpoint = 3,
     ShowPremiumPopup = LoaderConfig.ShowPremiumPopup ~= false,
     Prices = {
         { label = "Weekly",   price = "$3.50" },
@@ -168,23 +172,137 @@ local function SafeParentUI(UI)
 end
 local function DeleteFile(path)
     if isfile and isfile(path) then
-        delfile(path)
+        pcall(delfile, path)
     end
+end
+local function EnsureFolder()
+    if not isfolder or not makefolder then return false end
+    if not isfolder(config.Folder) then
+        local ok = pcall(makefolder, config.Folder)
+        if not ok then return false end
+    end
+    return true
+end
+local function KeyFilePath()
+    return config.Folder .. "/key_" .. config.LuaProtScriptId .. ".txt"
 end
 local function SaveKey(key)
-    if not isfolder or not writefile then return end
-    if not isfolder("kiwisense") then makefolder("kiwisense") end
-    pcall(writefile, config.File, key)
+    if not writefile then return end
+    if EnsureFolder() then
+        pcall(writefile, KeyFilePath(), key)
+    else
+        pcall(writefile, config.File, key)
+    end
 end
-local function LoadSavedKey()
-    if not isfile then return nil end
-    if isfile(config.File) then
-        local ok, data = pcall(readfile, config.File)
-        if ok and data and #data > 0 then
-            return data
-        end
+local function ReadKeyFile(path)
+    if not isfile or not isfile(path) then return nil end
+    local ok, data = pcall(readfile, path)
+    if ok and type(data) == "string" then
+        local cleaned = data:gsub("%s", "")
+        if #cleaned > 0 then return cleaned end
     end
     return nil
+end
+local SavedKeyPath = nil
+local function LoadSavedKey()
+    local scoped = ReadKeyFile(KeyFilePath())
+    if scoped then
+        SavedKeyPath = KeyFilePath()
+        return scoped
+    end
+    local legacy = ReadKeyFile(config.File)
+    if legacy then
+        SavedKeyPath = config.File
+        return legacy
+    end
+    return nil
+end
+local StatsData = { checkpoints = 0, lastKey = 0, keyId = "", keyFirstSeen = 0 }
+local function StatsPath()
+    return config.Folder .. "/usage.json"
+end
+local function LoadStats()
+    local raw = nil
+    if isfile and isfile(StatsPath()) then
+        local ok, data = pcall(readfile, StatsPath())
+        if ok then raw = data end
+    end
+    if not raw then return end
+    local ok, decoded = pcall(function() return HttpService:JSONDecode(raw) end)
+    if ok and type(decoded) == "table" then
+        StatsData.checkpoints = tonumber(decoded.checkpoints) or 0
+        StatsData.lastKey = tonumber(decoded.lastKey) or 0
+        StatsData.keyId = tostring(decoded.keyId or "")
+        StatsData.keyFirstSeen = tonumber(decoded.keyFirstSeen) or 0
+    end
+end
+local function SaveStats()
+    if not writefile then return end
+    if not EnsureFolder() then return end
+    local ok, encoded = pcall(function() return HttpService:JSONEncode(StatsData) end)
+    if ok and encoded then
+        pcall(writefile, StatsPath(), encoded)
+    end
+end
+LoadStats()
+local function HashKey(key)
+    local total = 7
+    for i = 1, #key do
+        total = (total * 31 + key:byte(i)) % 2147483647
+    end
+    return tostring(total) .. "-" .. tostring(#key)
+end
+local function NoteKeyInUse(key)
+    if type(key) ~= "string" or key == "" then return end
+    local id = HashKey(key)
+    if StatsData.keyId ~= id then
+        StatsData.keyId = id
+        StatsData.keyFirstSeen = os.time()
+        SaveStats()
+    end
+end
+local function LooksLifetime(key)
+    if type(key) ~= "string" or key == "" then return false end
+    if StatsData.keyId ~= HashKey(key) then return false end
+    local first = tonumber(StatsData.keyFirstSeen) or 0
+    if first <= 0 then return false end
+    return (os.time() - first) >= 259200
+end
+local function CountCheckpoint()
+    StatsData.checkpoints = StatsData.checkpoints + 1
+    StatsData.lastKey = os.time()
+    SaveStats()
+end
+local function MinutesLost()
+    return StatsData.checkpoints * config.MinutesPerCheckpoint
+end
+local function WeeksToBreakEven()
+    return math.max(1, math.ceil(config.LifetimeValue / config.WeeklyValue))
+end
+local function PriceGapLine()
+    local bestLabel, bestValue = nil, nil
+    for _, tier in config.Prices do
+        if tier.label ~= "Lifetime" then
+            local value = tonumber((tostring(tier.price):gsub("[^%d%.]", "")))
+            if value and (not bestValue or value > bestValue) then
+                bestLabel, bestValue = tier.label, value
+            end
+        end
+    end
+    if not bestLabel then
+        return "One payment, then it is yours forever"
+    end
+    return ("Lifetime is only <b>$%.2f</b> more than %s"):format(math.max(0, config.LifetimeValue - bestValue), bestLabel)
+end
+local function UsageLine()
+    local count = StatsData.checkpoints
+    if count <= 0 then
+        return "Lifetime users skip this screen completely."
+    end
+    if count == 1 then
+        return "That is 1 key unlocked on this device so far."
+    end
+    return ("That is %d keys unlocked on this device - about %d minutes spent on links."):format(count, MinutesLost())
 end
 local function IsValidKeyFormat(key)
     if type(key) ~= "string" then return false end
@@ -192,6 +310,11 @@ local function IsValidKeyFormat(key)
     return cleaned ~= "" and #cleaned <= 256
 end
 local ScriptLoaded = false
+local Validating = false
+
+local function ForgetSavedKey()
+    DeleteFile(KeyFilePath())
+end
 
 local function ClearKeyGlobals()
     _G.ScriptKey = nil
@@ -444,25 +567,36 @@ local function CloseUI()
         end
     end)
 end
+local PendingUpsell = nil
 local function HandleKeyObtained(key)
-    if ScriptLoaded then return end
+    if ScriptLoaded or Validating then return end
     if not IsValidKeyFormat(key) then
         Notify("Error", "Enter a valid LuaProt key.", 5, Scheme.RedColor)
         SetStatus("Invalid LuaProt key format", Scheme.RedColor)
         return
     end
+    Validating = true
     Notify(config.Title, "Checking LuaProt key...", 4, Scheme.AccentColor)
     SetStatus("Checking LuaProt...", Scheme.WarningColor)
     task.spawn(function()
         local success, reason = TryExecuteWithKey(key)
+        Validating = false
         if success then
             ScriptLoaded = true
             SaveKey(key)
-            SetStatus("LuaProt loader started", Scheme.SuccessColor)
-            CloseUI()
+            local isLifetime = LooksLifetime(key)
+            NoteKeyInUse(key)
+            if not isLifetime then CountCheckpoint() end
+            SetStatus("Key accepted - loading script", Scheme.SuccessColor)
+            local shown = false
+            if PendingUpsell and not isLifetime then
+                local ok, result = pcall(PendingUpsell)
+                shown = ok and result == true
+            end
+            if not shown then CloseUI() end
         else
             ClearKeyGlobals()
-            DeleteFile(config.File)
+            ForgetSavedKey()
             local msg = reason == "format" and "Invalid key format." or tostring(reason or "Unknown error")
             Notify("Error", msg, 8, Scheme.RedColor)
             SetStatus(msg, Scheme.RedColor)
@@ -1098,7 +1232,7 @@ local function BuildUI()
         LayoutOrder = 1,
         RichText = true,
         Size = UDim2.new(1, 0, 0, 16),
-        Text = "<b>Stop doing keys. Go Lifetime.</b>",
+        Text = "<b>Never see this screen again.</b>",
         TextColor3 = Scheme.AccentColor,
         TextSize = 15,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -1114,7 +1248,7 @@ local function BuildUI()
         AutomaticSize = Enum.AutomaticSize.Y,
         Size = UDim2.new(1, 0, 0, 0),
         TextWrapped = true,
-        Text = "Pay once, skip every checkpoint, and <b>unlock every current and future nobulem.wtf script.</b>",
+        Text = ("Lifetime costs the same as %d weekly keys, then it never costs anything again and it <b>unlocks every current and future nobulem.wtf script.</b>"):format(WeeksToBreakEven()),
         TextColor3 = Scheme.FontColor,
         TextSize = 11,
         TextTransparency = 0.35,
@@ -1123,9 +1257,27 @@ local function BuildUI()
         ZIndex = 3,
         Parent = AdContent,
     })
+    local UsageLabel = New("TextLabel", {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        FontFace = Scheme.Font,
+        LayoutOrder = 3,
+        RichText = true,
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Size = UDim2.new(1, 0, 0, 0),
+        TextWrapped = true,
+        Text = UsageLine(),
+        TextColor3 = Scheme.WarningColor,
+        TextSize = 11,
+        TextTransparency = 0.1,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        ZIndex = 3,
+        Parent = AdContent,
+    })
     local BenefitsList = New("Frame", {
         BackgroundTransparency = 1,
-        LayoutOrder = 3,
+        LayoutOrder = 4,
         AutomaticSize = Enum.AutomaticSize.Y,
         Size = UDim2.new(1, 0, 0, 0),
         ZIndex = 3,
@@ -1200,7 +1352,7 @@ local function BuildUI()
     end
     local PricingBox = New("Frame", {
         BackgroundColor3 = GetBetterColor(Scheme.BackgroundColor, 4),
-        LayoutOrder = 4,
+        LayoutOrder = 5,
         AutomaticSize = Enum.AutomaticSize.Y,
         Size = UDim2.new(1, 0, 0, 0),
         ZIndex = 3,
@@ -1261,15 +1413,28 @@ local function BuildUI()
             Parent = Row,
         })
     end
+    New("TextLabel", {
+        BackgroundTransparency = 1,
+        FontFace = Scheme.Font,
+        LayoutOrder = #config.Prices + 1,
+        RichText = true,
+        Size = UDim2.new(1, 0, 0, 14),
+        Text = PriceGapLine(),
+        TextColor3 = Scheme.SuccessColor,
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 3,
+        Parent = PricingBox,
+    })
     local BuyBtn = New("TextButton", {
         AutoButtonColor = false,
         BackgroundColor3 = Scheme.AccentColor,
         BorderSizePixel = 0,
         FontFace = Scheme.Font,
-        LayoutOrder = 5,
+        LayoutOrder = 6,
         RichText = true,
-        Size = UDim2.new(1, 0, 0, 24),
-        Text = "<b>Buy Lifetime — " .. config.LifetimePrice .. "</b>",
+        Size = UDim2.new(1, 0, 0, 30),
+        Text = "<b>Go keyless - " .. config.LifetimePrice .. " once</b>",
         TextColor3 = Scheme.WhiteColor,
         TextSize = 14,
         TextTransparency = 0.1,
@@ -1283,23 +1448,25 @@ local function BuildUI()
         Parent = BuyBtn,
     })
     BuyBtn.MouseEnter:Connect(function()
-        TweenService:Create(BuyBtn, TweenInfoDefault, { TextTransparency = 0 }):Play()
+        TweenService:Create(BuyBtn, TweenInfoDefault, { TextTransparency = 0, BackgroundColor3 = GetBetterColor(Scheme.AccentColor, 8) }):Play()
     end)
     BuyBtn.MouseLeave:Connect(function()
-        TweenService:Create(BuyBtn, TweenInfoDefault, { TextTransparency = 0.4 }):Play()
+        TweenService:Create(BuyBtn, TweenInfoDefault, { TextTransparency = 0.1, BackgroundColor3 = Scheme.AccentColor }):Play()
     end)
     BuyBtn.MouseButton1Click:Connect(function()
         if setclipboard then
             setclipboard(config.BuyUrl)
+            Notify("Checkout Link Copied", "Paste " .. config.BuyUrl .. " in your browser to go keyless.", 7, Scheme.AccentColor)
+        else
+            Notify("Lifetime Checkout", config.BuyUrl, 12, Scheme.AccentColor)
         end
-        Notify("Buy Link Copied", config.BuyUrl, 5, Scheme.AccentColor)
     end)
     local DiscordBtn = New("TextButton", {
         AutoButtonColor = false,
         BackgroundColor3 = Scheme.MainColor,
         BorderSizePixel = 0,
         FontFace = Scheme.Font,
-        LayoutOrder = 6,
+        LayoutOrder = 7,
         RichText = true,
         Size = UDim2.new(1, 0, 0, 21),
         Text = "Discord Server",
@@ -1522,19 +1689,23 @@ local function BuildUI()
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = ButtonRow,
     })
-    local function CreateObsidianButton(text, layoutOrder, parent)
+    local function CreateObsidianButton(text, layoutOrder, parent, opts)
+        opts = opts or {}
+        local idle = opts.Idle or 0.4
+        local background = opts.Background or Scheme.MainColor
+        local hover = opts.Hover or (opts.Background and GetBetterColor(background, 8)) or background
         local Btn = New("TextButton", {
             AutoButtonColor = false,
-            BackgroundColor3 = Scheme.MainColor,
+            BackgroundColor3 = background,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
             LayoutOrder = layoutOrder,
             RichText = true,
             Size = UDim2.fromScale(1, 1),
             Text = text,
-            TextColor3 = Scheme.FontColor,
-            TextSize = 14,
-            TextTransparency = 0.4,
+            TextColor3 = opts.TextColor or Scheme.FontColor,
+            TextSize = opts.TextSize or 14,
+            TextTransparency = idle,
             ZIndex = 3,
             Parent = parent,
         })
@@ -1545,17 +1716,71 @@ local function BuildUI()
             Parent = Btn,
         })
         Btn.MouseEnter:Connect(function()
-            TweenService:Create(Btn, TweenInfoDefault, { TextTransparency = 0 }):Play()
+            TweenService:Create(Btn, TweenInfoDefault, { TextTransparency = 0, BackgroundColor3 = hover }):Play()
         end)
         Btn.MouseLeave:Connect(function()
-            TweenService:Create(Btn, TweenInfoDefault, { TextTransparency = 0.4 }):Play()
+            TweenService:Create(Btn, TweenInfoDefault, { TextTransparency = idle, BackgroundColor3 = background }):Play()
         end)
         return Btn
     end
-    local LinkvertiseBtn = CreateObsidianButton("Linkvertise", 1, ButtonRow)
-    local WorkInkBtn = CreateObsidianButton("Work.ink", 2, ButtonRow)
-    local LootLabsBtn = CreateObsidianButton("LootLabs", 3, ButtonRow)
-    local CheckStatusBtn = CreateObsidianButton("Validate Key", 4, ButtonRow)
+    local ActionRow = New("Frame", {
+        BackgroundTransparency = 1,
+        LayoutOrder = 4,
+        Size = UDim2.new(1, 0, 0, 26),
+        ZIndex = 3,
+        Parent = AuthContent,
+    })
+    New("UIListLayout", {
+        FillDirection = Enum.FillDirection.Horizontal,
+        HorizontalFlex = Enum.UIFlexAlignment.Fill,
+        Padding = UDim.new(0, 9),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = ActionRow,
+    })
+    local PasteBtn = CreateObsidianButton("Paste From Clipboard", 1, ActionRow, { TextSize = 13 })
+    local CheckStatusBtn = CreateObsidianButton("<b>Validate Key</b>", 2, ActionRow, {
+        Background = Scheme.AccentColor,
+        TextColor = Scheme.WhiteColor,
+        Idle = 0.1,
+    })
+    New("TextLabel", {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        FontFace = Scheme.Font,
+        LayoutOrder = 5,
+        RichText = true,
+        Size = UDim2.new(1, 0, 0, 14),
+        Text = StatsData.checkpoints > 0
+            and ("You have unlocked %d free keys here - every one expires. Lifetime never does."):format(StatsData.checkpoints)
+            or "No key yet? Get a free one below - or skip links forever with Lifetime.",
+        TextColor3 = Scheme.FontColor,
+        TextSize = 11,
+        TextTransparency = 0.45,
+        TextWrapped = true,
+        AutomaticSize = Enum.AutomaticSize.Y,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 3,
+        Parent = AuthContent,
+    })
+    ButtonRow.LayoutOrder = 6
+    local LinkvertiseBtn = CreateObsidianButton("Linkvertise", 1, ButtonRow, { TextSize = 12, Idle = 0.55 })
+    local WorkInkBtn = CreateObsidianButton("Work.ink", 2, ButtonRow, { TextSize = 12, Idle = 0.55 })
+    local LootLabsBtn = CreateObsidianButton("LootLabs", 3, ButtonRow, { TextSize = 12, Idle = 0.55 })
+    local GoKeylessBtn = CreateObsidianButton("<b>Go keyless - " .. config.LifetimePrice .. " once, all games, no links</b>", 7, AuthContent, {
+        Background = Scheme.AccentColor,
+        TextColor = Scheme.WhiteColor,
+        TextSize = 13,
+        Idle = 0.1,
+    })
+    GoKeylessBtn.Size = UDim2.new(1, 0, 0, 28)
+    GoKeylessBtn.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(config.BuyUrl)
+            Notify("Checkout Link Copied", "Paste " .. config.BuyUrl .. " in your browser to go keyless.", 7, Scheme.AccentColor)
+        else
+            Notify("Lifetime Checkout", config.BuyUrl, 12, Scheme.AccentColor)
+        end
+    end)
     local BottomBg = New("Frame", {
         AnchorPoint = Vector2.new(0, 1),
         BackgroundColor3 = GetBetterColor(Scheme.BackgroundColor, 4),
@@ -1598,6 +1823,26 @@ local function BuildUI()
         end
         SetStatus("Complete the " .. provider .. " link, then paste your key...", Scheme.WarningColor)
     end
+    PasteBtn.MouseButton1Click:Connect(function()
+        if ScriptLoaded then return end
+        local reader = getclipboard or (getgenv and getgenv().getclipboard) or (syn and syn.get_clipboard)
+        if not reader then
+            Notify("Clipboard Unavailable", "Your executor cannot read the clipboard. Paste into the box manually.", 5, Scheme.RedColor)
+            return
+        end
+        local ok, data = pcall(reader)
+        local cleaned = (ok and type(data) == "string" and data or ""):gsub("%s", "")
+        if cleaned == "" then
+            Notify("Clipboard Empty", "Copy your key first, then press Paste From Clipboard.", 4, Scheme.RedColor)
+            return
+        end
+        KeyTextBox.Text = cleaned
+        if IsValidKeyFormat(cleaned) then
+            HandleKeyObtained(cleaned)
+        else
+            SetStatus("Pasted text is not a valid key", Scheme.RedColor)
+        end
+    end)
     LinkvertiseBtn.MouseButton1Click:Connect(function()
         CopyKeyLink("Linkvertise", config.LinkvertiseUrl)
     end)
@@ -1629,8 +1874,10 @@ local function BuildUI()
         end
         HandleKeyObtained(cleaned)
     end)
-    local function ShowPremiumOffer()
-        if not config.ShowPremiumPopup or not ScreenGui or not ScreenGui.Parent then return end
+    local function ShowPremiumOffer(mode)
+        if not config.ShowPremiumPopup or not ScreenGui or not ScreenGui.Parent then return false end
+        local postSuccess = mode == "post"
+        local cardHeight = postSuccess and 356 or 330
 
         local Overlay = New("TextButton", {
             AutoButtonColor = false,
@@ -1646,7 +1893,7 @@ local function BuildUI()
             AnchorPoint = Vector2.new(0.5, 0.5),
             BackgroundColor3 = GetBetterColor(Scheme.BackgroundColor, 2),
             Position = UDim2.fromScale(0.5, 0.54),
-            Size = UDim2.fromOffset(IsMobile and 340 or 390, 330),
+            Size = UDim2.fromOffset(IsMobile and 340 or 390, cardHeight),
             ZIndex = 31,
             Parent = Overlay,
         })
@@ -1671,7 +1918,7 @@ local function BuildUI()
             FontFace = Scheme.Font,
             Position = UDim2.fromOffset(24, 24),
             Size = UDim2.fromOffset(116, 24),
-            Text = "LIFETIME ACCESS",
+            Text = postSuccess and "SCRIPT LOADING" or "LIFETIME ACCESS",
             TextColor3 = Scheme.WhiteColor,
             TextSize = 11,
             ZIndex = 32,
@@ -1684,7 +1931,7 @@ local function BuildUI()
             Position = UDim2.fromOffset(24, 62),
             RichText = true,
             Size = UDim2.new(1, -48, 0, 34),
-            Text = "<b>Make this your last key.</b>",
+            Text = postSuccess and "<b>Make that your last key.</b>" or "<b>Make this your last key.</b>",
             TextColor3 = Scheme.FontColor,
             TextSize = 24,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1698,7 +1945,9 @@ local function BuildUI()
             Position = UDim2.fromOffset(24, 102),
             RichText = true,
             Size = UDim2.new(1, -48, 0, 42),
-            Text = "Skip the ads and checkpoints forever. One purchase unlocks <b>every current and future script.</b>",
+            Text = postSuccess
+                and ("Your script is starting now. Next session asks for a new key again - unless you go keyless once for <b>%s.</b>"):format(config.LifetimePrice)
+                or "Skip the ads and checkpoints forever. One purchase unlocks <b>every current and future script.</b>",
             TextColor3 = Scheme.FontColor,
             TextSize = 13,
             TextTransparency = 0.22,
@@ -1708,6 +1957,24 @@ local function BuildUI()
             ZIndex = 32,
             Parent = Card,
         })
+
+        local shift = postSuccess and 26 or 0
+        if postSuccess then
+            New("TextLabel", {
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                FontFace = Scheme.Font,
+                Position = UDim2.fromOffset(24, 146),
+                RichText = true,
+                Size = UDim2.new(1, -48, 0, 20),
+                Text = UsageLine(),
+                TextColor3 = Scheme.WarningColor,
+                TextSize = 12,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = 32,
+                Parent = Card,
+            })
+        end
 
         local benefits = {
             "No keys or checkpoints",
@@ -1719,7 +1986,7 @@ local function BuildUI()
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 FontFace = Scheme.Font,
-                Position = UDim2.fromOffset(24, 151 + ((i - 1) * 24)),
+                Position = UDim2.fromOffset(24, 151 + shift + ((i - 1) * 24)),
                 Size = UDim2.new(1, -48, 0, 20),
                 Text = "+  " .. text,
                 TextColor3 = i == 1 and Scheme.SuccessColor or Scheme.FontColor,
@@ -1735,10 +2002,10 @@ local function BuildUI()
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.fromOffset(24, 228),
+            Position = UDim2.fromOffset(24, 228 + shift),
             RichText = true,
             Size = UDim2.new(1, -48, 0, 22),
-            Text = "One payment  •  <b>" .. config.LifetimePrice .. " lifetime</b>",
+            Text = ("One payment  •  <b>%s lifetime</b>  •  same as %d weekly keys"):format(config.LifetimePrice, WeeksToBreakEven()),
             TextColor3 = Scheme.AccentColor,
             TextSize = 14,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1751,31 +2018,30 @@ local function BuildUI()
             BackgroundColor3 = Scheme.AccentColor,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.fromOffset(24, 258),
+            Position = UDim2.fromOffset(24, 258 + shift),
             RichText = true,
-            Size = UDim2.new(1, -142, 0, 44),
-            Text = "<b>Go keyless — " .. config.LifetimePrice .. "</b>",
+            Size = UDim2.new(1, -48, 0, 44),
+            Text = "<b>Go keyless - " .. config.LifetimePrice .. " once</b>",
             TextColor3 = Scheme.WhiteColor,
-            TextSize = 14,
+            TextSize = 15,
             ZIndex = 32,
             Parent = Card,
         })
         AddCorner(BuyNow, 8)
         local ContinueFree = New("TextButton", {
             AutoButtonColor = false,
-            BackgroundColor3 = Scheme.MainColor,
+            BackgroundTransparency = 1,
             BorderSizePixel = 0,
             FontFace = Scheme.Font,
-            Position = UDim2.new(1, -110, 0, 258),
-            Size = UDim2.fromOffset(86, 44),
-            Text = "Continue free",
+            Position = UDim2.fromOffset(24, 306 + shift),
+            Size = UDim2.new(1, -48, 0, 18),
+            Text = postSuccess and "Continue with my free key" or "Maybe later",
             TextColor3 = Scheme.FontColor,
             TextSize = 12,
-            TextTransparency = 0.35,
+            TextTransparency = 0.5,
             ZIndex = 32,
             Parent = Card,
         })
-        AddCorner(ContinueFree, 8)
 
         local closed = false
         local function CloseOffer()
@@ -1787,6 +2053,7 @@ local function BuildUI()
             }):Play()
             task.delay(0.22, function()
                 if Overlay then Overlay:Destroy() end
+                if postSuccess then CloseUI() end
             end)
         end
         BuyNow.MouseEnter:Connect(function()
@@ -1796,46 +2063,65 @@ local function BuildUI()
             TweenService:Create(BuyNow, TweenInfoDefault, { BackgroundColor3 = Scheme.AccentColor }):Play()
         end)
         ContinueFree.MouseEnter:Connect(function()
-            TweenService:Create(ContinueFree, TweenInfoDefault, { TextTransparency = 0 }):Play()
+            TweenService:Create(ContinueFree, TweenInfoDefault, { TextTransparency = 0.15 }):Play()
         end)
         ContinueFree.MouseLeave:Connect(function()
-            TweenService:Create(ContinueFree, TweenInfoDefault, { TextTransparency = 0.35 }):Play()
+            TweenService:Create(ContinueFree, TweenInfoDefault, { TextTransparency = 0.5 }):Play()
         end)
         BuyNow.MouseButton1Click:Connect(function()
             if setclipboard then
                 setclipboard(config.BuyUrl)
-                Notify("Lifetime Link Copied", "Open the checkout link to go keyless forever.", 6, Scheme.AccentColor)
+                Notify("Lifetime Link Copied", "Open " .. config.BuyUrl .. " to go keyless forever.", 8, Scheme.AccentColor)
             else
-                Notify("Lifetime Checkout", config.BuyUrl, 10, Scheme.AccentColor)
+                Notify("Lifetime Checkout", config.BuyUrl, 12, Scheme.AccentColor)
             end
             CloseOffer()
         end)
         ContinueFree.MouseButton1Click:Connect(CloseOffer)
+        Overlay.MouseButton1Click:Connect(CloseOffer)
 
         TweenService:Create(Overlay, TweenInfo.new(0.25), { BackgroundTransparency = 0.28 }):Play()
         TweenService:Create(Card, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Position = UDim2.fromScale(0.5, 0.5),
         }):Play()
+        return true
+    end
+    PendingUpsell = function()
+        return ShowPremiumOffer("post")
     end
 
     TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.fromOffset(WINDOW_WIDTH, WINDOW_HEIGHT),
     }):Play()
-    task.delay(0.55, ShowPremiumOffer)
+    task.delay(0.55, function()
+        ShowPremiumOffer("intro")
+    end)
 end
 local savedKey = LoadSavedKey()
 if savedKey then
     local execOk, execErr = TryExecuteWithKey(savedKey)
     if execOk then
         ScriptLoaded = true
-        if NotifGui then
-            pcall(function() NotifGui:Destroy() end)
-            NotifGui = nil
+        local nudge = config.ShowPremiumPopup and not LooksLifetime(savedKey)
+        if nudge then
+            NoteKeyInUse(savedKey)
+            Notify(
+                config.Title,
+                "Free key restored. " .. UsageLine() .. "\nGo keyless once for " .. config.LifetimePrice .. " and never do this again: " .. config.BuyUrl,
+                12,
+                Scheme.AccentColor
+            )
         end
+        task.delay(nudge and 13 or 0, function()
+            if NotifGui then
+                pcall(function() NotifGui:Destroy() end)
+                NotifGui = nil
+            end
+        end)
         return
     end
 
-    DeleteFile(config.File)
+    ForgetSavedKey()
     ClearKeyGlobals()
     Notify(config.Title, "Saved key could not start LuaProt: " .. tostring(execErr), 7, Scheme.RedColor)
 end
