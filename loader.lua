@@ -179,6 +179,13 @@ local Games = {
         LuaProtScriptId = "36302033676466107774",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+    {
+        PlaceIds        = { 5041144419, 6939657427, 10953555034},
+        GameName        = "SCP: Roleplay",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "19288386138978870282",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local HttpService = game:GetService("HttpService")
