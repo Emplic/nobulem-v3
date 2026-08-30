@@ -324,8 +324,10 @@ end
 local function ClearKeyGlobals()
     _G.ScriptKey = nil
     _G.script_key = nil
+    _G.lp_key = nil
     getgenv().ScriptKey = nil
     getgenv().script_key = nil
+    getgenv().lp_key = nil
     getgenv().Key = nil
 end
 
@@ -340,11 +342,11 @@ local function CreateLuaProtSdk()
 end
 
 local function ValidateKey(key)
-    if not IsValidKeyFormat(key) then return false, "format" end
+    if not IsValidKeyFormat(key) then return false, "format", nil, true end
 
     local sdkOk, sdkOrErr = pcall(CreateLuaProtSdk)
     if not sdkOk then
-        return false, "LuaProt SDK: " .. tostring(sdkOrErr)
+        return false, "LuaProt SDK unreachable: " .. tostring(sdkOrErr), nil, false
     end
 
     local sdk = sdkOrErr
@@ -352,68 +354,45 @@ local function ValidateKey(key)
         return sdk:checkKey(key)
     end)
     if not checkOk then
-        return false, "LuaProt key check: " .. tostring(result)
+        return false, "LuaProt key check failed: " .. tostring(result), nil, false
     end
-    if type(result) ~= "table" then
-        return false, "LuaProt returned an invalid key-check response"
+    if type(result) ~= "table" or result.status == nil then
+        return false, "LuaProt returned an invalid key-check response", nil, false
     end
     if result.status ~= "VALID" then
-        return false, tostring(result.message or result.status or "Invalid key")
+        local status = tostring(result.status)
+        if status == "MISSING_SCRIPTID" then
+            return false, "Script is misconfigured (missing script id)", nil, false
+        end
+        return false, tostring(result.message or status), nil, true
     end
 
-    return true, nil, sdk
-end
-
-local function DescribeLoadResult(result)
-    if type(result) == "table" then
-        local status = tostring(result.status or ""):upper()
-        if status == "VALID" or status == "SUCCESS" or status == "OK" then
-            return true
-        end
-        if status ~= "" or result.message then
-            return false, tostring(result.message or status)
-        end
-        return true
-    end
-    if result == false then
-        return false, "LuaProt refused to load the script for this key"
-    end
-    if type(result) == "string" then
-        local lowered = result:lower()
-        if lowered:find("invalid") or lowered:find("expired") or lowered:find("error") then
-            return false, result
-        end
-    end
-    return true
+    return true, nil, sdk, false
 end
 
 local function ExecuteScript(key, sdk)
     _G.ScriptKey = key
     _G.script_key = key
+    _G.lp_key = key
     getgenv().ScriptKey = key
     getgenv().script_key = key
+    getgenv().lp_key = key
     getgenv().Key = key
 
-    local loadOk, loadResult = pcall(function()
-        return sdk:loadScript()
+    local loadOk, loadErr = pcall(function()
+        return sdk:loadScript(key)
     end)
 
     if not loadOk then
         ClearKeyGlobals()
-        return false, "LuaProt loader: " .. tostring(loadResult)
+        return false, "LuaProt loader: " .. tostring(loadErr), false
     end
-
-    local ran, why = DescribeLoadResult(loadResult)
-    if not ran then
-        ClearKeyGlobals()
-        return false, why or "LuaProt did not run the script"
-    end
-    return true, nil
+    return true, nil, false
 end
 
 local function TryExecuteWithKey(key)
-    local ok, reason, sdk = ValidateKey(key)
-    if not ok then return false, reason end
+    local ok, reason, sdk, rejected = ValidateKey(key)
+    if not ok then return false, reason, rejected end
     return ExecuteScript(key, sdk)
 end
 local function GetHWID()
@@ -613,7 +592,7 @@ local function HandleKeyObtained(key)
     Notify(config.Title, "Checking LuaProt key...", 4, Scheme.AccentColor)
     SetStatus("Checking LuaProt...", Scheme.WarningColor)
     task.spawn(function()
-        local success, reason = TryExecuteWithKey(key)
+        local success, reason, rejected = TryExecuteWithKey(key)
         Validating = false
         if success then
             ScriptLoaded = true
@@ -630,7 +609,7 @@ local function HandleKeyObtained(key)
             if not shown then CloseUI() end
         else
             ClearKeyGlobals()
-            ForgetSavedKey()
+            if rejected then ForgetSavedKey() end
             local msg = reason == "format" and "Invalid key format." or tostring(reason or "Unknown error")
             Notify("Error", msg, 8, Scheme.RedColor)
             SetStatus(msg, Scheme.RedColor)
@@ -2133,7 +2112,11 @@ local function BuildUI()
 end
 local savedKey = LoadSavedKey()
 if savedKey then
-    local execOk, execErr = TryExecuteWithKey(savedKey)
+    local execOk, execErr, execRejected = TryExecuteWithKey(savedKey)
+    if not execOk and not execRejected then
+        task.wait(2)
+        execOk, execErr, execRejected = TryExecuteWithKey(savedKey)
+    end
     if execOk then
         ScriptLoaded = true
         local nudge = config.ShowPremiumPopup and not LooksLifetime(savedKey)
@@ -2141,7 +2124,7 @@ if savedKey then
             NoteKeyInUse(savedKey)
             Notify(
                 config.Title,
-                "Free key restored. " .. UsageLine() .. "\nGo keyless once for " .. config.LifetimePrice .. " and never do this again: " .. config.BuyUrl,
+                "Saved key accepted - starting script. " .. UsageLine() .. "\nGo keyless once for " .. config.LifetimePrice .. " and never do this again: " .. config.BuyUrl,
                 12,
                 Scheme.AccentColor
             )
@@ -2155,13 +2138,20 @@ if savedKey then
         return
     end
 
-    ForgetSavedKey()
     ClearKeyGlobals()
     ScriptLoaded = false
-    Notify(config.Title, "Saved key no longer works: " .. tostring(execErr) .. "\nGet a new key below.", 8, Scheme.RedColor)
+    if execRejected then
+        ForgetSavedKey()
+        Notify(config.Title, "Saved key is no longer valid: " .. tostring(execErr) .. "\nGet a new key below.", 8, Scheme.RedColor)
+    else
+        Notify(config.Title, "Could not reach LuaProt with your saved key: " .. tostring(execErr) .. "\nYour key is kept - press Validate Key to retry.", 10, Scheme.WarningColor)
+    end
 end
 local buildOk, buildErr = pcall(BuildUI)
 if not buildOk then
     Notify("UI Error", tostring(buildErr), 15, Scheme.RedColor)
     warn("[KeySystem] BuildUI error: " .. tostring(buildErr))
+elseif savedKey and KeyTextBox then
+    KeyTextBox.Text = savedKey
+    SetStatus("Saved key loaded - press Validate Key to retry", Scheme.WarningColor)
 end
