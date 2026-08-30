@@ -314,6 +314,11 @@ local Validating = false
 
 local function ForgetSavedKey()
     DeleteFile(KeyFilePath())
+    DeleteFile(config.File)
+    if SavedKeyPath then
+        DeleteFile(SavedKeyPath)
+        SavedKeyPath = nil
+    end
 end
 
 local function ClearKeyGlobals()
@@ -359,6 +364,29 @@ local function ValidateKey(key)
     return true, nil, sdk
 end
 
+local function DescribeLoadResult(result)
+    if type(result) == "table" then
+        local status = tostring(result.status or ""):upper()
+        if status == "VALID" or status == "SUCCESS" or status == "OK" then
+            return true
+        end
+        if status ~= "" or result.message then
+            return false, tostring(result.message or status)
+        end
+        return true
+    end
+    if result == false then
+        return false, "LuaProt refused to load the script for this key"
+    end
+    if type(result) == "string" then
+        local lowered = result:lower()
+        if lowered:find("invalid") or lowered:find("expired") or lowered:find("error") then
+            return false, result
+        end
+    end
+    return true
+end
+
 local function ExecuteScript(key, sdk)
     _G.ScriptKey = key
     _G.script_key = key
@@ -366,13 +394,19 @@ local function ExecuteScript(key, sdk)
     getgenv().script_key = key
     getgenv().Key = key
 
-    local loadOk, loadErr = pcall(function()
-        sdk:loadScript()
+    local loadOk, loadResult = pcall(function()
+        return sdk:loadScript()
     end)
 
     if not loadOk then
         ClearKeyGlobals()
-        return false, "LuaProt loader: " .. tostring(loadErr)
+        return false, "LuaProt loader: " .. tostring(loadResult)
+    end
+
+    local ran, why = DescribeLoadResult(loadResult)
+    if not ran then
+        ClearKeyGlobals()
+        return false, why or "LuaProt did not run the script"
     end
     return true, nil
 end
@@ -2123,7 +2157,8 @@ if savedKey then
 
     ForgetSavedKey()
     ClearKeyGlobals()
-    Notify(config.Title, "Saved key could not start LuaProt: " .. tostring(execErr), 7, Scheme.RedColor)
+    ScriptLoaded = false
+    Notify(config.Title, "Saved key no longer works: " .. tostring(execErr) .. "\nGet a new key below.", 8, Scheme.RedColor)
 end
 local buildOk, buildErr = pcall(BuildUI)
 if not buildOk then
