@@ -83,6 +83,7 @@ local config = {
     LifetimeValue = 19.99,
     WeeklyValue = 3.50,
     MinutesPerCheckpoint = 3,
+    PreloadNudgeSeconds = 3.5,
     ShowPremiumPopup = LoaderConfig.ShowPremiumPopup ~= false,
     Prices = {
         { label = "Weekly",   price = "$3.50" },
@@ -370,7 +371,9 @@ local function ValidateKey(key)
     return true, nil, sdk, false
 end
 
-local function ExecuteScript(key, sdk)
+local TeardownUI
+
+local function LoadScript(key, sdk)
     _G.ScriptKey = key
     _G.script_key = key
     _G.lp_key = key
@@ -379,21 +382,18 @@ local function ExecuteScript(key, sdk)
     getgenv().lp_key = key
     getgenv().Key = key
 
+    if TeardownUI then pcall(TeardownUI) end
+    task.wait()
+
     local loadOk, loadErr = pcall(function()
         return sdk:loadScript(key)
     end)
 
     if not loadOk then
         ClearKeyGlobals()
-        return false, "LuaProt loader: " .. tostring(loadErr), false
+        return false, "LuaProt loader: " .. tostring(loadErr)
     end
-    return true, nil, false
-end
-
-local function TryExecuteWithKey(key)
-    local ok, reason, sdk, rejected = ValidateKey(key)
-    if not ok then return false, reason, rejected end
-    return ExecuteScript(key, sdk)
+    return true, nil
 end
 local function GetHWID()
     local ok, id = pcall(function()
@@ -581,6 +581,20 @@ local function CloseUI()
     end)
 end
 local PendingUpsell = nil
+function TeardownUI()
+    if ScreenGui then
+        pcall(function() ScreenGui:Destroy() end)
+        ScreenGui = nil
+    end
+    if NotifGui then
+        pcall(function() NotifGui:Destroy() end)
+        NotifGui = nil
+    end
+    StatusLabel = nil
+    KeyTextBox = nil
+    getgenv().NobulemKeySystemClosed = true
+end
+
 local function HandleKeyObtained(key)
     if ScriptLoaded or Validating then return end
     if not IsValidKeyFormat(key) then
@@ -592,28 +606,41 @@ local function HandleKeyObtained(key)
     Notify(config.Title, "Checking LuaProt key...", 4, Scheme.AccentColor)
     SetStatus("Checking LuaProt...", Scheme.WarningColor)
     task.spawn(function()
-        local success, reason, rejected = TryExecuteWithKey(key)
+        local ok, reason, sdk, rejected = ValidateKey(key)
         Validating = false
-        if success then
-            ScriptLoaded = true
-            SaveKey(key)
-            local isLifetime = LooksLifetime(key)
-            NoteKeyInUse(key)
-            if not isLifetime then CountCheckpoint() end
-            SetStatus("Key accepted - loading script", Scheme.SuccessColor)
-            local shown = false
-            if PendingUpsell and not isLifetime then
-                local ok, result = pcall(PendingUpsell)
-                shown = ok and result == true
-            end
-            if not shown then CloseUI() end
-        else
+        if not ok then
             ClearKeyGlobals()
             if rejected then ForgetSavedKey() end
             local msg = reason == "format" and "Invalid key format." or tostring(reason or "Unknown error")
             Notify("Error", msg, 8, Scheme.RedColor)
             SetStatus(msg, Scheme.RedColor)
+            return
         end
+
+        ScriptLoaded = true
+        SaveKey(key)
+        local isLifetime = LooksLifetime(key)
+        NoteKeyInUse(key)
+        if not isLifetime then CountCheckpoint() end
+        SetStatus("Key accepted - loading script", Scheme.SuccessColor)
+
+        local started = false
+        local function StartScript()
+            if started then return end
+            started = true
+            local loadOk, loadErr = LoadScript(key, sdk)
+            if not loadOk then
+                ScriptLoaded = false
+                warn("[nobulem.wtf] " .. tostring(loadErr))
+            end
+        end
+
+        local shown = false
+        if PendingUpsell and not isLifetime then
+            local pcallOk, result = pcall(PendingUpsell, StartScript)
+            shown = pcallOk and result == true
+        end
+        if not shown then StartScript() end
     end)
 end
 local function BuildUI()
@@ -1887,7 +1914,7 @@ local function BuildUI()
         end
         HandleKeyObtained(cleaned)
     end)
-    local function ShowPremiumOffer(mode)
+    local function ShowPremiumOffer(mode, onDone)
         if not config.ShowPremiumPopup or not ScreenGui or not ScreenGui.Parent then return false end
         local postSuccess = mode == "post"
         local cardHeight = postSuccess and 356 or 330
@@ -2066,7 +2093,13 @@ local function BuildUI()
             }):Play()
             task.delay(0.22, function()
                 if Overlay then Overlay:Destroy() end
-                if postSuccess then CloseUI() end
+                if postSuccess then
+                    if onDone then
+                        task.spawn(onDone)
+                    else
+                        CloseUI()
+                    end
+                end
             end)
         end
         BuyNow.MouseEnter:Connect(function()
@@ -2099,8 +2132,8 @@ local function BuildUI()
         }):Play()
         return true
     end
-    PendingUpsell = function()
-        return ShowPremiumOffer("post")
+    PendingUpsell = function(onDone)
+        return ShowPremiumOffer("post", onDone)
     end
 
     TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -2112,10 +2145,10 @@ local function BuildUI()
 end
 local savedKey = LoadSavedKey()
 if savedKey then
-    local execOk, execErr, execRejected = TryExecuteWithKey(savedKey)
+    local execOk, execErr, sdk, execRejected = ValidateKey(savedKey)
     if not execOk and not execRejected then
         task.wait(2)
-        execOk, execErr, execRejected = TryExecuteWithKey(savedKey)
+        execOk, execErr, sdk, execRejected = ValidateKey(savedKey)
     end
     if execOk then
         ScriptLoaded = true
@@ -2125,16 +2158,16 @@ if savedKey then
             Notify(
                 config.Title,
                 "Saved key accepted - starting script. " .. UsageLine() .. "\nGo keyless once for " .. config.LifetimePrice .. " and never do this again: " .. config.BuyUrl,
-                12,
+                config.PreloadNudgeSeconds,
                 Scheme.AccentColor
             )
+            task.wait(config.PreloadNudgeSeconds + 0.35)
         end
-        task.delay(nudge and 13 or 0, function()
-            if NotifGui then
-                pcall(function() NotifGui:Destroy() end)
-                NotifGui = nil
-            end
-        end)
+        local loadOk, loadErr = LoadScript(savedKey, sdk)
+        if not loadOk then
+            ScriptLoaded = false
+            warn("[nobulem.wtf] " .. tostring(loadErr))
+        end
         return
     end
 
