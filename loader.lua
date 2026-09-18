@@ -189,7 +189,7 @@ local Games = {
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
         {
-        PlaceIds        = { 13883059853, 11468075017, 5956785391, 9627847912},
+        PlaceIds        = { 136406881576517, 13883059853, 11468075017, 5956785391, 9627847912},
         GameName        = "Project Slayers 2",
         SaveFile        = "nobulem_key.txt",
         LuaProtScriptId = "63969555156456004056",
