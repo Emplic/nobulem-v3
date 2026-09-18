@@ -3,6 +3,8 @@ getgenv().nobulem_loader_started = true
 
 local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/key-system.lua")
 
+local SHARED_KEY_SCRIPT_ID = ""
+
 local Games = {
     {
         PlaceIds        = { 87018676608089 },
@@ -186,6 +188,13 @@ local Games = {
         LuaProtScriptId = "19288386138978870282",
         GetKeyUrl       = "https://nobulem.wtf/key",
     },
+        {
+        PlaceIds        = { 13883059853, 11468075017, 5956785391, 9627847912},
+        GameName        = "Project Slayers 2",
+        SaveFile        = "nobulem_key.txt",
+        LuaProtScriptId = "19288386138978870282",
+        GetKeyUrl       = "https://nobulem.wtf/key",
+    },
 }
 
 local HttpService = game:GetService("HttpService")
@@ -243,7 +252,7 @@ local ObsidianLibrary
 local function LoadObsidian()
     if ObsidianLibrary then return ObsidianLibrary end
     local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
-    local okL, Library = pcall(function() return loadstring(game:HttpGet(repo .. "Library.lua"))() end)
+    local okL, Library = pcall(function() return loadstring(game:HttpGet("https://raw.githubusercontent.com/offperms/nobulem/refs/heads/main/library.lua"))() end)
     if not okL or not Library then return nil end
     local okT, ThemeManager = pcall(function() return loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))() end)
     if okT and ThemeManager then
@@ -301,6 +310,7 @@ getgenv().NobulemLoaderConfig = {
     GameName        = ResolvedName,
     SaveFile        = cfg.SaveFile,
     LuaProtScriptId = cfg.LuaProtScriptId,
+    KeyScriptId     = cfg.KeyScriptId or (SHARED_KEY_SCRIPT_ID ~= "" and SHARED_KEY_SCRIPT_ID or nil),
     GetKeyUrl       = cfg.GetKeyUrl,
 }
 
