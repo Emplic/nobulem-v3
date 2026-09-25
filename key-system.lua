@@ -61,26 +61,18 @@ for _, name in {"ObsidianKeySystem", "ObsidianKeyNotification"} do
         CoreGui[name]:Destroy()
     end
 end
-local RawScriptId = LoaderConfig.LuaProtScriptId and tostring(LoaderConfig.LuaProtScriptId) or ""
-if RawScriptId == "" then
-    warn("[nobulem.wtf] keysystem.lua loaded without a LuaProt script ID - run loader.lua first")
-    return
-end
-if RawScriptId:match("^0+$") then
+local RawScriptId = LoaderConfig.LuarmorScriptId and tostring(LoaderConfig.LuarmorScriptId) or ""
+if #RawScriptId ~= 32 or not RawScriptId:match("^[0-9a-fA-F]+$") then
     local label = tostring(LoaderConfig.GameName or "This game")
-    warn(("[nobulem.wtf] %s has no LuaProt script ID assigned - key checks are disabled for it."):format(label))
+    warn(("[nobulem.wtf] %s needs a valid 32-character Luarmor script ID."):format(label))
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "nobulem.wtf",
-            Text = label .. " is not set up on LuaProt yet - no key can validate here.",
+            Text = label .. " is not set up on Luarmor yet - no key can validate here.",
             Duration = 10,
         })
     end)
     return
-end
-local SharedKeyScriptId = LoaderConfig.KeyScriptId and tostring(LoaderConfig.KeyScriptId) or ""
-if SharedKeyScriptId == "" or SharedKeyScriptId:match("^0+$") then
-    SharedKeyScriptId = nil
 end
 local config = {
     File = LoaderConfig.SaveFile or "nobulem_key.txt",
@@ -89,12 +81,10 @@ local config = {
     Title = "nobulem.wtf",
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
     Description = "Free access needs a new key every time. Lifetime never asks again.",
-    LinkvertiseUrl = LoaderConfig.LinkvertiseUrl or "https://luaprot.net/ad/8734d1ba",
-    WorkInkUrl = LoaderConfig.WorkInkUrl or "https://luaprot.net/ad/f77fb8ab",
-    LootLabsUrl = LoaderConfig.LootLabsUrl or "https://luaprot.net/ad/ad6e1a72",
-    LuaProtScriptId = RawScriptId,
-    KeyScriptId = SharedKeyScriptId,
-    LuaProtSdkUrl = "https://sdk.luaprot.net/",
+    LinkvertiseUrl = LoaderConfig.LinkvertiseUrl or LoaderConfig.GetKeyUrl or "",
+    WorkInkUrl = LoaderConfig.WorkInkUrl or LoaderConfig.GetKeyUrl or "",
+    LuarmorScriptId = RawScriptId,
+    LuarmorSdkUrl = "https://sdkapi-public.luarmor.net/library.lua",
     Logo = "138831083704120",
     DiscordInvite = "https://discord.gg/mugcSRnpuG",
     BuyUrl = "https://nobulem.com/pricing/",
@@ -208,12 +198,9 @@ local function KeyFilePath()
 end
 local function LegacyKeyPaths()
     local paths = {
-        config.Folder .. "/key_" .. config.LuaProtScriptId .. ".txt",
+        config.Folder .. "/key_" .. config.LuarmorScriptId .. ".txt",
         config.File,
     }
-    if config.KeyScriptId then
-        table.insert(paths, config.Folder .. "/key_" .. config.KeyScriptId .. ".txt")
-    end
     if listfiles and isfolder and isfolder(config.Folder) then
         local ok, files = pcall(listfiles, config.Folder)
         if ok and type(files) == "table" then
@@ -350,7 +337,7 @@ end
 local function IsValidKeyFormat(key)
     if type(key) ~= "string" then return false end
     local cleaned = key:gsub("%s", "")
-    return cleaned ~= "" and #cleaned <= 256
+    return #cleaned == 32 and cleaned:match("^[A-Za-z]+$") ~= nil
 end
 local ScriptLoaded = false
 local Validating = false
@@ -365,72 +352,56 @@ end
 local function ClearKeyGlobals()
     _G.ScriptKey = nil
     _G.script_key = nil
-    _G.lp_key = nil
     getgenv().ScriptKey = nil
     getgenv().script_key = nil
-    getgenv().lp_key = nil
     getgenv().Key = nil
 end
 
-local function CreateLuaProtSdk(scriptId)
-    local source = game:HttpGet(config.LuaProtSdkUrl)
+local function CreateLuarmorSdk()
+    local source = game:HttpGet(config.LuarmorSdkUrl)
     local chunk, compileErr = loadstring(source)
     if not chunk then error("SDK compile: " .. tostring(compileErr)) end
     local sdk = chunk()
     if type(sdk) ~= "table" then error("SDK returned an invalid value") end
-    sdk.scriptId = scriptId or config.LuaProtScriptId
+    sdk.script_id = config.LuarmorScriptId
     return sdk
 end
 
-local function StatusMeansDeadKey(status, message)
-    local text = (tostring(status or "") .. " " .. tostring(message or "")):upper()
-    if text:find("SCRIPT", 1, true) then return false end
-    for _, needle in {"EXPIRE", "BANNED", "BLACKLIST", "REVOK"} do
-        if text:find(needle, 1, true) then return true end
-    end
-    return false
-end
-
-local function CheckKeyWithScript(scriptId, key)
-    local sdkOk, sdkOrErr = pcall(CreateLuaProtSdk, scriptId)
+local function CheckKeyWithScript(key)
+    local sdkOk, sdkOrErr = pcall(CreateLuarmorSdk)
     if not sdkOk then
-        return nil, "LuaProt SDK unreachable: " .. tostring(sdkOrErr), false, false
+        return nil, "Luarmor SDK unreachable: " .. tostring(sdkOrErr), false, false
     end
 
     local sdk = sdkOrErr
     local checkOk, result = pcall(function()
-        return sdk:checkKey(key)
+        return sdk.check_key(key)
     end)
     if not checkOk then
-        return nil, "LuaProt key check failed: " .. tostring(result), false, false
+        return nil, "Luarmor key check failed: " .. tostring(result), false, false
     end
-    if type(result) ~= "table" or result.status == nil then
-        return nil, "LuaProt returned an invalid key-check response", false, false
+    if type(result) ~= "table" or result.code == nil then
+        return nil, "Luarmor returned an invalid key-check response", false, false
     end
-    if result.status == "VALID" then
+    if result.code == "KEY_VALID" then
         return sdk, nil, false, false
     end
 
-    local status = tostring(result.status)
-    if status == "MISSING_SCRIPTID" then
-        return nil, "Script is misconfigured (missing script id)", false, false
+    local status = tostring(result.code)
+    if status == "SCRIPT_ID_INVALID" or status == "SCRIPT_ID_INCORRECT" then
+        return nil, "Luarmor script ID is invalid or not uploaded", false, false
     end
-    return nil, tostring(result.message or status), StatusMeansDeadKey(status, result.message), true
+    local dead = status == "KEY_EXPIRED" or status == "KEY_BANNED"
+    local rejected = dead or status == "KEY_INCORRECT" or status == "KEY_INVALID"
+        or status == "KEY_HWID_LOCKED"
+    return nil, tostring(result.message or status), dead, rejected
 end
 
 local function ValidateKey(key)
     if not IsValidKeyFormat(key) then return false, "format", nil, false, true end
 
-    local sdk, err, dead, rejected = CheckKeyWithScript(config.LuaProtScriptId, key)
+    local sdk, err, dead, rejected = CheckKeyWithScript(key)
     if sdk then return true, nil, sdk, false, false end
-
-    if rejected and not dead and config.KeyScriptId and config.KeyScriptId ~= config.LuaProtScriptId then
-        local sharedSdk, sharedErr, sharedDead, sharedRejected = CheckKeyWithScript(config.KeyScriptId, key)
-        if sharedSdk then return true, nil, sharedSdk, false, false end
-        if sharedRejected then
-            err, dead, rejected = sharedErr, sharedDead, true
-        end
-    end
 
     return false, err, nil, dead, rejected
 end
@@ -440,23 +411,21 @@ local TeardownUI
 local function LoadScript(key, sdk)
     _G.ScriptKey = key
     _G.script_key = key
-    _G.lp_key = key
     getgenv().ScriptKey = key
     getgenv().script_key = key
-    getgenv().lp_key = key
     getgenv().Key = key
 
     if TeardownUI then pcall(TeardownUI) end
     task.wait()
 
-    sdk.scriptId = config.LuaProtScriptId
+    sdk.script_id = config.LuarmorScriptId
     local loadOk, loadErr = pcall(function()
-        return sdk:loadScript(key)
+        return sdk.load_script()
     end)
 
     if not loadOk then
         ClearKeyGlobals()
-        return false, "LuaProt loader: " .. tostring(loadErr)
+        return false, "Luarmor loader: " .. tostring(loadErr)
     end
     return true, nil
 end
@@ -663,13 +632,13 @@ end
 local function HandleKeyObtained(key)
     if ScriptLoaded or Validating then return end
     if not IsValidKeyFormat(key) then
-        Notify("Error", "Enter a valid LuaProt key.", 5, Scheme.RedColor)
-        SetStatus("Invalid LuaProt key format", Scheme.RedColor)
+        Notify("Error", "Enter a valid 32-letter Luarmor key.", 5, Scheme.RedColor)
+        SetStatus("Invalid Luarmor key format", Scheme.RedColor)
         return
     end
     Validating = true
-    Notify(config.Title, "Checking LuaProt key...", 4, Scheme.AccentColor)
-    SetStatus("Checking LuaProt...", Scheme.WarningColor)
+    Notify(config.Title, "Checking Luarmor key...", 4, Scheme.AccentColor)
+    SetStatus("Checking Luarmor...", Scheme.WarningColor)
     task.spawn(function()
         local ok, reason, sdk, dead = ValidateKey(key)
         Validating = false
@@ -1871,7 +1840,6 @@ local function BuildUI()
     ButtonRow.LayoutOrder = 6
     local LinkvertiseBtn = CreateObsidianButton("Linkvertise", 1, ButtonRow, { TextSize = 12, Idle = 0.55 })
     local WorkInkBtn = CreateObsidianButton("Work.ink", 2, ButtonRow, { TextSize = 12, Idle = 0.55 })
-    local LootLabsBtn = CreateObsidianButton("LootLabs", 3, ButtonRow, { TextSize = 12, Idle = 0.55 })
     local GoKeylessBtn = CreateObsidianButton("<b>Go keyless - " .. config.LifetimePrice .. " once, all games, no links</b>", 7, AuthContent, {
         Background = Scheme.AccentColor,
         TextColor = Scheme.WhiteColor,
@@ -1921,6 +1889,10 @@ local function BuildUI()
         Parent = MainFrame,
     })
     local function CopyKeyLink(provider, url)
+        if type(url) ~= "string" or not url:match("^https://") then
+            Notify("Luarmor setup needed", "Add your Luarmor ad link in NobulemLuarmorAdUrls.", 8, Scheme.RedColor)
+            return
+        end
         if setclipboard then
             setclipboard(url)
             Notify("Link Copied", provider .. " key link copied. Open it in your browser.", 5, Scheme.AccentColor)
@@ -1955,9 +1927,6 @@ local function BuildUI()
     WorkInkBtn.MouseButton1Click:Connect(function()
         CopyKeyLink("Work.ink", config.WorkInkUrl)
     end)
-    LootLabsBtn.MouseButton1Click:Connect(function()
-        CopyKeyLink("LootLabs", config.LootLabsUrl)
-    end)
     CheckStatusBtn.MouseButton1Click:Connect(function()
         if ScriptLoaded then return end
         local cleaned = (KeyTextBox.Text or ""):gsub("%s", "")
@@ -1973,8 +1942,8 @@ local function BuildUI()
         if KeyTextBox.Text == "" or ScriptLoaded then return end
         local cleaned = KeyTextBox.Text:gsub("%s", "")
         if not IsValidKeyFormat(cleaned) then
-            Notify("Error", "Enter a valid LuaProt key.", 4, Scheme.RedColor)
-            SetStatus("Invalid LuaProt key format", Scheme.RedColor)
+            Notify("Error", "Enter a valid 32-letter Luarmor key.", 4, Scheme.RedColor)
+            SetStatus("Invalid Luarmor key format", Scheme.RedColor)
             KeyTextBox.Text = ""
             return
         end
