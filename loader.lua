@@ -3,43 +3,56 @@ getgenv().nobulem_loader_started = true
 
 local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/key-system.lua")
 
-local SHARED_KEY_SCRIPT_ID = ""
+local LuarmorScriptIds = {
+    WarTycoon = "450d986ceeb9678f3455712371a99053",
+    Flick = "2d3b779daff5c319a93d5d8f38b1bdc0",
+    WarRivals = "c6d70ed6afc7fcb69b5d72b8d40491b7",
+    SCPRoleplay = "916111fd797faab13af7b223958c2a98",
+    ProjectSlayers = "9955c61131117e72e978555014354b74",
+}
+local LuarmorAdUrls = {
+    Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
+    WorkInk = "https://ads.luarmor.net/get_key?for=Work_ink-ENZrHfPIitmN",
+}
+
+for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptIds[name] = id end
+for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
 local Games = {
     {
         PlaceIds        = { 4639625707 },
         GameName        = "War Tycoon",
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "49408082951445804304",
-        GetKeyUrl       = "https://nobulem.wtf/key",
+        LuarmorScriptId = LuarmorScriptIds.WarTycoon or "",
+        GetKeyUrl       = LuarmorAdUrls.WarTycoon or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 136801880565837 },
         GameName        = "Flick",
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "69056539903019355219",
-        GetKeyUrl       = "https://nobulem.wtf/key",
+        LuarmorScriptId = LuarmorScriptIds.Flick or "",
+        GetKeyUrl       = LuarmorAdUrls.Flick or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 121918565917280 },
         GameName        = "War Rivals",
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "78341232169921354921",
-        GetKeyUrl       = "https://nobulem.wtf/key",
+        LuarmorScriptId = LuarmorScriptIds.WarRivals or "",
+        GetKeyUrl       = LuarmorAdUrls.WarRivals or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 5041144419, 6939657427, 10953555034},
         GameName        = "SCP: Roleplay",
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "19288386138978870282",
-        GetKeyUrl       = "https://nobulem.wtf/key",
+        LuarmorScriptId = LuarmorScriptIds.SCPRoleplay or "",
+        GetKeyUrl       = LuarmorAdUrls.SCPRoleplay or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 136406881576517, 13883059853, 11468075017, 5956785391, 9627847912, 75556147183481},
         GameName        = "Project Slayers 2",
         SaveFile        = "nobulem_key.txt",
-        LuaProtScriptId = "63969555156456004056",
-        GetKeyUrl       = "https://nobulem.wtf/key",
+        LuarmorScriptId = LuarmorScriptIds.ProjectSlayers or "",
+        GetKeyUrl       = LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
     },
 }
 
@@ -141,6 +154,13 @@ end
 
 local ResolvedName = (cfg.PlaceNames and cfg.PlaceNames[game.PlaceId]) or cfg.GameName
 
+local scriptId = LuarmorScriptIds[game.PlaceId] or cfg.LuarmorScriptId
+if type(scriptId) ~= "string" or #scriptId ~= 32 or not scriptId:match("^[0-9a-fA-F]+$") then
+    Notify("Luarmor setup needed", "Set the Luarmor script ID for " .. ResolvedName .. " in loader.lua.", 10)
+    getgenv().nobulem_loader_started = nil
+    return
+end
+
 if cfg.Discontinued then
     Notify(
         ResolvedName,
@@ -155,9 +175,11 @@ getgenv().NobulemLoaderConfig = {
     PlaceId         = game.PlaceId,
     GameName        = ResolvedName,
     SaveFile        = cfg.SaveFile,
-    LuaProtScriptId = cfg.LuaProtScriptId,
-    KeyScriptId     = cfg.KeyScriptId or (SHARED_KEY_SCRIPT_ID ~= "" and SHARED_KEY_SCRIPT_ID or nil),
+    LuarmorScriptId = scriptId,
     GetKeyUrl       = cfg.GetKeyUrl,
+    LinkvertiseUrl  = LuarmorAdUrls.Linkvertise,
+    WorkInkUrl      = LuarmorAdUrls.WorkInk,
+    LootLabsUrl     = LuarmorAdUrls.LootLabs,
 }
 
 local function InviteDiscord()
