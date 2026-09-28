@@ -9,6 +9,7 @@ local LuarmorScriptIds = {
     WarRivals = "c6d70ed6afc7fcb69b5d72b8d40491b7",
     SCPRoleplay = "916111fd797faab13af7b223958c2a98",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
+    RideAPet = "6f13bbbd5782a987ce64c4a18d874d54",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -53,6 +54,13 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.ProjectSlayers or "",
         GetKeyUrl       = LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 124216119978534, 77451396148528, 73314521587550 },
+        GameName        = "Ride A Pet",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.RideAPet or "",
+        GetKeyUrl       = LuarmorAdUrls.RideAPet or LuarmorAdUrls.Default or "",
     },
 }
 
