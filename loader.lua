@@ -13,7 +13,7 @@ local LuarmorScriptIds = {
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
-    WorkInk = "https://ads.luarmor.net/get_key?for=Work_ink-ENZrHfPIitmN",
+    Linkvertise24h = "https://ads.luarmor.net/get_key?for=Linkvertise_2-KLYIoYnluHnT",
 }
 
 for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptIds[name] = id end
@@ -121,6 +121,7 @@ local function LoadObsidian()
     local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
     local okL, Library = pcall(function() return loadstring(game:HttpGet("https://raw.githubusercontent.com/offperms/nobulem/refs/heads/main/library.lua"))() end)
     if not okL or not Library then return nil end
+    Library.CornerRadius = 10
     local okT, ThemeManager = pcall(function() return loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))() end)
     if okT and ThemeManager then
         pcall(function()
@@ -186,8 +187,8 @@ getgenv().NobulemLoaderConfig = {
     LuarmorScriptId = scriptId,
     GetKeyUrl       = cfg.GetKeyUrl,
     LinkvertiseUrl  = LuarmorAdUrls.Linkvertise,
-    WorkInkUrl      = LuarmorAdUrls.WorkInk,
-    LootLabsUrl     = LuarmorAdUrls.LootLabs,
+    Linkvertise12hUrl = LuarmorAdUrls.Linkvertise12h or LuarmorAdUrls.Linkvertise,
+    Linkvertise24hUrl = LuarmorAdUrls.Linkvertise24h,
 }
 
 local function InviteDiscord()
