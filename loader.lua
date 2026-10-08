@@ -10,6 +10,7 @@ local LuarmorScriptIds = {
     SCPRoleplay = "916111fd797faab13af7b223958c2a98",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
     RideAPet = "6f13bbbd5782a987ce64c4a18d874d54",
+    HussValley = "116ebbf35ba12f82bbfb1b5b552d8773",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -21,6 +22,13 @@ for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptI
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
 local Games = {
+    {
+        PlaceIds        = { 107535308163741 },
+        GameName        = "Huss Valley",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.HussValley or "",
+        GetKeyUrl       = LuarmorAdUrls.HussValley or LuarmorAdUrls.Default or "",
+    },
     {
         PlaceIds        = { 4639625707 },
         GameName        = "War Tycoon",
