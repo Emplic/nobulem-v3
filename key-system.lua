@@ -80,9 +80,11 @@ local config = {
     Folder = "nobulem",
     Title = "nobulem.wtf",
     Version = LoaderConfig.GameName and (LoaderConfig.GameName .. " - Key system") or "Key system",
-    Description = "Free access needs a new key every time. Lifetime never asks again.",
-    LinkvertiseUrl = LoaderConfig.LinkvertiseUrl or LoaderConfig.GetKeyUrl or "",
-    WorkInkUrl = LoaderConfig.WorkInkUrl or LoaderConfig.GetKeyUrl or "",
+    Description = "Choose 12 or 24 hours of free access. Lifetime never asks again.",
+    LinkvertiseUrl = LoaderConfig.Linkvertise12hUrl or LoaderConfig.LinkvertiseUrl or LoaderConfig.GetKeyUrl
+        or "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
+    Linkvertise24hUrl = LoaderConfig.Linkvertise24hUrl
+        or "https://ads.luarmor.net/get_key?for=Linkvertise_2-KLYIoYnluHnT",
     LuarmorScriptId = RawScriptId,
     LuarmorSdkUrl = "https://sdkapi-public.luarmor.net/library.lua",
     Logo = "138831083704120",
@@ -678,6 +680,171 @@ local function HandleKeyObtained(key)
         if not shown then StartScript() end
     end)
 end
+local function CreateKeyDurationDropdown(parent, onChanged)
+    -- Choose a Luarmor ad flow; Luarmor remains responsible for the key's expiry.
+    local options = {
+        { Hours = 12, Url = config.LinkvertiseUrl, Detail = "Default duration" },
+        { Hours = 24, Url = config.Linkvertise24hUrl, Detail = "Extended duration" },
+    }
+    local selected = options[1]
+    local opened, hovered = false, false
+    local transition = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local holder = New("Frame", {
+        Name = "KeyDuration", BackgroundTransparency = 1,
+        LayoutOrder = 6, Size = UDim2.new(1, 0, 0, 46), ZIndex = 3, Parent = parent,
+    })
+    New("TextLabel", {
+        BackgroundTransparency = 1, FontFace = Scheme.Font,
+        Size = UDim2.new(0.5, 0, 0, 14), Text = "Key duration",
+        TextColor3 = Scheme.FontColor, TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 3, Parent = holder,
+    })
+    New("TextLabel", {
+        AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1,
+        FontFace = Scheme.Font, Position = UDim2.fromScale(1, 0),
+        Size = UDim2.new(0.5, 0, 0, 14), Text = "Linkvertise only",
+        TextColor3 = Scheme.FontColor, TextTransparency = 0.5, TextSize = 11,
+        TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 3, Parent = holder,
+    })
+    local trigger = New("TextButton", {
+        Name = "DurationButton", AutoButtonColor = false,
+        BackgroundColor3 = Scheme.MainColor, BorderSizePixel = 0,
+        Position = UDim2.fromOffset(0, 18), Size = UDim2.new(1, 0, 0, 28),
+        Text = "", ZIndex = 4, Parent = holder,
+    })
+    AddCorner(trigger, CornerRadius / 2)
+    local stroke = New("UIStroke", {
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Color = Scheme.OutlineColor, Parent = trigger,
+    })
+    local value = New("TextLabel", {
+        BackgroundTransparency = 1, FontFace = Scheme.Font,
+        Position = UDim2.fromOffset(8, 0), Size = UDim2.new(1, -36, 1, 0),
+        Text = "12 hours (default)", TextColor3 = Scheme.FontColor, TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5, Parent = trigger,
+    })
+    local arrow = New("ImageLabel", {
+        AnchorPoint = Vector2.new(1, 0.5), BackgroundTransparency = 1,
+        Position = UDim2.new(1, -7, 0.5, 0), Size = UDim2.fromOffset(16, 16),
+        ImageColor3 = Scheme.FontColor, ImageTransparency = 0.4,
+        ZIndex = 5, Parent = trigger,
+    })
+    local fallbackArrow = New("TextLabel", {
+        BackgroundTransparency = 1, FontFace = Scheme.Font, Size = UDim2.fromScale(1, 1),
+        Text = "v", TextColor3 = Scheme.FontColor, TextTransparency = 0.4,
+        TextSize = 12, ZIndex = 5, Parent = arrow,
+    })
+    OnIconsReady(function()
+        if arrow.Parent and ApplyLucideIcon(arrow, "chevron-down") then
+            fallbackArrow.Visible = false
+        end
+    end)
+    -- Expand in the scrolling content so the menu stays usable on smaller screens.
+    local menu = New("Frame", {
+        Name = "DurationMenu", BackgroundColor3 = Scheme.MainColor, BorderSizePixel = 0,
+        ClipsDescendants = true, Position = UDim2.fromOffset(0, 50),
+        Size = UDim2.new(1, 0, 0, 0), Visible = false, ZIndex = 4, Parent = holder,
+    })
+    AddCorner(menu, CornerRadius / 2)
+    New("UIStroke", {
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Color = Scheme.OutlineColor, Parent = menu,
+    })
+    local rows = {}
+    local animations = {}
+    local function Animate(instance, properties)
+        if animations[instance] then animations[instance]:Cancel() end
+        local tween = TweenService:Create(instance, transition, properties)
+        animations[instance] = tween
+        tween:Play()
+        return tween
+    end
+    local function UpdateTrigger()
+        Animate(stroke, { Color = (opened or hovered) and Scheme.AccentColor or Scheme.OutlineColor })
+        Animate(trigger, { BackgroundColor3 = hovered and GetBetterColor(Scheme.MainColor, 2) or Scheme.MainColor })
+    end
+    local function SetOpen(state)
+        opened = state
+        if opened then menu.Visible = true end
+        Animate(holder, { Size = UDim2.new(1, 0, 0, opened and 136 or 46) })
+        local tween = Animate(menu, { Size = UDim2.new(1, 0, 0, opened and 82 or 0) })
+        Animate(arrow, { Rotation = opened and 180 or 0 })
+        UpdateTrigger()
+        if not opened then
+            tween.Completed:Once(function(playbackState)
+                if not opened and playbackState == Enum.PlaybackState.Completed then menu.Visible = false end
+            end)
+        end
+    end
+    local function UpdateRows()
+        for _, row in rows do
+            local active = row.Option == selected
+            row.Button.BackgroundColor3 = active and Scheme.MainColor:Lerp(Scheme.AccentColor, 0.12) or Scheme.MainColor
+            row.Title.TextColor3 = active and Scheme.AccentColor or Scheme.FontColor
+            row.Marker.Visible = active
+        end
+    end
+    for index, option in options do
+        local button = New("TextButton", {
+            Name = "Duration" .. option.Hours, AutoButtonColor = false,
+            BackgroundColor3 = Scheme.MainColor, BorderSizePixel = 0,
+            Position = UDim2.fromOffset(4, 4 + (index - 1) * 38),
+            Size = UDim2.new(1, -8, 0, 36), Text = "", ZIndex = 5, Parent = menu,
+        })
+        AddCorner(button, CornerRadius / 2)
+        local title = New("TextLabel", {
+            BackgroundTransparency = 1, FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(8, 3), Size = UDim2.new(1, -36, 0, 14),
+            Text = option.Hours .. " hours", TextColor3 = Scheme.FontColor, TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 6, Parent = button,
+        })
+        New("TextLabel", {
+            BackgroundTransparency = 1, FontFace = Scheme.Font,
+            Position = UDim2.fromOffset(8, 18), Size = UDim2.new(1, -36, 0, 12),
+            Text = option.Detail, TextColor3 = Scheme.FontColor, TextTransparency = 0.5, TextSize = 10,
+            TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 6, Parent = button,
+        })
+        local marker = New("TextLabel", {
+            AnchorPoint = Vector2.new(1, 0.5), BackgroundTransparency = 1,
+            FontFace = Scheme.Font, Position = UDim2.new(1, -8, 0.5, 0),
+            Size = UDim2.fromOffset(16, 16), Text = "•", TextSize = 20,
+            TextColor3 = Scheme.AccentColor, ZIndex = 6, Parent = button,
+        })
+        table.insert(rows, { Button = button, Title = title, Marker = marker, Option = option })
+        button.MouseEnter:Connect(function()
+            button.BackgroundColor3 = Scheme.MainColor:Lerp(Scheme.AccentColor, 0.18)
+        end)
+        button.MouseLeave:Connect(UpdateRows)
+        button.Activated:Connect(function()
+            selected = option
+            value.Text = option.Hours .. (option.Hours == 12 and " hours (default)" or " hours")
+            UpdateRows()
+            onChanged(option)
+            SetOpen(false)
+        end)
+    end
+    UpdateRows()
+    trigger.MouseEnter:Connect(function() hovered = true; UpdateTrigger() end)
+    trigger.MouseLeave:Connect(function() hovered = false; UpdateTrigger() end)
+    trigger.Activated:Connect(function() SetOpen(not opened) end)
+    local function Contains(gui, point)
+        local position, size = gui.AbsolutePosition, gui.AbsoluteSize
+        return point.X >= position.X and point.X <= position.X + size.X
+            and point.Y >= position.Y and point.Y <= position.Y + size.Y
+    end
+    local dismiss = UserInputService.InputBegan:Connect(function(input)
+        if not opened then return end
+        if input.KeyCode == Enum.KeyCode.Escape then
+            SetOpen(false)
+        elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if not Contains(trigger, input.Position) and not Contains(menu, input.Position) then SetOpen(false) end
+        end
+    end)
+    holder.Destroying:Connect(function()
+        dismiss:Disconnect()
+        for _, tween in animations do tween:Cancel() end
+    end)
+    return function() return selected end, function() SetOpen(false) end
+end
+
 local function BuildUI()
     ScreenGui = New("ScreenGui", {
         Name = "ObsidianKeySystem",
@@ -1837,10 +2004,13 @@ local function BuildUI()
         ZIndex = 3,
         Parent = AuthContent,
     })
-    ButtonRow.LayoutOrder = 6
-    local LinkvertiseBtn = CreateObsidianButton("Linkvertise", 1, ButtonRow, { TextSize = 12, Idle = 0.55 })
-    local WorkInkBtn = CreateObsidianButton("Work.ink", 2, ButtonRow, { TextSize = 12, Idle = 0.55 })
-    local GoKeylessBtn = CreateObsidianButton("<b>Go keyless - " .. config.LifetimePrice .. " once, all games, no links</b>", 7, AuthContent, {
+    ButtonRow.LayoutOrder = 7
+    ButtonRow.Size = UDim2.new(1, 0, 0, 26)
+    local LinkvertiseBtn = CreateObsidianButton("Get 12-hour key • Linkvertise", 1, ButtonRow, { TextSize = 12, Idle = 0.15 })
+    local GetKeyDuration, CloseDurationMenu = CreateKeyDurationDropdown(AuthContent, function(option)
+        LinkvertiseBtn.Text = "Get " .. option.Hours .. "-hour key • Linkvertise"
+    end)
+    local GoKeylessBtn = CreateObsidianButton("<b>Go keyless - " .. config.LifetimePrice .. " once, all games, no links</b>", 8, AuthContent, {
         Background = Scheme.AccentColor,
         TextColor = Scheme.WhiteColor,
         TextSize = 13,
@@ -1922,10 +2092,9 @@ local function BuildUI()
         end
     end)
     LinkvertiseBtn.MouseButton1Click:Connect(function()
-        CopyKeyLink("Linkvertise", config.LinkvertiseUrl)
-    end)
-    WorkInkBtn.MouseButton1Click:Connect(function()
-        CopyKeyLink("Work.ink", config.WorkInkUrl)
+        local option = GetKeyDuration()
+        CloseDurationMenu()
+        CopyKeyLink("Linkvertise (" .. option.Hours .. " hours)", option.Url)
     end)
     CheckStatusBtn.MouseButton1Click:Connect(function()
         if ScriptLoaded then return end
