@@ -85,6 +85,8 @@ local config = {
         or "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
     Linkvertise24hUrl = LoaderConfig.Linkvertise24hUrl
         or "https://ads.luarmor.net/get_key?for=Linkvertise_2-KLYIoYnluHnT",
+    WorkInkUrl = LoaderConfig.WorkInkUrl or LoaderConfig.GetKeyUrl
+        or "https://ads.luarmor.net/get_key?for=Work_ink-ENZrHfPIitmN",
     LuarmorScriptId = RawScriptId,
     LuarmorSdkUrl = "https://sdkapi-public.luarmor.net/library.lua",
     Logo = "138831083704120",
@@ -683,8 +685,8 @@ end
 local function CreateKeyDurationDropdown(parent, onChanged)
     -- Choose a Luarmor ad flow; Luarmor remains responsible for the key's expiry.
     local options = {
-        { Hours = 12, Url = config.LinkvertiseUrl, Detail = "Default duration" },
-        { Hours = 24, Url = config.Linkvertise24hUrl, Detail = "Extended duration" },
+        { Hours = 12, Url = config.LinkvertiseUrl, Detail = "Linkvertise or Work.ink" },
+        { Hours = 24, Url = config.Linkvertise24hUrl, Detail = "Linkvertise only" },
     }
     local selected = options[1]
     local opened, hovered = false, false
@@ -699,11 +701,11 @@ local function CreateKeyDurationDropdown(parent, onChanged)
         TextColor3 = Scheme.FontColor, TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 3, Parent = holder,
     })
-    New("TextLabel", {
+    local providerLabel = New("TextLabel", {
         AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1,
         FontFace = Scheme.Font, Position = UDim2.fromScale(1, 0),
-        Size = UDim2.new(0.5, 0, 0, 14), Text = "Linkvertise only",
-        TextColor3 = Scheme.FontColor, TextTransparency = 0.5, TextSize = 11,
+        Size = UDim2.new(0.5, 0, 0, 14), Text = "Linkvertise + Work.ink",
+        TextColor3 = Scheme.FontColor, TextTransparency = 0.5, TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 3, Parent = holder,
     })
     local trigger = New("TextButton", {
@@ -816,6 +818,7 @@ local function CreateKeyDurationDropdown(parent, onChanged)
         button.Activated:Connect(function()
             selected = option
             value.Text = option.Hours .. (option.Hours == 12 and " hours (default)" or " hours")
+            providerLabel.Text = option.Hours == 12 and "Linkvertise + Work.ink" or "Linkvertise only"
             UpdateRows()
             onChanged(option)
             SetOpen(false)
@@ -2006,9 +2009,11 @@ local function BuildUI()
     })
     ButtonRow.LayoutOrder = 7
     ButtonRow.Size = UDim2.new(1, 0, 0, 26)
-    local LinkvertiseBtn = CreateObsidianButton("Get 12-hour key • Linkvertise", 1, ButtonRow, { TextSize = 12, Idle = 0.15 })
+    local LinkvertiseBtn = CreateObsidianButton("Linkvertise", 1, ButtonRow, { TextSize = 12, Idle = 0.55 })
+    local WorkInkBtn = CreateObsidianButton("Work.ink", 2, ButtonRow, { TextSize = 12, Idle = 0.55 })
     local GetKeyDuration, CloseDurationMenu = CreateKeyDurationDropdown(AuthContent, function(option)
-        LinkvertiseBtn.Text = "Get " .. option.Hours .. "-hour key • Linkvertise"
+        WorkInkBtn.Visible = option.Hours == 12
+        LinkvertiseBtn.Text = option.Hours == 12 and "Linkvertise" or "Get 24-hour key • Linkvertise"
     end)
     local GoKeylessBtn = CreateObsidianButton("<b>Go keyless - " .. config.LifetimePrice .. " once, all games, no links</b>", 8, AuthContent, {
         Background = Scheme.AccentColor,
@@ -2095,6 +2100,11 @@ local function BuildUI()
         local option = GetKeyDuration()
         CloseDurationMenu()
         CopyKeyLink("Linkvertise (" .. option.Hours .. " hours)", option.Url)
+    end)
+    WorkInkBtn.MouseButton1Click:Connect(function()
+        if GetKeyDuration().Hours ~= 12 then return end
+        CloseDurationMenu()
+        CopyKeyLink("Work.ink (12 hours)", config.WorkInkUrl)
     end)
     CheckStatusBtn.MouseButton1Click:Connect(function()
         if ScriptLoaded then return end
