@@ -683,7 +683,6 @@ local function HandleKeyObtained(key)
     end)
 end
 local function CreateKeyDurationDropdown(parent, onChanged)
-    -- Choose a Luarmor ad flow; Luarmor remains responsible for the key's expiry.
     local options = {
         { Hours = 12, Url = config.LinkvertiseUrl, Detail = "Linkvertise or Work.ink" },
         { Hours = 24, Url = config.Linkvertise24hUrl, Detail = "Linkvertise only" },
@@ -740,7 +739,6 @@ local function CreateKeyDurationDropdown(parent, onChanged)
             fallbackArrow.Visible = false
         end
     end)
-    -- Expand in the scrolling content so the menu stays usable on smaller screens.
     local menu = New("Frame", {
         Name = "DurationMenu", BackgroundColor3 = Scheme.MainColor, BorderSizePixel = 0,
         ClipsDescendants = true, Position = UDim2.fromOffset(0, 50),
