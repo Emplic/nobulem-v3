@@ -12794,48 +12794,46 @@ local function CreateUserProfile(MainFrame, Tabs, WindowInfo)
     local SwitchTween
     local Card = New("TextButton", {
         Name = "UserProfile", AnchorPoint = Vector2.new(0, 1),
-        BackgroundColor3 = "MainColor", Text = "", AutoButtonColor = false,
+        BackgroundColor3 = "BackgroundColor", Text = "", AutoButtonColor = false,
         ClipsDescendants = true, Selectable = true, ZIndex = 5, Parent = MainFrame,
     })
-    New("UICorner", { CornerRadius = UDim.new(0, 10), Parent = Card })
-    New("UIStroke", { Color = "OutlineColor", Transparency = 0.25, Parent = Card })
+    local Divider = New("Frame", {
+        BackgroundColor3 = "OutlineColor", AnchorPoint = Vector2.new(0, 1),
+        Size = UDim2.new(0, 0, 0, 1), ZIndex = 6, Parent = MainFrame,
+    })
     local Avatar = New("ImageLabel", {
         Name = "Avatar", BackgroundColor3 = "BackgroundColor",
-        Position = UDim2.fromOffset(8, 8), Size = UDim2.fromOffset(36, 36),
+        Position = UDim2.fromOffset(12, 12), Size = UDim2.fromOffset(32, 32),
         Image = string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", LocalPlayer.UserId),
         Parent = Card,
     })
-    New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Avatar })
-    New("UIStroke", { Color = "AccentColor", Thickness = 1.5, Parent = Avatar })
-    local Status = New("Frame", {
-        BackgroundColor3 = "AccentColor", BorderSizePixel = 0,
-        Position = UDim2.fromOffset(35, 35), Size = UDim2.fromOffset(8, 8),
-        ZIndex = 6, Parent = Card,
-    })
-    New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Status })
+    table.insert(Library.Corners, New("UICorner", {
+        CornerRadius = UDim.new(0, Library.CornerRadius / 2), Parent = Avatar,
+    }))
     local Name = New("TextLabel", {
-        BackgroundTransparency = 1, Position = UDim2.fromOffset(54, 8),
-        Size = UDim2.new(1, -76, 0, 19), Text = LocalPlayer.DisplayName,
-        TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1, Position = UDim2.fromOffset(54, 10),
+        Size = UDim2.new(1, -82, 0, 18), Text = LocalPlayer.DisplayName,
+        TextSize = 14, TextTransparency = 0.15, TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd, RichText = false, Parent = Card,
     })
     local Username = New("TextLabel", {
-        BackgroundTransparency = 1, Position = UDim2.fromOffset(54, 28),
-        Size = UDim2.new(1, -76, 0, 16), Text = "@" .. LocalPlayer.Name,
-        TextSize = 11, TextTransparency = 0.4, TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1, Position = UDim2.fromOffset(54, 29),
+        Size = UDim2.new(1, -82, 0, 16), Text = "@" .. LocalPlayer.Name,
+        TextSize = 12, TextTransparency = 0.5, TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd, RichText = false, Parent = Card,
     })
-    local More = New("TextLabel", {
+    local More = New("ImageLabel", {
         BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -4, 0.5, 0), Size = UDim2.fromOffset(20, 36),
-        Text = "...", TextSize = 16, TextTransparency = 0.3, Parent = Card,
+        Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.fromOffset(14, 14),
+        ImageColor3 = "FontColor", ImageTransparency = 0.5, Parent = Card,
     })
+    local Chevron = Library:GetCustomIcon("chevron-up")
+    if Chevron then Library:ApplyLucideIcon(More, Chevron) end
     local Restore = New("TextButton", {
         Name = "RestoreUserProfile", AnchorPoint = Vector2.new(0, 1),
-        BackgroundColor3 = "MainColor", Text = "Profile", TextSize = 12,
-        AutoButtonColor = true, Selectable = true, ZIndex = 5, Parent = MainFrame,
+        BackgroundColor3 = "BackgroundColor", Text = "Profile", TextSize = 12,
+        TextTransparency = 0.5, AutoButtonColor = false, Selectable = true, ZIndex = 5, Parent = MainFrame,
     })
-    New("UICorner", { CornerRadius = UDim.new(0, 10), Parent = Restore })
     local RestoreIcon = New("ImageLabel", {
         BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(20, 20),
@@ -12849,72 +12847,58 @@ local function CreateUserProfile(MainFrame, Tabs, WindowInfo)
         BackgroundColor3 = "MainColor", Visible = false, Active = true,
         ClipsDescendants = true, ZIndex = 20, Parent = MainFrame,
     })
-    New("UICorner", { CornerRadius = UDim.new(0, 12), Parent = Menu })
+    table.insert(Library.Corners, New("UICorner", {
+        CornerRadius = UDim.new(0, Library.CornerRadius / 2), Parent = Menu,
+    }))
     New("UIStroke", { Color = "OutlineColor", Parent = Menu })
-    New("TextLabel", {
-        BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 8),
-        Size = UDim2.new(1, -60, 0, 24), Text = "Your profile", TextSize = 15,
-        TextXAlignment = Enum.TextXAlignment.Left, Parent = Menu,
-    })
-    local Close = New("TextButton", {
-        BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0),
-        Position = UDim2.new(1, 0, 0, 0), Size = UDim2.fromOffset(44, 44),
-        Text = "x", TextSize = 16, Selectable = true, Parent = Menu,
-    })
-    local UserId = New("TextLabel", {
-        BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 36),
-        Size = UDim2.new(1, -24, 0, 18), Text = "User ID: " .. tostring(LocalPlayer.UserId),
-        TextSize = 11, TextTransparency = 0.4, TextXAlignment = Enum.TextXAlignment.Left,
-        TextTruncate = Enum.TextTruncate.AtEnd, Parent = Menu,
-    })
     local Switch = New("TextButton", {
-        Name = "ProfileVisibility", BackgroundColor3 = "BackgroundColor",
-        AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 8, 1, -8),
-        Size = UDim2.new(1, -16, 0, 48), Text = "", AutoButtonColor = false,
+        Name = "ProfileVisibility", BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(0, 0), Size = UDim2.fromScale(1, 1),
+        Text = "", AutoButtonColor = false,
         Selectable = true, Parent = Menu,
     })
-    New("UICorner", { CornerRadius = UDim.new(0, 8), Parent = Switch })
     New("TextLabel", {
-        BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0),
-        Size = UDim2.new(1, -66, 1, 0), Text = "Show profile", TextSize = 13,
+        BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 0),
+        Size = UDim2.new(1, -64, 1, 0), Text = "Show profile", TextSize = 14,
+        TextTransparency = 0.4,
         TextXAlignment = Enum.TextXAlignment.Left, Parent = Switch,
     })
     local Track = New("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0),
-        Size = UDim2.fromOffset(36, 22), BackgroundColor3 = function()
-            return Profile.Visible and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+        AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0),
+        Size = UDim2.fromOffset(32, 18), BackgroundColor3 = function()
+            return Profile.Visible and Library.Scheme.AccentColor or Library.Scheme.MainColor
         end, Parent = Switch,
     })
     New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Track })
+    New("UIStroke", { Color = "OutlineColor", Parent = Track })
     local Knob = New("Frame", {
         BackgroundColor3 = "FontColor", AnchorPoint = Vector2.new(0, 0.5),
-        Size = UDim2.fromOffset(16, 16), Parent = Track,
+        Size = UDim2.fromOffset(14, 14), Parent = Track,
     })
     New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Knob })
 
     function Profile:RefreshLayout()
         local Width = Tabs.Size.X.Offset
         local Compact = Width < 142
-        local Inset = Width < 64 and 2 or 6
-        Card.Size = UDim2.fromOffset(Width - Inset * 2, 52)
-        Card.Position = UDim2.new(0, Inset, 1, -27)
-        Restore.Size = UDim2.fromOffset(Width - Inset * 2, 52)
+        local Height = self.Visible and 56 or 44
+        Card.Size = UDim2.fromOffset(Width, 56)
+        Card.Position = UDim2.new(0, 0, 1, -21)
+        Restore.Size = UDim2.fromOffset(Width, 44)
         Restore.Position = Card.Position
+        Divider.Size = UDim2.fromOffset(Width, 1)
+        Divider.Position = UDim2.new(0, 0, 1, -21 - Height)
         Card.Visible = self.Visible
         Restore.Visible = not self.Visible
         Restore.Text = Compact and (UserIcon and "" or "+") or "Show profile"
         RestoreIcon.Visible = Compact and UserIcon ~= nil
-        Avatar.Position = Compact and UDim2.new(0.5, -18, 0, 8) or UDim2.fromOffset(8, 8)
-        Status.Visible = not Compact
+        Avatar.Position = Compact and UDim2.new(0.5, -16, 0, 12) or UDim2.fromOffset(12, 12)
         Name.Visible = not Compact
         Username.Visible = not Compact
-        More.Visible = not Compact
+        More.Visible = not Compact and Chevron ~= nil
         -- Reserve space below the scrolling tabs without shrinking the content pane.
-        Tabs.Size = UDim2.new(0, Width, 1, -134)
-        local Height = math.clamp(MainFrame.Size.Y.Offset - 145, 96, 132)
-        Menu.Size = UDim2.fromOffset(math.min(240, MainFrame.Size.X.Offset - 16), Height)
-        Menu.Position = UDim2.new(0, 8, 1, -87)
-        UserId.Visible = Height >= 120
+        Tabs.Size = UDim2.new(0, Width, 1, -70 - Height)
+        Menu.Size = UDim2.fromOffset(math.min(math.max(Width - 12, 192), MainFrame.Size.X.Offset - 16), 48)
+        Menu.Position = UDim2.new(0, 6, 1, -27 - Height)
     end
 
     function Profile:SetVisible(Visible)
@@ -12922,9 +12906,9 @@ local function CreateUserProfile(MainFrame, Tabs, WindowInfo)
         WindowInfo.ShowUserProfile = self.Visible
         Menu.Visible = false
         if SwitchTween then SwitchTween:Cancel() end
-        Track.BackgroundColor3 = self.Visible and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+        Track.BackgroundColor3 = self.Visible and Library.Scheme.AccentColor or Library.Scheme.MainColor
         SwitchTween = TweenService:Create(Knob, TweenInfo.new(0.16, Enum.EasingStyle.Quad), {
-            Position = UDim2.new(0, self.Visible and 17 or 3, 0.5, 0),
+            Position = UDim2.new(0, self.Visible and 16 or 2, 0.5, 0),
         })
         SwitchTween:Play()
         self:RefreshLayout()
@@ -12932,7 +12916,6 @@ local function CreateUserProfile(MainFrame, Tabs, WindowInfo)
 
     Library:GiveSignal(Card.Activated:Connect(function() Menu.Visible = not Menu.Visible end))
     Library:GiveSignal(Restore.Activated:Connect(function() Profile:SetVisible(true) end))
-    Library:GiveSignal(Close.Activated:Connect(function() Menu.Visible = false end))
     Library:GiveSignal(Switch.Activated:Connect(function()
         Profile:SetVisible(not Profile.Visible)
         -- Keep settings open so the switch animation is visible and can be reversed.
@@ -12959,7 +12942,7 @@ local function CreateUserProfile(MainFrame, Tabs, WindowInfo)
         Name.Text = LocalPlayer.DisplayName
     end))
     Library:OnUnload(function() if SwitchTween then SwitchTween:Cancel() end end)
-    Knob.Position = UDim2.new(0, Profile.Visible and 17 or 3, 0.5, 0)
+    Knob.Position = UDim2.new(0, Profile.Visible and 16 or 2, 0.5, 0)
     Profile:RefreshLayout()
     task.spawn(function()
         -- Thumbnail requests yield; never delay window creation or write after unload.
