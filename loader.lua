@@ -10,6 +10,7 @@ local LuarmorScriptIds = {
     SCPRoleplay = "916111fd797faab13af7b223958c2a98",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
     AnimeDice = "08ea73e8d4bed5ba14b200e54b64d329",
+    AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
     HussValley = "116ebbf35ba12f82bbfb1b5b552d8773",
 }
 local LuarmorAdUrls = {
@@ -22,6 +23,14 @@ for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptI
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
 local Games = {
+    {
+        PlaceIds        = { 114574503491412, 109151342576374 },
+        UniverseId      = 10512942223,
+        GameName        = "Anime Zero",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.AnimeZero or "",
+        GetKeyUrl       = LuarmorAdUrls.AnimeZero or LuarmorAdUrls.Default or "",
+    },
     {
         PlaceIds        = { 107535308163741 },
         GameName        = "Huss Valley",
@@ -104,6 +113,9 @@ local SubplaceCache = {}
 
 local function ResolveGame(placeId)
     for _, entry in ipairs(Games) do
+        if placeId == game.PlaceId and entry.UniverseId and entry.UniverseId == game.GameId then
+            return entry
+        end
         for _, id in ipairs(entry.PlaceIds) do
             if id == placeId then return entry end
         end
@@ -128,7 +140,7 @@ local ObsidianLibrary
 local function LoadObsidian()
     if ObsidianLibrary then return ObsidianLibrary end
     local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
-    local okL, Library = pcall(function() return loadstring(game:HttpGet("https://raw.githubusercontent.com/offperms/nobulem/refs/heads/main/library.lua"))() end)
+    local okL, Library = pcall(function() return loadstring(game:HttpGet("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/library.lua"))() end)
     if not okL or not Library then return nil end
     Library.CornerRadius = 10
     local okT, ThemeManager = pcall(function() return loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))() end)
