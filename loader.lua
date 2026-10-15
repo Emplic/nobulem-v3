@@ -7,6 +7,7 @@ local LuarmorScriptIds = {
     WarTycoon = "450d986ceeb9678f3455712371a99053",
     Flick = "2d3b779daff5c319a93d5d8f38b1bdc0",
     WarRivals = "c6d70ed6afc7fcb69b5d72b8d40491b7",
+    WarRivalsSellFries = "2e458885993bf92dd5f601886f49efd7",
     SCPRoleplay = "916111fd797faab13af7b223958c2a98",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
     AnimeDice = "08ea73e8d4bed5ba14b200e54b64d329",
@@ -21,6 +22,8 @@ local LuarmorAdUrls = {
 
 for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptIds[name] = id end
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
+
+local WarRivalsSellFriesScriptId = LuarmorScriptIds.WarRivalsSellFries or ""
 
 local Games = {
     {
@@ -54,10 +57,19 @@ local Games = {
     },
     {
         PlaceIds        = { 121918565917280 },
+        UniverseId      = 10465807951,
         GameName        = "War Rivals",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.WarRivals or "",
-        GetKeyUrl       = LuarmorAdUrls.WarRivals or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = WarRivalsSellFriesScriptId ~= "" and WarRivalsSellFriesScriptId or LuarmorScriptIds.WarRivals or "",
+        GetKeyUrl       = LuarmorAdUrls.WarRivalsSellFries or LuarmorAdUrls.WarRivals or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 139542527731344 },
+        UniverseId      = 10767380385,
+        GameName        = "Sell Fries",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = WarRivalsSellFriesScriptId,
+        GetKeyUrl       = LuarmorAdUrls.WarRivalsSellFries or LuarmorAdUrls.SellFries or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 5041144419, 6939657427, 10953555034},
