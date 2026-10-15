@@ -56,7 +56,7 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.Flick or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 121918565917280 },
+        PlaceIds        = { 121918565917280, 84633364830760 },
         UniverseId      = 10465807951,
         GameName        = "War Rivals",
         SaveFile        = "nobulem_key.txt",
