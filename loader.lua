@@ -12,6 +12,7 @@ local LuarmorScriptIds = {
     ProjectSlayers = "9955c61131117e72e978555014354b74",
     AnimeDice = "08ea73e8d4bed5ba14b200e54b64d329",
     AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
+    AnimeZeroHuntingSeason = "3ec02d97a9106e0ff825f5087fc02af7",
     HussValley = "116ebbf35ba12f82bbfb1b5b552d8773",
 }
 local LuarmorAdUrls = {
@@ -24,6 +25,7 @@ for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptI
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
 local WarRivalsSellFriesScriptId = LuarmorScriptIds.WarRivalsSellFries or ""
+local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason or ""
 
 local Games = {
     {
@@ -31,8 +33,16 @@ local Games = {
         UniverseId      = 10512942223,
         GameName        = "Anime Zero",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.AnimeZero or "",
-        GetKeyUrl       = LuarmorAdUrls.AnimeZero or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = AnimeZeroHuntingSeasonScriptId ~= "" and AnimeZeroHuntingSeasonScriptId or LuarmorScriptIds.AnimeZero or "",
+        GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.AnimeZero or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 120073741652089 },
+        UniverseId      = 1851087906,
+        GameName        = "Hunting Season",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = AnimeZeroHuntingSeasonScriptId,
+        GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.HuntingSeason or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 107535308163741 },
