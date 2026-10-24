@@ -10,7 +10,7 @@ local LuarmorScriptIds = {
     WarRivalsSellFries = "2e458885993bf92dd5f601886f49efd7",
     Wanted = "b59527dfe5520d0cd523a37e7ddf2b47",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
-    AnimeDice = "08ea73e8d4bed5ba14b200e54b64d329",
+    Hypershot = "",
     AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
     AnimeZeroHuntingSeason = "3ec02d97a9106e0ff825f5087fc02af7",
     HussValley = "116ebbf35ba12f82bbfb1b5b552d8773",
@@ -97,11 +97,12 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 113290951185459 },
-        GameName        = "Anime Dice",
+        PlaceIds        = { 86696142930150, 100040622766961, 108428559529058 },
+        UniverseId      = 5995470825,
+        GameName        = "Hypershot",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.AnimeDice or "",
-        GetKeyUrl       = LuarmorAdUrls.AnimeDice or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = LuarmorScriptIds.Hypershot or "",
+        GetKeyUrl       = LuarmorAdUrls.Hypershot or LuarmorAdUrls.Default or "",
     },
 }
 
