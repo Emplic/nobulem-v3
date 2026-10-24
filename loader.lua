@@ -10,7 +10,7 @@ local LuarmorScriptIds = {
     WarRivalsSellFries = "2e458885993bf92dd5f601886f49efd7",
     Wanted = "b59527dfe5520d0cd523a37e7ddf2b47",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
-    Hypershot = "",
+    Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
     AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
     AnimeZeroHuntingSeason = "3ec02d97a9106e0ff825f5087fc02af7",
     HussValley = "116ebbf35ba12f82bbfb1b5b552d8773",
@@ -29,7 +29,7 @@ local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason o
 
 local Games = {
     {
-        PlaceIds        = { 114574503491412, 109151342576374 },
+        PlaceIds        = { 114574503491412, 109151342576374, 96023089630459, 132303256922720 },
         UniverseId      = 10512942223,
         GameName        = "Anime Zero",
         SaveFile        = "nobulem_key.txt",
@@ -37,7 +37,10 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.AnimeZero or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 120073741652089 },
+        PlaceIds        = {
+            120073741652089, 5286116071, 73645306091146, 89820338455770, 108808025081246,
+            112565629873945, 124742531393193, 134584993281466,
+        },
         UniverseId      = 1851087906,
         GameName        = "Hunting Season",
         SaveFile        = "nobulem_key.txt",
@@ -46,13 +49,15 @@ local Games = {
     },
     {
         PlaceIds        = { 107535308163741 },
+        UniverseId      = 10764627709,
         GameName        = "Huss Valley",
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.HussValley or "",
         GetKeyUrl       = LuarmorAdUrls.HussValley or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 4639625707 },
+        PlaceIds        = { 4639625707, 6856061811, 17267897726, 18161998932, 116355587227251 },
+        UniverseId      = 1526814825,
         GameName        = "War Tycoon",
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.WarTycoon or "",
@@ -60,13 +65,14 @@ local Games = {
     },
     {
         PlaceIds        = { 136801880565837 },
+        UniverseId      = 8795154789,
         GameName        = "Flick",
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.Flick or "",
         GetKeyUrl       = LuarmorAdUrls.Flick or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 121918565917280, 84633364830760 },
+        PlaceIds        = { 121918565917280, 84633364830760, 123983382517341 },
         UniverseId      = 10465807951,
         GameName        = "War Rivals",
         SaveFile        = "nobulem_key.txt",
@@ -74,7 +80,7 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.WarRivalsSellFries or LuarmorAdUrls.WarRivals or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 139542527731344 },
+        PlaceIds        = { 139542527731344, 94891079210424 },
         UniverseId      = 10767380385,
         GameName        = "Sell Fries",
         SaveFile        = "nobulem_key.txt",
@@ -90,14 +96,21 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.Wanted or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 136406881576517, 13883059853, 11468075017, 5956785391, 9627847912, 75556147183481},
+        PlaceIds        = {
+            136406881576517, 13883059853, 11468075017, 5956785391, 9627847912, 75556147183481,
+            16205713724, 17047024836, 109676363279588, 130395143593224,
+        },
+        UniverseId      = 5595353122,
         GameName        = "Project Slayers 2",
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.ProjectSlayers or "",
         GetKeyUrl       = LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 86696142930150, 100040622766961, 108428559529058 },
+        PlaceIds        = {
+            86696142930150, 100040622766961, 108428559529058, 17516596118, 92980558919575, 97804379417079,
+            105357751512007, 110169684430399, 122181485177067, 128220027114734, 131008473296170, 134474332601640,
+        },
         UniverseId      = 5995470825,
         GameName        = "Hypershot",
         SaveFile        = "nobulem_key.txt",
