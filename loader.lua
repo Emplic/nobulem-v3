@@ -13,7 +13,7 @@ local LuarmorScriptIds = {
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
     AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
     AnimeZeroHuntingSeason = "3ec02d97a9106e0ff825f5087fc02af7",
-    HussValley = "116ebbf35ba12f82bbfb1b5b552d8773",
+    SaveTheKrustyKrab = "aa03e2dca054e1ed1ba620402ead2454",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -48,12 +48,16 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.HuntingSeason or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 107535308163741 },
-        UniverseId      = 10764627709,
-        GameName        = "Huss Valley",
+        -- 129332901430212 is the start place (lobby); the restaurant runs in the
+        -- 77709018585862 subplace. Both from AssetService:GetGamePlacesAsync().
+        PlaceIds        = { 77709018585862, 129332901430212 },
+        LobbyPlaceIds   = { 129332901430212 },
+        SubplaceRoots   = { 129332901430212 },
+        UniverseId      = 10768625767,
+        GameName        = "Save the Krusty Krab",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.HussValley or "",
-        GetKeyUrl       = LuarmorAdUrls.HussValley or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = LuarmorScriptIds.SaveTheKrustyKrab or "",
+        GetKeyUrl       = LuarmorAdUrls.SaveTheKrustyKrab or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 4639625707, 6856061811, 17267897726, 18161998932, 116355587227251 },
@@ -220,6 +224,13 @@ if not cfg then
 end
 
 local ResolvedName = (cfg.PlaceNames and cfg.PlaceNames[game.PlaceId]) or cfg.GameName
+
+-- games that start in a lobby only run the script once you're in an actual match
+if cfg.LobbyPlaceIds and table.find(cfg.LobbyPlaceIds, game.PlaceId) then
+    Notify(ResolvedName, "You're in the lobby. Please join a game, then execute again.", 10)
+    getgenv().nobulem_loader_started = nil
+    return
+end
 
 local scriptId = LuarmorScriptIds[game.PlaceId] or cfg.LuarmorScriptId
 if type(scriptId) ~= "string" or #scriptId ~= 32 or not scriptId:match("^[0-9a-fA-F]+$") then
