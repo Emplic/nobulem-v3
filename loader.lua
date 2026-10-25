@@ -48,8 +48,6 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.HuntingSeason or LuarmorAdUrls.Default or "",
     },
     {
-        -- 129332901430212 is the start place (lobby); the restaurant runs in the
-        -- 77709018585862 subplace. Both from AssetService:GetGamePlacesAsync().
         PlaceIds        = { 77709018585862, 129332901430212 },
         LobbyPlaceIds   = { 129332901430212 },
         SubplaceRoots   = { 129332901430212 },
@@ -225,7 +223,6 @@ end
 
 local ResolvedName = (cfg.PlaceNames and cfg.PlaceNames[game.PlaceId]) or cfg.GameName
 
--- games that start in a lobby only run the script once you're in an actual match
 if cfg.LobbyPlaceIds and table.find(cfg.LobbyPlaceIds, game.PlaceId) then
     Notify(ResolvedName, "You're in the lobby. Please join a game, then execute again.", 10)
     getgenv().nobulem_loader_started = nil
