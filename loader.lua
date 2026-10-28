@@ -6,8 +6,7 @@ local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs
 local LuarmorScriptIds = {
     WarTycoon = "450d986ceeb9678f3455712371a99053",
     Flick = "2d3b779daff5c319a93d5d8f38b1bdc0",
-    WarRivals = "2e458885993bf92dd5f601886f49efd7",
-    WarRivalsSellFries = "2e458885993bf92dd5f601886f49efd7",
+    UrbanReload = "40c127c6813852ae8c544277c726345d",
     Wanted = "b59527dfe5520d0cd523a37e7ddf2b47",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
@@ -24,7 +23,6 @@ local LuarmorAdUrls = {
 for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptIds[name] = id end
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
-local WarRivalsSellFriesScriptId = LuarmorScriptIds.WarRivalsSellFries or ""
 local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason or ""
 
 local Games = {
@@ -74,20 +72,12 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.Flick or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 121918565917280, 84633364830760, 123983382517341 },
-        UniverseId      = 10465807951,
-        GameName        = "War Rivals",
+        PlaceIds        = { 84448037861644 },
+        UniverseId      = 10769552054,
+        GameName        = "Urban Reload",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = WarRivalsSellFriesScriptId ~= "" and WarRivalsSellFriesScriptId or LuarmorScriptIds.WarRivals or "",
-        GetKeyUrl       = LuarmorAdUrls.WarRivalsSellFries or LuarmorAdUrls.WarRivals or LuarmorAdUrls.Default or "",
-    },
-    {
-        PlaceIds        = { 139542527731344, 94891079210424 },
-        UniverseId      = 10767380385,
-        GameName        = "Sell Fries",
-        SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = WarRivalsSellFriesScriptId,
-        GetKeyUrl       = LuarmorAdUrls.WarRivalsSellFries or LuarmorAdUrls.SellFries or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = LuarmorScriptIds.UrbanReload or "",
+        GetKeyUrl       = LuarmorAdUrls.UrbanReload or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 14438406081 },
