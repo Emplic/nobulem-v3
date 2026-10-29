@@ -13,6 +13,7 @@ local LuarmorScriptIds = {
     AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
     AnimeZeroHuntingSeason = "3ec02d97a9106e0ff825f5087fc02af7",
     SaveTheKrustyKrab = "aa03e2dca054e1ed1ba620402ead2454",
+    WantedBreakAndStealAnEgg = "e47e9632261b3364b61f4442e3a03571",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -24,6 +25,7 @@ for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptI
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
 local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason or ""
+local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnEgg or ""
 
 local Games = {
     {
@@ -84,8 +86,16 @@ local Games = {
         UniverseId      = 4987856151,
         GameName        = "Wanted",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.Wanted or "",
-        GetKeyUrl       = LuarmorAdUrls.Wanted or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = WantedBreakAndStealAnEggScriptId ~= "" and WantedBreakAndStealAnEggScriptId or LuarmorScriptIds.Wanted or "",
+        GetKeyUrl       = LuarmorAdUrls.WantedBreakAndStealAnEgg or LuarmorAdUrls.Wanted or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 114326934417838 },
+        UniverseId      = 10765288803,
+        GameName        = "Break and Steal an Egg",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = WantedBreakAndStealAnEggScriptId,
+        GetKeyUrl       = LuarmorAdUrls.WantedBreakAndStealAnEgg or LuarmorAdUrls.BreakAndStealAnEgg or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = {
