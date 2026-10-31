@@ -3965,6 +3965,11 @@ do
             return Ok and Result == true
         end
 
+        --// Real InputObjects error on unknown members, so only read PolledKey off our fake tables \\--
+        local GetPolledKey = function(Input)
+            return if type(Input) == "table" then Input.PolledKey else nil
+        end
+
         local NewPolledInput = function(Name)
             return { UserInputType = Enum.UserInputType.None, KeyCode = Enum.KeyCode.Unknown, PolledKey = Name }
         end
@@ -4064,8 +4069,8 @@ do
                 return false
             end
 
-            if Input.PolledKey then
-                return IsPolledDown(Input.PolledKey) and not UserInputService:GetFocusedTextBox()
+            if GetPolledKey(Input) then
+                return IsPolledDown(GetPolledKey(Input)) and not UserInputService:GetFocusedTextBox()
             elseif SpecialKeysInput[Input.UserInputType] ~= nil then
                 return UserInputService:IsMouseButtonPressed(Input.UserInputType)
                     and not UserInputService:GetFocusedTextBox()
@@ -4777,8 +4782,8 @@ do
 
                 local IsMod = IsModifierInput(InputObj)
                 local KeyName
-                if InputObj.PolledKey then
-                    KeyName = InputObj.PolledKey
+                if GetPolledKey(InputObj) then
+                    KeyName = GetPolledKey(InputObj)
                 elseif SpecialKeysInput[InputObj.UserInputType] ~= nil then
                     KeyName = SpecialKeysInput[InputObj.UserInputType]
                 elseif InputObj.UserInputType == Enum.UserInputType.Keyboard then
@@ -4913,8 +4918,8 @@ do
             end
 
             local Key = "Unknown"
-            if CurrentInput.PolledKey then
-                Key = CurrentInput.PolledKey
+            if GetPolledKey(CurrentInput) then
+                Key = GetPolledKey(CurrentInput)
             elseif SpecialKeysInput[CurrentInput.UserInputType] ~= nil then
                 Key = SpecialKeysInput[CurrentInput.UserInputType]
             elseif CurrentInput.UserInputType == Enum.UserInputType.Keyboard then
@@ -4939,7 +4944,7 @@ do
                 return
             end
 
-            local IsMouse = IsMouseClickInput(Input) or Input.PolledKey ~= nil
+            local IsMouse = IsMouseClickInput(Input) or GetPolledKey(Input) ~= nil
             if
                 KeyPicker.Mode == "Always"
                 or KeyPicker.Value == "Unknown"
@@ -4961,7 +4966,7 @@ do
                 and HoldingModifiers == true
                 and (
                     SpecialKeysInput[Input.UserInputType] == Key
-                    or Input.PolledKey == Key
+                    or GetPolledKey(Input) == Key
                     or (Input.UserInputType == Enum.UserInputType.Keyboard and Input.KeyCode.Name == Key)
                 )
             then
