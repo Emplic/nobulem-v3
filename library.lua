@@ -3938,6 +3938,57 @@ do
             [Enum.UserInputType.MouseButton3] = "MB3",
         }
 
+        -- Extra mouse buttons (Mouse4 / Mouse5). Roblox doesn't expose these to UserInputService,
+        -- so unless the engine adds the enums they are polled through the executor's iskeypressed.
+        local PolledKeys = {}
+        for Name, Data in { MB4 = { "MouseButton4", 0x05 }, MB5 = { "MouseButton5", 0x06 } } do
+            local Ok, Item = pcall(function()
+                return Enum.UserInputType[Data[1]]
+            end)
+
+            if Ok and Item then
+                SpecialKeys[Name] = Item
+                SpecialKeysInput[Item] = Name
+            else
+                PolledKeys[Name] = Data[2]
+            end
+        end
+
+        local KeyPressedFn = iskeypressed or keyispressed
+
+        local IsPolledDown = function(Name)
+            if not (KeyPressedFn and PolledKeys[Name]) or not Library.IsRobloxFocused then
+                return false
+            end
+
+            local Ok, Result = pcall(KeyPressedFn, PolledKeys[Name])
+            return Ok and Result == true
+        end
+
+        local NewPolledInput = function(Name)
+            return { UserInputType = Enum.UserInputType.None, KeyCode = Enum.KeyCode.Unknown, PolledKey = Name }
+        end
+
+        --// Fires OnBegan with a fake InputObject on every fresh press of Mouse4 / Mouse5 \\--
+        local ListenPolled = function(OnBegan)
+            local Down = {}
+            for Name in PolledKeys do
+                Down[Name] = IsPolledDown(Name)
+            end
+
+            return RunService.Heartbeat:Connect(function()
+                for Name in PolledKeys do
+                    local Now = IsPolledDown(Name)
+                    if Now ~= Down[Name] then
+                        Down[Name] = Now
+                        if Now then
+                            OnBegan(NewPolledInput(Name))
+                        end
+                    end
+                end
+            end)
+        end
+
         -- Modifiers
         local Modifiers = {
             ["LAlt"] = Enum.KeyCode.LeftAlt,
@@ -4013,7 +4064,9 @@ do
                 return false
             end
 
-            if SpecialKeysInput[Input.UserInputType] ~= nil then
+            if Input.PolledKey then
+                return IsPolledDown(Input.PolledKey) and not UserInputService:GetFocusedTextBox()
+            elseif SpecialKeysInput[Input.UserInputType] ~= nil then
                 return UserInputService:IsMouseButtonPressed(Input.UserInputType)
                     and not UserInputService:GetFocusedTextBox()
             elseif Input.UserInputType == Enum.UserInputType.Keyboard then
@@ -4553,7 +4606,13 @@ do
                     return false
                 end
 
-                if SpecialKeys[Key] ~= nil then
+                if PolledKeys[Key] ~= nil then
+                    if Library.Toggled then
+                        return false
+                    end
+
+                    return IsPolledDown(Key) and not UserInputService:GetFocusedTextBox()
+                elseif SpecialKeys[Key] ~= nil then
                     if Library.Toggled then
                         return false
                     end
@@ -4612,6 +4671,10 @@ do
                         return nil
                     end
 
+                    if PolledKeys[KeyPicker.Value] ~= nil then
+                        return KeyPicker.Value
+                    end
+
                     if SpecialKeys[KeyPicker.Value] == nil then
                         return Enum.KeyCode[KeyPicker.Value]
                     end
@@ -4632,6 +4695,10 @@ do
                 if Key == "None" then
                     Key = nil
                     return nil
+                end
+
+                if PolledKeys[Key] ~= nil then
+                    return Key
                 end
 
                 if SpecialKeys[Key] == nil then
@@ -4710,7 +4777,9 @@ do
 
                 local IsMod = IsModifierInput(InputObj)
                 local KeyName
-                if SpecialKeysInput[InputObj.UserInputType] ~= nil then
+                if InputObj.PolledKey then
+                    KeyName = InputObj.PolledKey
+                elseif SpecialKeysInput[InputObj.UserInputType] ~= nil then
                     KeyName = SpecialKeysInput[InputObj.UserInputType]
                 elseif InputObj.UserInputType == Enum.UserInputType.Keyboard then
                     if IsMod then
@@ -4743,10 +4812,29 @@ do
                 return true
             end
 
-            -- Wait for the first valid InputBegan --
+            -- Wait for the first valid InputBegan (or Mouse4 / Mouse5 press) --
+            local WaitForPickInput = function()
+                local Got
+                local Pick = function(InputObj)
+                    Got = Got or InputObj
+                end
+
+                local BeganConn = UserInputService.InputBegan:Connect(Pick)
+                local PolledConn = ListenPolled(Pick)
+
+                repeat
+                    task.wait()
+                until Got or Library.Unloaded
+
+                BeganConn:Disconnect()
+                PolledConn:Disconnect()
+
+                return Got
+            end
+
             while true do
-                local InputObj = UserInputService.InputBegan:Wait()
-                if UserInputService:GetFocusedTextBox() ~= nil then
+                local InputObj = WaitForPickInput()
+                if not InputObj or UserInputService:GetFocusedTextBox() ~= nil then
                     SetPickingState(false)
                     return
                 end
@@ -4774,16 +4862,20 @@ do
                 local Released = false
 
                 local BeganConn
+                local PolledConn
                 local EndedConn
 
-                BeganConn = UserInputService.InputBegan:Connect(function(InputObj)
+                local OnNextInput = function(InputObj)
                     if UserInputService:GetFocusedTextBox() ~= nil then
                         return
                     end
                     if IsValidInput(InputObj) then
                         NextInput = InputObj
                     end
-                end)
+                end
+
+                BeganConn = UserInputService.InputBegan:Connect(OnNextInput)
+                PolledConn = ListenPolled(OnNextInput)
 
                 EndedConn = UserInputService.InputEnded:Connect(function(InputObj)
                     if InputObj.KeyCode == CurrentInput.KeyCode then
@@ -4796,6 +4888,7 @@ do
                 until Released or NextInput or UserInputService:GetFocusedTextBox() ~= nil or Library.Unloaded
 
                 if BeganConn then BeganConn:Disconnect() end
+                if PolledConn then PolledConn:Disconnect() end
                 if EndedConn then EndedConn:Disconnect() end
 
                 if UserInputService:GetFocusedTextBox() ~= nil or Library.Unloaded then
@@ -4820,7 +4913,9 @@ do
             end
 
             local Key = "Unknown"
-            if SpecialKeysInput[CurrentInput.UserInputType] ~= nil then
+            if CurrentInput.PolledKey then
+                Key = CurrentInput.PolledKey
+            elseif SpecialKeysInput[CurrentInput.UserInputType] ~= nil then
                 Key = SpecialKeysInput[CurrentInput.UserInputType]
             elseif CurrentInput.UserInputType == Enum.UserInputType.Keyboard then
                 Key = CurrentInput.KeyCode == Enum.KeyCode.Escape and "None" or CurrentInput.KeyCode.Name
@@ -4839,12 +4934,12 @@ do
         end)
         Picker.MouseButton2Click:Connect(MenuTable.Toggle)
 
-        table.insert(KeyPicker.Connections, UserInputService.InputBegan:Connect(function(Input: InputObject)
+        local HandleBegan = function(Input: InputObject)
             if Library.Unloaded then
                 return
             end
 
-            local IsMouse = IsMouseClickInput(Input)
+            local IsMouse = IsMouseClickInput(Input) or Input.PolledKey ~= nil
             if
                 KeyPicker.Mode == "Always"
                 or KeyPicker.Value == "Unknown"
@@ -4866,6 +4961,7 @@ do
                 and HoldingModifiers == true
                 and (
                     SpecialKeysInput[Input.UserInputType] == Key
+                    or Input.PolledKey == Key
                     or (Input.UserInputType == Enum.UserInputType.Keyboard and Input.KeyCode.Name == Key)
                 )
             then
@@ -4884,6 +4980,30 @@ do
             end
 
             KeyPicker:Update()
+        end
+
+        table.insert(KeyPicker.Connections, UserInputService.InputBegan:Connect(HandleBegan))
+
+        -- Mouse4 / Mouse5 binds are polled, and only while this picker is actually bound to one
+        local PolledWasDown = false
+        table.insert(KeyPicker.Connections, RunService.Heartbeat:Connect(function()
+            local Key = KeyPicker.Value
+            if PolledKeys[Key] == nil then
+                PolledWasDown = false
+                return
+            end
+
+            local Now = IsPolledDown(Key)
+            if Now == PolledWasDown then
+                return
+            end
+
+            PolledWasDown = Now
+            if Now then
+                HandleBegan(NewPolledInput(Key))
+            else
+                KeyPicker:Update()
+            end
         end))
 
         table.insert(KeyPicker.Connections, UserInputService.InputEnded:Connect(function(Input: InputObject)
