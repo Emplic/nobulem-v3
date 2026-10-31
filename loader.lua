@@ -15,6 +15,7 @@ local LuarmorScriptIds = {
     SaveTheKrustyKrab = "aa03e2dca054e1ed1ba620402ead2454",
     WantedBreakAndStealAnEgg = "e47e9632261b3364b61f4442e3a03571",
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
+    SniperDuelsKrustyKrab = "10d60e9107bd1826b57c3c061c43a133",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -28,6 +29,7 @@ for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[na
 local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason or ""
 local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnEgg or ""
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
+local SniperDuelsKrustyKrabScriptId = LuarmorScriptIds.SniperDuelsKrustyKrab or ""
 
 local Games = {
     {
@@ -56,8 +58,19 @@ local Games = {
         UniverseId      = 10768625767,
         GameName        = "Save the Krusty Krab",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.SaveTheKrustyKrab or "",
-        GetKeyUrl       = LuarmorAdUrls.SaveTheKrustyKrab or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = SniperDuelsKrustyKrabScriptId ~= "" and SniperDuelsKrustyKrabScriptId or LuarmorScriptIds.SaveTheKrustyKrab or "",
+        GetKeyUrl       = LuarmorAdUrls.SniperDuelsKrustyKrab or LuarmorAdUrls.SaveTheKrustyKrab or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = {
+            109397169461300, 87638278358672, 99744266684189, 108950797601270,
+            71550370264914, 126656889246841, 139461236281850,
+        },
+        UniverseId      = 7264587281,
+        GameName        = "Sniper Duels",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = SniperDuelsKrustyKrabScriptId,
+        GetKeyUrl       = LuarmorAdUrls.SniperDuelsKrustyKrab or LuarmorAdUrls.SniperDuels or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 4639625707, 6856061811, 17267897726, 18161998932, 116355587227251 },
