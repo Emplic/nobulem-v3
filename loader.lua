@@ -17,6 +17,7 @@ local LuarmorScriptIds = {
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
     SniperDuelsKrustyKrab = "10d60e9107bd1826b57c3c061c43a133",
     HypershotVenomEvolution = "8934f8215d1c598724cbbf2d65308305",
+    ProjectSlayersSpiderArm = "08a06d4201aadf0d1eaf19cda5c9256a",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -32,6 +33,7 @@ local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnE
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
 local SniperDuelsKrustyKrabScriptId = LuarmorScriptIds.SniperDuelsKrustyKrab or ""
 local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
+local ProjectSlayersSpiderArmScriptId = LuarmorScriptIds.ProjectSlayersSpiderArm or ""
 
 local Games = {
     {
@@ -130,8 +132,16 @@ local Games = {
         UniverseId      = 5595353122,
         GameName        = "Project Slayers 2",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.ProjectSlayers or "",
-        GetKeyUrl       = LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = ProjectSlayersSpiderArmScriptId ~= "" and ProjectSlayersSpiderArmScriptId or LuarmorScriptIds.ProjectSlayers or "",
+        GetKeyUrl       = LuarmorAdUrls.ProjectSlayersSpiderArm or LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 117734411290994, 76196077709659, 101278483792069 },
+        UniverseId      = 10771997908,
+        GameName        = "+1 Spider Arm",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = ProjectSlayersSpiderArmScriptId,
+        GetKeyUrl       = LuarmorAdUrls.ProjectSlayersSpiderArm or LuarmorAdUrls.SpiderArm or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = {
