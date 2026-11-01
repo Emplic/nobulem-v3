@@ -16,6 +16,7 @@ local LuarmorScriptIds = {
     WantedBreakAndStealAnEgg = "e47e9632261b3364b61f4442e3a03571",
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
     SniperDuelsKrustyKrab = "10d60e9107bd1826b57c3c061c43a133",
+    HypershotVenomEvolution = "8934f8215d1c598724cbbf2d65308305",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -30,6 +31,7 @@ local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason o
 local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnEgg or ""
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
 local SniperDuelsKrustyKrabScriptId = LuarmorScriptIds.SniperDuelsKrustyKrab or ""
+local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
 
 local Games = {
     {
@@ -139,8 +141,16 @@ local Games = {
         UniverseId      = 5995470825,
         GameName        = "Hypershot",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.Hypershot or "",
-        GetKeyUrl       = LuarmorAdUrls.Hypershot or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = HypershotVenomEvolutionScriptId ~= "" and HypershotVenomEvolutionScriptId or LuarmorScriptIds.Hypershot or "",
+        GetKeyUrl       = LuarmorAdUrls.HypershotVenomEvolution or LuarmorAdUrls.Hypershot or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 116448925875915 },
+        UniverseId      = 10769464063,
+        GameName        = "Venom Evolution",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = HypershotVenomEvolutionScriptId,
+        GetKeyUrl       = LuarmorAdUrls.HypershotVenomEvolution or LuarmorAdUrls.VenomEvolution or LuarmorAdUrls.Default or "",
     },
 }
 
