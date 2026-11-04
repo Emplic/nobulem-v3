@@ -12,12 +12,11 @@ local LuarmorScriptIds = {
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
     AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
     AnimeZeroHuntingSeason = "3ec02d97a9106e0ff825f5087fc02af7",
-    SaveTheKrustyKrab = "aa03e2dca054e1ed1ba620402ead2454",
     WantedBreakAndStealAnEgg = "e47e9632261b3364b61f4442e3a03571",
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
-    SniperDuelsKrustyKrab = "10d60e9107bd1826b57c3c061c43a133",
     HypershotVenomEvolution = "8934f8215d1c598724cbbf2d65308305",
     ProjectSlayersSpiderArm = "08a06d4201aadf0d1eaf19cda5c9256a",
+    AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -31,7 +30,6 @@ for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[na
 local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason or ""
 local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnEgg or ""
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
-local SniperDuelsKrustyKrabScriptId = LuarmorScriptIds.SniperDuelsKrustyKrab or ""
 local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
 local ProjectSlayersSpiderArmScriptId = LuarmorScriptIds.ProjectSlayersSpiderArm or ""
 
@@ -56,25 +54,17 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.HuntingSeason or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 77709018585862, 129332901430212 },
-        LobbyPlaceIds   = { 129332901430212 },
-        SubplaceRoots   = { 129332901430212 },
-        UniverseId      = 10768625767,
-        GameName        = "Save the Krusty Krab",
-        SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = SniperDuelsKrustyKrabScriptId ~= "" and SniperDuelsKrustyKrabScriptId or LuarmorScriptIds.SaveTheKrustyKrab or "",
-        GetKeyUrl       = LuarmorAdUrls.SniperDuelsKrustyKrab or LuarmorAdUrls.SaveTheKrustyKrab or LuarmorAdUrls.Default or "",
-    },
-    {
+        -- menu, Town Central (lobby), Trade Central and every mission/raid map
         PlaceIds        = {
-            109397169461300, 87638278358672, 99744266684189, 108950797601270,
-            71550370264914, 126656889246841, 139461236281850,
+            13379208636, 13379349730, 13904207646, 14012874501, 14638336319, 14916516914, 14932214603,
+            15030367419, 15220308770, 15374465998, 15824912319, 17688739434, 112374853034490, 126678335159530,
         },
-        UniverseId      = 7264587281,
-        GameName        = "Sniper Duels",
+        SubplaceRoots   = { 13379208636 },
+        UniverseId      = 4658598196,
+        GameName        = "Attack on Titan Revolution",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = SniperDuelsKrustyKrabScriptId,
-        GetKeyUrl       = LuarmorAdUrls.SniperDuelsKrustyKrab or LuarmorAdUrls.SniperDuels or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = LuarmorScriptIds.AOTR or "",
+        GetKeyUrl       = LuarmorAdUrls.AOTR or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 4639625707, 6856061811, 17267897726, 18161998932, 116355587227251 },
