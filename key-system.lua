@@ -205,7 +205,8 @@ local function CountCheckpoint()
     SaveStats()
 end
 
-local function IsLifetimeKey(key, expiresAt)
+local function IsLifetimeKey(key, expiresAt, neverExpires)
+    if neverExpires then return true end
     if expiresAt and expiresAt > os.time() then
         return expiresAt - os.time() > config.LifetimeThreshold
     end
@@ -305,8 +306,9 @@ local function CheckOnce(key)
         local data = type(result.data) == "table" and result.data or {}
         local expiresAt = tonumber(data.auth_expire)
         if expiresAt and expiresAt > 1e11 then expiresAt //= 1000 end
-        if expiresAt and expiresAt <= 0 then expiresAt = nil end
-        return { ok = true, sdk = sdk, expiresAt = expiresAt }
+        local neverExpires = expiresAt ~= nil and expiresAt <= 0
+        if neverExpires then expiresAt = nil end
+        return { ok = true, sdk = sdk, expiresAt = expiresAt, neverExpires = neverExpires }
     end
 
     local known = KeyMessages[code]
@@ -1718,7 +1720,7 @@ function OpenWindow(opts)
             SetBusy(false)
             SetStatus("success", "Key accepted.")
             SaveKey(key)
-            local lifetime = IsLifetimeKey(key, result.expiresAt)
+            local lifetime = IsLifetimeKey(key, result.expiresAt, result.neverExpires)
             if NoteKeyInUse(key) and not lifetime then CountCheckpoint() end
             task.wait(0.35)
             if Window ~= controller then return end
@@ -1801,7 +1803,7 @@ if savedKey and IsValidKeyFormat(savedKey) then
     local result = CheckKey(savedKey)
     if result.ok then
         State.accepted = true
-        local lifetime = IsLifetimeKey(savedKey, result.expiresAt)
+        local lifetime = IsLifetimeKey(savedKey, result.expiresAt, result.neverExpires)
         NoteKeyInUse(savedKey)
         if config.ShowPremiumPopup and not lifetime then
             toast.Update({
