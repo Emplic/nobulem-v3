@@ -316,7 +316,26 @@ local function InviteDiscord()
     end
 end
 
-task.spawn(InviteDiscord)
+local DISCORD_INVITE_FILE = "nobulem_discord.txt"
+local DISCORD_INVITE_LIMIT = 5
+
+local function ShouldInviteDiscord()
+    local count = 0
+    pcall(function()
+        if isfile and isfile(DISCORD_INVITE_FILE) then
+            count = tonumber(readfile(DISCORD_INVITE_FILE)) or 0
+        end
+    end)
+    if count >= DISCORD_INVITE_LIMIT then return false end
+    pcall(function()
+        if writefile then writefile(DISCORD_INVITE_FILE, tostring(count + 1)) end
+    end)
+    return true
+end
+
+if ShouldInviteDiscord() then
+    task.spawn(InviteDiscord)
+end
 
 local ok, err = pcall(function()
     local source = game:HttpGet(KEYSYSTEM_URL)
