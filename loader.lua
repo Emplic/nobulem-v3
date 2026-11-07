@@ -20,7 +20,7 @@ local LuarmorScriptIds = {
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
-    WorkInk = "https://ads.luarmor.net/get_key?for=Work_ink-ENZrHfPIitmN",
+    LootLabs = "https://ads.luarmor.net/get_key?for=Lootlabs-uWczMBbSTANN",
     Linkvertise24h = "https://ads.luarmor.net/get_key?for=Linkvertise_2-KLYIoYnluHnT",
 }
 
@@ -288,7 +288,6 @@ getgenv().NobulemLoaderConfig = {
     LinkvertiseUrl  = LuarmorAdUrls.Linkvertise,
     Linkvertise12hUrl = LuarmorAdUrls.Linkvertise12h or LuarmorAdUrls.Linkvertise,
     Linkvertise24hUrl = LuarmorAdUrls.Linkvertise24h,
-    WorkInkUrl      = LuarmorAdUrls.WorkInk,
     LootLabsUrl     = LuarmorAdUrls.LootLabs,
 }
 
