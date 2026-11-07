@@ -59,8 +59,8 @@ local config = {
         [12] = {
             { Name = "Linkvertise", Url = LoaderConfig.Linkvertise12hUrl or LoaderConfig.LinkvertiseUrl or LoaderConfig.GetKeyUrl
                 or "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ" },
-            { Name = "Work.ink", Url = LoaderConfig.WorkInkUrl or LoaderConfig.GetKeyUrl
-                or "https://ads.luarmor.net/get_key?for=Work_ink-ENZrHfPIitmN" },
+            { Name = "Lootlabs", Url = LoaderConfig.LootLabsUrl or LoaderConfig.GetKeyUrl
+                or "https://ads.luarmor.net/get_key?for=Lootlabs-uWczMBbSTANN" },
         },
         [24] = {
             { Name = "Linkvertise", Url = LoaderConfig.Linkvertise24hUrl
