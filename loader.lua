@@ -10,13 +10,12 @@ local LuarmorScriptIds = {
     Wanted = "b59527dfe5520d0cd523a37e7ddf2b47",
     ProjectSlayers = "9955c61131117e72e978555014354b74",
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
-    AnimeZero = "a04c0b7e46927ee3eefa916ccd650326",
-    AnimeZeroHuntingSeason = "3ec02d97a9106e0ff825f5087fc02af7",
     WantedBreakAndStealAnEgg = "e47e9632261b3364b61f4442e3a03571",
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
     HypershotVenomEvolution = "8934f8215d1c598724cbbf2d65308305",
     ProjectSlayersSpiderArm = "08a06d4201aadf0d1eaf19cda5c9256a",
     AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
+    ABizarreRun = "1beffe3e89f9490b79c1f8d37520d1ee",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -27,32 +26,12 @@ local LuarmorAdUrls = {
 for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptIds[name] = id end
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
-local AnimeZeroHuntingSeasonScriptId = LuarmorScriptIds.AnimeZeroHuntingSeason or ""
 local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnEgg or ""
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
 local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
 local ProjectSlayersSpiderArmScriptId = LuarmorScriptIds.ProjectSlayersSpiderArm or ""
 
 local Games = {
-    {
-        PlaceIds        = { 114574503491412, 109151342576374, 96023089630459, 132303256922720 },
-        UniverseId      = 10512942223,
-        GameName        = "Anime Zero",
-        SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = AnimeZeroHuntingSeasonScriptId ~= "" and AnimeZeroHuntingSeasonScriptId or LuarmorScriptIds.AnimeZero or "",
-        GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.AnimeZero or LuarmorAdUrls.Default or "",
-    },
-    {
-        PlaceIds        = {
-            120073741652089, 5286116071, 73645306091146, 89820338455770, 108808025081246,
-            112565629873945, 124742531393193, 134584993281466,
-        },
-        UniverseId      = 1851087906,
-        GameName        = "Hunting Season",
-        SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = AnimeZeroHuntingSeasonScriptId,
-        GetKeyUrl       = LuarmorAdUrls.AnimeZeroHuntingSeason or LuarmorAdUrls.HuntingSeason or LuarmorAdUrls.Default or "",
-    },
     {
         -- menu, Town Central (lobby), Trade Central and every mission/raid map
         PlaceIds        = {
@@ -151,6 +130,14 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = HypershotVenomEvolutionScriptId,
         GetKeyUrl       = LuarmorAdUrls.HypershotVenomEvolution or LuarmorAdUrls.VenomEvolution or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 108055619068945 },
+        UniverseId      = 9867225552,
+        GameName        = "A Bizarre Run",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.ABizarreRun or "",
+        GetKeyUrl       = LuarmorAdUrls.ABizarreRun or LuarmorAdUrls.Default or "",
     },
 }
 
