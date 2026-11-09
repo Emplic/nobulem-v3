@@ -199,7 +199,7 @@ local ObsidianLibrary
 local function LoadObsidian()
     if ObsidianLibrary then return ObsidianLibrary end
     local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
-    local okL, Library = pcall(function() return loadstring(game:HttpGet("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/library.lua"))() end)
+    local okL, Library = pcall(function() return loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/Library.lua"))() end)
     if not okL or not Library then return nil end
     Library.CornerRadius = 10
     local okT, ThemeManager = pcall(function() return loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))() end)
