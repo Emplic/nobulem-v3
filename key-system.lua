@@ -735,19 +735,40 @@ local State = { busy = false, accepted = false }
 
 local OpenWindow
 
+local function PublishKeyInfo(key, result)
+    local env = getgenv()
+    local info = { Lifetime = false, ExpiresAt = type(result) == "table" and result.expiresAt or nil }
+    env.NobulemKeyInfo = info
+    if info.ExpiresAt or type(result) ~= "table" or not result.neverExpires or PreviewMode then return info end
+    task.spawn(function()
+        for attempt = 1, 8 do
+            task.wait(attempt == 1 and 3 or 8)
+            if env.NobulemKeyInfo ~= info then return end
+            local again = CheckOnce(key)
+            if env.NobulemKeyInfo ~= info then return end
+            if again.ok and again.expiresAt then
+                info.ExpiresAt = again.expiresAt
+                return
+            end
+            if again.ok and again.neverExpires and (info.Started or attempt >= 4) then
+                info.Lifetime = true
+                return
+            end
+        end
+    end)
+    return info
+end
+
 local function StartScript(key, sdk, result)
     SetKeyGlobals(key)
-    local expiresAt = type(result) == "table" and result.expiresAt or nil
-    getgenv().NobulemKeyInfo = {
-        Lifetime = IsLifetimeKey(key, expiresAt, type(result) == "table" and result.neverExpires),
-        ExpiresAt = expiresAt,
-    }
+    local keyInfo = PublishKeyInfo(key, result)
     local function Run()
         DestroyGui()
         getgenv().NobulemKeySystemClosed = true
         task.wait()
         sdk.script_id = config.LuarmorScriptId
         local ok, err = pcall(sdk.load_script)
+        keyInfo.Started = true
         if not ok then
             ClearKeyGlobals()
             getgenv().NobulemKeyInfo = nil
