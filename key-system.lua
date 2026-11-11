@@ -1800,17 +1800,36 @@ function OpenWindow(opts)
     return controller
 end
 
+local function ProvidedKey()
+    local env = getgenv()
+    for _, value in { LoaderConfig.ScriptKey, env.script_key, _G.script_key } do
+        if type(value) == "string" then
+            local key = ExtractKey(value)
+            if key ~= "" then return key end
+        end
+    end
+    return nil
+end
+
+local providedKey = ProvidedKey()
 local savedKey = LoadSavedKey()
-if savedKey and IsValidKeyFormat(savedKey) then
-    local toast = Toast({ Title = "Checking saved key", Body = GameName, Kind = "loading", Duration = 0 })
-    local result = CheckKey(savedKey)
+local candidates = {}
+if providedKey and IsValidKeyFormat(providedKey) then table.insert(candidates, providedKey) end
+if savedKey and IsValidKeyFormat(savedKey) and savedKey ~= providedKey then table.insert(candidates, savedKey) end
+
+local lastFailure = nil
+for _, key in candidates do
+    local isSaved = key == savedKey
+    local toast = Toast({ Title = isSaved and "Checking saved key" or "Checking your key", Body = GameName, Kind = "loading", Duration = 0 })
+    local result = CheckKey(key)
     if result.ok then
         State.accepted = true
-        local lifetime = IsLifetimeKey(savedKey, result.expiresAt, result.neverExpires)
-        NoteKeyInUse(savedKey)
+        if not isSaved then SaveKey(key) end
+        local lifetime = IsLifetimeKey(key, result.expiresAt, result.neverExpires)
+        if NoteKeyInUse(key) and not isSaved and not lifetime then CountCheckpoint() end
         if config.ShowPremiumPopup and not lifetime then
             toast.Update({
-                Title = "Saved key accepted",
+                Title = isSaved and "Saved key accepted" or "Key accepted",
                 Body = ("Starting %s. %s"):format(GameName, UsageLine()),
                 Kind = "success",
                 Duration = config.PreloadNudgeSeconds,
@@ -1818,23 +1837,30 @@ if savedKey and IsValidKeyFormat(savedKey) then
             })
             task.wait(config.PreloadNudgeSeconds)
         else
-            toast.Update({ Title = "Welcome back", Body = "Starting " .. GameName .. ".", Kind = "success", Duration = 1.2 })
+            toast.Update({ Title = isSaved and "Welcome back" or "Key accepted", Body = "Starting " .. GameName .. ".", Kind = "success", Duration = 1.2 })
             task.wait(0.8)
         end
-        StartScript(savedKey, result.sdk)
+        StartScript(key, result.sdk)
         return
     end
 
     toast.Close()
     ClearKeyGlobals()
+    if result.kind == "dead" and isSaved then ForgetSavedKey() end
+    if not lastFailure then lastFailure = { key = key, result = result } end
+end
+
+if lastFailure then
+    local result = lastFailure.result
     if result.kind == "dead" then
-        ForgetSavedKey()
         OpenWindow({ Status = { "error", result.message } })
     elseif result.kind == "transient" then
-        OpenWindow({ Prefill = savedKey, Status = { "error", result.message .. " Press Unlock to retry." } })
+        OpenWindow({ Prefill = lastFailure.key, Status = { "error", result.message .. " Press Unlock to retry." } })
     else
-        OpenWindow({ Prefill = savedKey, Status = { "error", result.message } })
+        OpenWindow({ Prefill = lastFailure.key, Status = { "error", result.message } })
     end
+elseif providedKey then
+    OpenWindow({ Prefill = providedKey, Status = { "error", "That doesn't look like a key - they're exactly 32 letters." } })
 else
     OpenWindow()
 end
