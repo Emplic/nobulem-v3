@@ -516,9 +516,12 @@ local function SetIcon(image, name)
 end
 
 for _, name in { "NobulemKeySystem", "ObsidianKeySystem", "ObsidianKeyNotification" } do
-    for _, parent in { CoreGui, gethui() } do
-        local existing = parent:FindFirstChild(name)
-        if existing then pcall(existing.Destroy, existing) end
+    local hiddenOk, hidden = pcall(gethui)
+    for _, parent in { CoreGui, hiddenOk and hidden or nil } do
+        pcall(function()
+            local existing = parent:FindFirstChild(name)
+            if existing then existing:Destroy() end
+        end)
     end
 end
 
