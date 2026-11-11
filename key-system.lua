@@ -735,8 +735,13 @@ local State = { busy = false, accepted = false }
 
 local OpenWindow
 
-local function StartScript(key, sdk)
+local function StartScript(key, sdk, result)
     SetKeyGlobals(key)
+    local expiresAt = type(result) == "table" and result.expiresAt or nil
+    getgenv().NobulemKeyInfo = {
+        Lifetime = IsLifetimeKey(key, expiresAt, type(result) == "table" and result.neverExpires),
+        ExpiresAt = expiresAt,
+    }
     local function Run()
         DestroyGui()
         getgenv().NobulemKeySystemClosed = true
@@ -745,6 +750,7 @@ local function StartScript(key, sdk)
         local ok, err = pcall(sdk.load_script)
         if not ok then
             ClearKeyGlobals()
+            getgenv().NobulemKeyInfo = nil
             State.accepted = false
             warn("[nobulem.wtf] Luarmor loader: " .. tostring(err))
             OpenWindow({ Prefill = key, Status = { "error", "The script failed to start. Press Unlock to try again." } })
@@ -1730,7 +1736,7 @@ function OpenWindow(opts)
             controller.ShowSuccess({
                 Lifetime = lifetime,
                 ExpiresAt = result.expiresAt,
-                OnContinue = function() StartScript(key, result.sdk) end,
+                OnContinue = function() StartScript(key, result.sdk, result) end,
             })
         end)
     end
@@ -1840,7 +1846,7 @@ for _, key in candidates do
             toast.Update({ Title = isSaved and "Welcome back" or "Key accepted", Body = "Starting " .. GameName .. ".", Kind = "success", Duration = 1.2 })
             task.wait(0.8)
         end
-        StartScript(key, result.sdk)
+        StartScript(key, result.sdk, result)
         return
     end
 
