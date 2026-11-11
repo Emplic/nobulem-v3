@@ -1,5 +1,72 @@
-if getgenv().nobulem_loader_started then return end
-getgenv().nobulem_loader_started = true
+local LoaderStatus = {}
+
+function LoaderStatus.show(text, isError, holdSeconds)
+    pcall(function()
+        local gui = LoaderStatus.gui
+        if not (gui and gui.Parent) then
+            gui = Instance.new("ScreenGui")
+            gui.Name = "NobulemLoaderStatus"
+            gui.IgnoreGuiInset = true
+            gui.ResetOnSpawn = false
+            gui.DisplayOrder = 999999
+            local placed = false
+            if type(gethui) == "function" then placed = pcall(function() gui.Parent = gethui() end) and gui.Parent ~= nil end
+            if not placed then placed = pcall(function() gui.Parent = game:GetService("CoreGui") end) and gui.Parent ~= nil end
+            if not placed then gui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui", 10) end
+            local label = Instance.new("TextLabel")
+            label.Name = "Text"
+            label.AnchorPoint = Vector2.new(0.5, 0)
+            label.Position = UDim2.new(0.5, 0, 0, 48)
+            label.Size = UDim2.new(0.9, 0, 0, 0)
+            label.AutomaticSize = Enum.AutomaticSize.Y
+            label.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+            label.BackgroundTransparency = 0.15
+            label.BorderSizePixel = 0
+            label.Font = Enum.Font.GothamMedium
+            label.TextSize = 15
+            label.TextWrapped = true
+            label.TextColor3 = Color3.new(1, 1, 1)
+            label.Parent = gui
+            local pad = Instance.new("UIPadding")
+            pad.PaddingTop = UDim.new(0, 8)
+            pad.PaddingBottom = UDim.new(0, 8)
+            pad.PaddingLeft = UDim.new(0, 10)
+            pad.PaddingRight = UDim.new(0, 10)
+            pad.Parent = label
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 8)
+            corner.Parent = label
+            local size = Instance.new("UISizeConstraint")
+            size.MaxSize = Vector2.new(520, math.huge)
+            size.Parent = label
+            LoaderStatus.gui = gui
+        end
+        local label = gui:FindFirstChild("Text")
+        label.Text = "nobulem.wtf | " .. tostring(text)
+        label.TextColor3 = isError and Color3.fromRGB(255, 110, 110) or Color3.new(1, 1, 1)
+        local token = {}
+        LoaderStatus.token = token
+        if holdSeconds then
+            task.delay(holdSeconds, function()
+                if LoaderStatus.token == token then LoaderStatus.hide() end
+            end)
+        end
+    end)
+end
+
+function LoaderStatus.hide()
+    if LoaderStatus.gui then pcall(function() LoaderStatus.gui:Destroy() end) end
+    LoaderStatus.gui = nil
+end
+
+local LoaderEnv = (type(getgenv) == "function" and getgenv()) or shared
+local previousStart = LoaderEnv.nobulem_loader_started
+if type(previousStart) == "number" and os.clock() - previousStart < 15 then
+    LoaderStatus.show("Already loading, please wait...", false, 4)
+    return
+end
+LoaderEnv.nobulem_loader_started = os.clock()
+LoaderStatus.show("Loading...")
 
 local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/key-system.lua")
 
@@ -215,6 +282,7 @@ local function LoadObsidian()
 end
 
 local function Notify(title, text, duration)
+    LoaderStatus.show(title .. ": " .. tostring(text), title:find("Error", 1, true) ~= nil or title:find("Unsupported", 1, true) ~= nil, duration or 6)
     local Library = LoadObsidian()
     if Library and Library.Notify then
         local ok = pcall(function()
@@ -324,15 +392,34 @@ if ShouldInviteDiscord() then
     task.spawn(InviteDiscord)
 end
 
+local function Download(url)
+    local okGet, body = pcall(function() return game:HttpGet(url) end)
+    if okGet and type(body) == "string" and #body > 0 then return body end
+    local http = (type(request) == "function" and request) or (type(http_request) == "function" and http_request) or (syn and syn.request)
+    if http then
+        local okReq, response = pcall(http, { Url = url, Method = "GET" })
+        if okReq and type(response) == "table" and type(response.Body) == "string" and #response.Body > 0 then return response.Body end
+    end
+    error("could not download " .. url .. " (" .. tostring(body) .. ")")
+end
+
+LoaderStatus.show("Opening key system for " .. ResolvedName .. "...")
 local ok, err = pcall(function()
-    local source = game:HttpGet(KEYSYSTEM_URL)
+    local source = Download(KEYSYSTEM_URL)
     local chunk, compileErr = loadstring(source)
     if not chunk then error("compile: " .. tostring(compileErr)) end
+    task.delay(3, function()
+        if LoaderStatus.gui and not LoaderStatus.failed then LoaderStatus.hide() end
+    end)
     chunk(getgenv().NobulemLoaderConfig)
 end)
 
-if not ok then
-    Notify("Loader Error", tostring(err), 10)
+if ok then
+    LoaderStatus.hide()
+    getgenv().nobulem_loader_started = nil
+else
+    LoaderStatus.failed = true
+    Notify("Loader Error", tostring(err), 15)
     getgenv().nobulem_loader_started = nil
     getgenv().NobulemLoaderConfig = nil
 end
