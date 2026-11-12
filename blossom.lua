@@ -68,7 +68,7 @@ local Themes = {
 	Obsidian = {
 		Background = RGB(16, 16, 18), Tab = RGB(12, 11, 14), Outline = RGB(44, 42, 52), Inline = RGB(24, 24, 29),
 		Text = RGB(234, 232, 244), InactiveText = RGB(118, 114, 134), Accent = RGB(159, 109, 255), Element = RGB(24, 23, 31),
-		Gradient = RGB(166, 164, 175), Shadow = RGB(0, 0, 0), HoveredElement = RGB(236, 240, 248),
+		Gradient = RGB(166, 164, 175), Shadow = RGB(0, 0, 0), HoveredElement = RGB(38, 36, 48),
 	},
 	["Sakura Drift"] = {
 		Background = RGB(38, 28, 34), Tab = RGB(32, 23, 29), Outline = RGB(70, 50, 62), Inline = RGB(48, 35, 43),
@@ -121,7 +121,7 @@ local Fonts = {
 local FontOrder = { "Inter", "Builder Sans", "Roboto", "Montserrat", "Source Sans Pro", "Ubuntu", "Nunito", "Arimo" }
 local WeightOrder = { "Regular", "Medium", "SemiBold", "Bold" }
 
-local Current = table.clone(Themes.Blossom)
+local Current = table.clone(Themes.Obsidian)
 local Casing = "Normal"
 local FontFamily = INTER
 local BodyWeight = Enum.FontWeight.SemiBold
@@ -304,6 +304,17 @@ local function bind(inst, prop, source)
 		Dynamic[inst] = true
 	end
 	inst[prop] = resolve(source)
+end
+
+local function unbind(inst, prop)
+	local bindings = Bound[inst]
+	if not bindings then return end
+	local source = bindings[prop]
+	if type(source) == "string" then
+		local set = ByKey[source]
+		if set and set[inst] == prop then set[inst] = nil end
+	end
+	bindings[prop] = nil
 end
 
 local function refresh(inst, preset)
@@ -700,6 +711,25 @@ local Icons = {
 	check = { { "f", 2, 8.4, 6.2, 2, FULL, 45 }, { "f", 5.2, 6.8, 10, 2, FULL, -45 } },
 	layout = { { "f", 0.5, 1, 15, 4.5, 1 }, { "f", 0.5, 6.5, 7, 8.5, 1 }, { "f", 8.5, 6.5, 7, 8.5, 1 } },
 	reset = { { "r", 2.6, 2.6, 10.8, 10.8, FULL, 0, 1.8 }, { "h", 9.5, 0.5, 6, 5.5, 0 }, { "f", 9.2, 1.2, 4.6, 4.6, 0.5, 45 } },
+	eye = { { "r", 0.8, 3.6, 14.4, 8.8, FULL, 0, 1.6 }, { "f", 5.6, 5.6, 4.8, 4.8, FULL } },
+	home = { { "f", 3.8, 1.8, 8.4, 8.4, 1, 45 }, { "f", 2.6, 7, 10.8, 8, 1 }, { "h", 6.6, 10, 2.8, 5, 0.6 } },
+	users = {
+		{ "f", 1.6, 2, 5.2, 5.2, FULL }, { "f", 0.2, 8.4, 8, 6.2, 2.6 }, { "f", 9.2, 3, 4.6, 4.6, FULL },
+		{ "f", 8.8, 9, 7, 5.6, 2.4 },
+	},
+	shield = { { "f", 2.4, 1, 11.2, 8.6, 2 }, { "f", 4, 4.6, 8, 8, 1.2, 45 } },
+	bolt = { { "f", 6.6, 0.4, 3.4, 8.4, 0.6, 24 }, { "f", 6, 7.2, 3.4, 8.4, 0.6, 24 }, { "f", 3.4, 6.4, 9.2, 2.6, 0.6 } },
+	list = {
+		{ "f", 0.8, 2.4, 2.6, 2.6, FULL }, { "f", 5, 2.7, 10.2, 2, FULL }, { "f", 0.8, 6.7, 2.6, 2.6, FULL },
+		{ "f", 5, 7, 10.2, 2, FULL }, { "f", 0.8, 11, 2.6, 2.6, FULL }, { "f", 5, 11.3, 10.2, 2, FULL },
+	},
+	heart = { { "f", 0.8, 1.8, 7.6, 7.6, FULL }, { "f", 7.6, 1.8, 7.6, 7.6, FULL }, { "f", 3.4, 4.4, 9.2, 9.2, 1, 45 } },
+	coin = { { "r", 1, 1, 14, 14, FULL, 0, 1.6 }, { "f", 6.8, 4, 2.4, 8, FULL } },
+	car = {
+		{ "f", 3.4, 2.6, 9.2, 5, 2 }, { "f", 0.6, 6, 14.8, 5.6, 2 }, { "f", 2, 10, 4.4, 4.4, FULL },
+		{ "f", 9.6, 10, 4.4, 4.4, FULL }, { "h", 3.35, 11.35, 1.7, 1.7, FULL }, { "h", 10.95, 11.35, 1.7, 1.7, FULL },
+	},
+	sword = { { "f", 7, 0.2, 2.6, 11.6, 0.6, 45 }, { "f", 1.4, 10, 7.2, 2.2, 0.6, 45 }, { "f", 0.6, 12.4, 2.6, 3.2, 0.6, 45 } },
 	logo = (function()
 		local parts = { { "f", 0.6, 0.6, 14.8, 14.8, FULL } }
 		for arm = 0, 2 do
@@ -1743,11 +1773,16 @@ local function guiParent(screen)
 	end
 end
 
+function Window:_fitTabList()
+	self.TabList.CanvasSize = Offset(0, math.ceil(self.SidebarY + Metrics.TabH / 2 + Metrics.Gap - self.TabListTop))
+end
+
 function Window:Category(name)
 	local y = self.SidebarY + (self.SidebarHasTabs and Metrics.TabToCategory or 0)
-	label(self.Sidebar, { Fg = "InactiveText", Text = name, TextSize = 9, X = Metrics.Pad, RowH = 12, Y = y - 6, W = 120 })
+	label(self.TabList, { Fg = "InactiveText", Text = name, TextSize = 9, X = Metrics.Pad, RowH = 12, Y = y - 6 - self.TabListTop, W = 120 })
 	self.SidebarY = y
 	self.SidebarAfterCategory = true
+	self:_fitTabList()
 end
 
 function Window:Tab(options)
@@ -1756,7 +1791,7 @@ function Window:Tab(options)
 	self.SidebarY = y
 
 	local tab = setmetatable({ Window = self, Name = options.Name, Y = y - Metrics.TabH / 2 }, Tab)
-	local button = new("TextButton", { Position = Offset(Metrics.Pad, tab.Y), Size = Offset(Metrics.TabW, Metrics.TabH), ZIndex = 2 }, self.Sidebar)
+	local button = new("TextButton", { Position = Offset(Metrics.Pad, tab.Y - self.TabListTop), Size = Offset(Metrics.TabW, Metrics.TabH), ZIndex = 2 }, self.TabList)
 	tab.Button = button
 	local hovering = false
 	local isActive = function() return self.CurrentTab == tab end
@@ -1795,6 +1830,7 @@ function Window:Tab(options)
 	hoverable(button, function() hovering = true; paint() end, function() hovering = false; paint() end)
 	button.MouseButton1Click:Connect(function() self:SelectTab(tab) end)
 	table.insert(self.Tabs, tab)
+	self:_fitTabList()
 	if not self.CurrentTab then self:SelectTab(tab, true) end
 	return tab
 end
@@ -1811,7 +1847,7 @@ function Window:SelectTab(tab, instant)
 	tab.Page.Visible = true
 	tab.Paint()
 	self.Indicator.Visible = true
-	place(self.Indicator, "Position", Offset(Metrics.Pad + 1, tab.Y + 1), not instant, "Soft")
+	place(self.Indicator, "Position", Offset(Metrics.Pad + 1, tab.Y + 1 - self.TabListTop), not instant, "Soft")
 	if not instant then
 		self.Veil.BackgroundTransparency = 0
 		animate(self.Veil, "BackgroundTransparency", 1, "Soft")
@@ -2010,8 +2046,7 @@ end
 
 -- The tab list and search box must both fit, however many tabs were added.
 function Window:_minHeight()
-	local needed = math.ceil(self.SidebarY + Metrics.TabH / 2 + Metrics.Gap + Metrics.SearchH + Metrics.Pad)
-	return evenClamp(math.max(self.MinSize.Y, needed + needed % 2), 0, math.huge)
+	return evenClamp(self.MinSize.Y, 0, math.huge)
 end
 
 function Window:_applySize(width, height)
@@ -2479,7 +2514,23 @@ function Window:Toggle()
 end
 
 local ConfigMemory = {}
-local function configPath(name) return "Blossom/" .. name .. ".json" end
+
+local function hasFileApi()
+	return typeof(writefile) == "function" and typeof(readfile) == "function" and typeof(isfile) == "function"
+end
+
+local function ensureFolder(path)
+	if typeof(isfolder) ~= "function" or typeof(makefolder) ~= "function" then return end
+	local built = ""
+	for part in string.gmatch(path, "[^/\\]+") do
+		built = built == "" and part or built .. "/" .. part
+		if not isfolder(built) then makefolder(built) end
+	end
+end
+
+function Window:_configPath(name)
+	return self.ConfigFolder .. "/" .. name .. ".json"
+end
 
 function Window:_serialize()
 	local data = {}
@@ -2516,7 +2567,10 @@ function Window:_deserialize(json)
 				end
 				object:Set(key)
 			else
+				local kind = object.Item and object.Item.Kind
+				local before = object.Value
 				object:Set(value)
+				if (kind == "Toggle" or kind == "Slider") and object.Value == before then fire(object.Callback, object.Value) end
 			end
 		end
 	end
@@ -2524,13 +2578,19 @@ end
 
 function Window:ListConfigs()
 	local names = {}
-	if typeof(listfiles) == "function" and typeof(isfolder) == "function" and isfolder("Blossom") then
-		for _, path in listfiles("Blossom") do
-			local name = string.match(path, "([^/\\]+)%.json$")
-			if name then table.insert(names, name) end
-		end
+	if hasFileApi() and typeof(listfiles) == "function" and typeof(isfolder) == "function" then
+		pcall(function()
+			if not isfolder(self.ConfigFolder) then return end
+			for _, path in listfiles(self.ConfigFolder) do
+				local name = string.match(path, "([^/\\]+)%.json$")
+				if name then table.insert(names, name) end
+			end
+		end)
 	else
-		for name in ConfigMemory do table.insert(names, name) end
+		local prefix = self.ConfigFolder .. "/"
+		for key in ConfigMemory do
+			if string.sub(key, 1, #prefix) == prefix then table.insert(names, string.sub(key, #prefix + 1)) end
+		end
 	end
 	table.sort(names)
 	return names
@@ -2538,56 +2598,74 @@ end
 
 function Window:SaveConfig(name)
 	local json = self:_serialize()
-	if typeof(writefile) == "function" then
-		if typeof(isfolder) == "function" and not isfolder("Blossom") then makefolder("Blossom") end
-		writefile(configPath(name), json)
+	if hasFileApi() then
+		ensureFolder(self.ConfigFolder)
+		writefile(self:_configPath(name), json)
 	else
-		ConfigMemory[name] = json
+		ConfigMemory[self.ConfigFolder .. "/" .. name] = json
 	end
 end
 
 function Window:LoadConfig(name)
 	local json
-	if typeof(readfile) == "function" and typeof(isfile) == "function" and isfile(configPath(name)) then
-		json = readfile(configPath(name))
+	if hasFileApi() then
+		local ok, result = pcall(function() return isfile(self:_configPath(name)) and readfile(self:_configPath(name)) or nil end)
+		json = ok and result or nil
 	else
-		json = ConfigMemory[name]
+		json = ConfigMemory[self.ConfigFolder .. "/" .. name]
 	end
-	if json then self:_deserialize(json); return true end
-	return false
+	if not json then return false end
+	self.LoadingConfig = true
+	local ok, err = pcall(self._deserialize, self, json)
+	self.LoadingConfig = false
+	if not ok then warn("[Blossom] config " .. tostring(name) .. ": " .. tostring(err)) end
+	return ok
 end
 
 function Window:DeleteConfig(name)
-	if typeof(delfile) == "function" and typeof(isfile) == "function" and isfile(configPath(name)) then
-		delfile(configPath(name))
+	if typeof(delfile) == "function" and hasFileApi() then
+		pcall(function()
+			if isfile(self:_configPath(name)) then delfile(self:_configPath(name)) end
+		end)
 	end
-	ConfigMemory[name] = nil
+	ConfigMemory[self.ConfigFolder .. "/" .. name] = nil
 end
 
-local AUTOLOAD_PATH = "Blossom/autoload.txt"
-local AutoloadMemory
+local AutoloadMemory = {}
 
-local function readAutoload()
-	if typeof(readfile) == "function" and typeof(isfile) == "function" then
-		return isfile(AUTOLOAD_PATH) and readfile(AUTOLOAD_PATH) or nil
+local function readAutoload(win)
+	local path = win.ConfigFolder .. "/autoload.txt"
+	if hasFileApi() then
+		local ok, name = pcall(function() return isfile(path) and readfile(path) or nil end)
+		return ok and name ~= "" and name or nil
 	end
-	return AutoloadMemory
+	return AutoloadMemory[path]
 end
 
-local function writeAutoload(name)
-	if typeof(writefile) ~= "function" then
-		AutoloadMemory = name
+local function writeAutoload(win, name)
+	local path = win.ConfigFolder .. "/autoload.txt"
+	if not hasFileApi() then
+		AutoloadMemory[path] = name
 	elseif name then
-		if typeof(isfolder) == "function" and not isfolder("Blossom") then makefolder("Blossom") end
-		writefile(AUTOLOAD_PATH, name)
-	elseif typeof(delfile) == "function" and isfile(AUTOLOAD_PATH) then
-		delfile(AUTOLOAD_PATH)
+		ensureFolder(win.ConfigFolder)
+		writefile(path, name)
+	elseif typeof(delfile) == "function" and isfile(path) then
+		delfile(path)
 	end
+end
+
+function Window:LoadAutoload()
+	local saved = readAutoload(self)
+	if saved and self:LoadConfig(saved) then
+		self:Notify(('Autoloaded "%s".'):format(saved))
+		return true
+	end
+	return false
 end
 
 function Window:BuildSettings(tab)
 	local selected
-	local saved = readAutoload()
+	local saved = readAutoload(self)
 	local autoloadOn, autoloadName = saved ~= nil, saved
 	local autoloadList
 	local profiles = tab:Section({ Name = "Profiles", Icon = "cube", Side = 1 })
@@ -2624,7 +2702,7 @@ function Window:BuildSettings(tab)
 		end
 	end })
 
-	local function storeAutoload() writeAutoload(autoloadOn and autoloadName or nil) end
+	local function storeAutoload() writeAutoload(self, autoloadOn and autoloadName or nil) end
 	local autoload = tab:Section({ Name = "Autoload", Icon = "cube", Side = 1 })
 	autoload:Toggle({ Name = "Load on start", Default = autoloadOn, NoSave = true, Callback = function(value)
 		autoloadOn = value
@@ -2653,10 +2731,8 @@ function Window:BuildSettings(tab)
 	menu:Dropdown({ Name = "Font", Options = FontOrder, Default = "Inter", NoSave = true, Callback = function(value) self:SetFont(value) end })
 	menu:Dropdown({ Name = "Text Weight", Options = WeightOrder, Default = BodyWeight.Name, NoSave = true, Callback = function(value) self:SetTextWeight(value) end })
 
-	if saved then
-		task.defer(function()
-			if self:LoadConfig(saved) then self:Notify(('Autoloaded "%s".'):format(saved)) end
-		end)
+	if saved and not self.ManualAutoload then
+		task.defer(function() self:LoadAutoload() end)
 	end
 end
 
@@ -2739,7 +2815,7 @@ function Window:Destroy()
 	self.Screen:Destroy()
 end
 
-local Blossom = { Themes = Themes, ThemeOrder = ThemeOrder, Metrics = Metrics, Fonts = Fonts }
+local Blossom = { Themes = Themes, ThemeOrder = ThemeOrder, Metrics = Metrics, Fonts = Fonts, Current = Current }
 
 local LastWindow
 
@@ -2760,9 +2836,9 @@ function Blossom.new(options)
 		Width = startW, Height = startH, MinSize = minSize, ColumnW = (startW - Metrics.ContentX - Metrics.Pad * 3) / 2,
 		ResizeJobs = {}, ResizeHandles = {},
 		Title = options.Title or "Blossom", Tabs = {}, Sections = {}, Columns = {}, Index = {}, Binds = {}, Colors = {}, Flags = {},
-		ThemeRows = {}, HotkeyEntries = {}, HotkeyOrder = {}, NotifyStack = {}, Connections = {}, Jobs = {}, Moved = {}, PendingThemeKeys = {}, FlagOwners = {},
+		ThemeRows = {}, HotkeyEntries = {}, HotkeyOrder = {}, WheelBlockers = setmetatable({}, { __mode = "k" }), NotifyStack = {}, Connections = {}, Jobs = {}, Moved = {}, PendingThemeKeys = {}, FlagOwners = {},
 		ThemeClock = 0, SidebarY = Metrics.FirstCategory, SidebarHasTabs = false, SidebarAfterCategory = false,
-		Visible = true, ThemeName = options.Theme or "Blossom", MenuKey = options.MenuKey or Enum.KeyCode.RightShift,
+		Visible = true, ThemeName = options.Theme or "Obsidian", ConfigFolder = options.ConfigFolder or "Blossom", ManualAutoload = options.ManualAutoload == true, MenuKey = options.MenuKey or Enum.KeyCode.RightShift,
 		LastPopupTime = 0, DropdownClosedAt = 0,
 	}, Window)
 	if options.Logo then
@@ -2814,7 +2890,12 @@ function Blossom.new(options)
 		if title.TextBounds.X > titleW and title.TextSize > 11 then fitTitle() end
 	end)
 	fitTitle()
-	win.Indicator = new("Frame", { Bg = "Inline", Size = Offset(Metrics.TabW - 2, Metrics.TabH - 2), Radius = Metrics.PillRadius, Border = "Outline", Visible = false }, sidebar)
+	win.TabListTop = 44
+	win.TabList = new("ScrollingFrame", {
+		Name = "Tabs", Position = Offset(0, win.TabListTop), Size = Dim2(1, 0, 1, -(win.TabListTop + Metrics.Pad + Metrics.SearchH + Metrics.Gap)),
+		ScrollBarThickness = 0, CanvasSize = Offset(0, 0), ClipsDescendants = true, ScrollingDirection = Enum.ScrollingDirection.Y,
+	}, sidebar)
+	win.Indicator = new("Frame", { Bg = "Inline", Size = Offset(Metrics.TabW - 2, Metrics.TabH - 2), Radius = Metrics.PillRadius, Border = "Outline", Visible = false }, win.TabList)
 	local searchButton = new("TextButton", {
 		Position = Dim2(0, Metrics.Pad + 1, 1, -(Metrics.Pad + Metrics.SearchH) + 1), Size = Offset(Metrics.TabW - 2, Metrics.SearchH - 2), Radius = Metrics.PillRadius, Border = "Outline", BackgroundTransparency = 0,
 	}, sidebar)
@@ -2909,6 +2990,9 @@ function Blossom.new(options)
 			if inside(dropdown.Panel, point) then return end
 			dropdown:Toggle(false)
 		end
+		for blocker in win.WheelBlockers do
+			if blocker.Parent and blocker.Visible and isShown(blocker) and inside(blocker, point) and blocker.AbsoluteCanvasSize.Y > blocker.AbsoluteWindowSize.Y + 1 then return end
+		end
 		for _, column in win.CurrentTab.Columns do
 			if inside(column.Scroll, point) then
 				column:ScrollTo(column.Target - input.Position.Z * 60)
@@ -2966,6 +3050,1088 @@ function Blossom.new(options)
 	end)
 
 	return win
+end
+
+local LucideIcons = {
+	home = "home", house = "home", ["house-plus"] = "home", eye = "eye", ["scan-eye"] = "eye", ["eye-off"] = "eye", glasses = "eye",
+	user = "user", ["user-round"] = "user", ["user-cog"] = "user", ["circle-user"] = "user", contact = "user",
+	users = "users", ["users-round"] = "users", ["user-plus"] = "users", ["person-standing"] = "user",
+	settings = "gear", ["settings-2"] = "gear", cog = "gear", sliders = "gear", ["sliders-horizontal"] = "gear", gauge = "gear",
+	wrench = "wrench", hammer = "wrench", ["pocket-knife"] = "wrench", construction = "wrench", package = "cube", box = "cube", boxes = "cube",
+	crosshair = "target", target = "target", locate = "target", ["locate-fixed"] = "target", focus = "target", radar = "target", scan = "target",
+	swords = "sword", sword = "sword", axe = "sword", skull = "target", ghost = "smile", smile = "smile", laugh = "smile",
+	shield = "shield", ["shield-check"] = "shield", ["shield-alert"] = "shield", ["shield-half"] = "shield", ["shield-plus"] = "shield",
+	zap = "bolt", bolt = "bolt", flame = "bolt", rocket = "bolt", sparkles = "bolt", wand = "bolt", ["wand-sparkles"] = "bolt", activity = "list",
+	car = "car", ["car-front"] = "car", truck = "car", plane = "car", tractor = "car", bike = "car", ship = "car", helicopter = "car",
+	list = "list", ["list-checks"] = "list", ["list-todo"] = "list", ["clipboard-list"] = "list", ["scroll-text"] = "list", menu = "list",
+	["layout-grid"] = "layout", layout = "layout", ["layout-dashboard"] = "layout", grid = "layout", ["panels-top-left"] = "layout",
+	heart = "heart", ["heart-pulse"] = "heart", ["heart-handshake"] = "heart", pill = "heart", syringe = "heart",
+	coins = "coin", coin = "coin", ["dollar-sign"] = "coin", ["circle-dollar-sign"] = "coin", gem = "coin", gift = "coin", wheat = "coin",
+	["shopping-cart"] = "coin", ["shopping-bag"] = "coin", store = "coin", banknote = "coin", wallet = "coin", trophy = "coin", crown = "coin",
+	map = "globe", globe = "globe", ["map-pin"] = "globe", compass = "globe", sun = "globe", earth = "globe", mountain = "globe", navigation = "globe",
+	bot = "robot", cpu = "robot", play = "robot", ["circle-play"] = "robot", repeat2 = "reset", timer = "reset", clock = "reset",
+	key = "key", keyboard = "key", lock = "key", ["key-round"] = "key", ["mouse-pointer"] = "key", ["mouse-pointer-click"] = "key",
+	bomb = "bomb", ["bow-arrow"] = "bullet", bullet = "bullet", gun = "bullet",
+	file = "file", ["file-text"] = "file", info = "file", ["book-open"] = "file", ["graduation-cap"] = "file", ["message-square"] = "file", bell = "file",
+	search = "search", check = "check", ["check-circle"] = "check", ["circle-check"] = "check", ["badge-check"] = "check",
+	["refresh-cw"] = "reset", ["repeat"] = "reset", ["rotate-ccw"] = "reset", ["rotate-cw"] = "reset", ["git-branch"] = "layout",
+	dices = "cube", dice = "cube", palette = "eye", paintbrush = "eye", brush = "eye", image = "eye", ["trending-up"] = "robot", server = "globe",
+	route = "globe", navigation = "globe", orbit = "globe", wind = "globe", snowflake = "globe", ["cloud-rain"] = "globe", mountain = "globe",
+	egg = "coin", trophy = "coin", award = "coin", landmark = "coin", ["badge-dollar-sign"] = "coin", store = "coin",
+	radar = "target", scan = "target", flag = "target", move = "bolt", footprints = "bolt", dumbbell = "heart",
+	["mouse-pointer-click"] = "key", ["volume-2"] = "key", radio = "key", ["flask-conical"] = "bomb", bug = "bomb",
+	["eye-off"] = "eye", video = "eye", ["video-off"] = "eye", camera = "eye", ["scan-eye"] = "eye",
+	["user-cog"] = "user", shirt = "user", ["paw-print"] = "smile", bird = "smile", handshake = "users",
+	["triangle-alert"] = "shield", ["shield-off"] = "shield", ["circle-plus"] = "check", plus = "check", ["check-check"] = "check",
+	puzzle = "cube", inbox = "cube", monitor = "layout", layers = "layout", ["list-ordered"] = "list", ["arrow-right-left"] = "reset",
+}
+
+local function blossomIcon(name)
+	if type(name) ~= "string" or name == "" then return "cube" end
+	if string.find(name, "rbxasset", 1, true) or Icons[name] then return name end
+	return LucideIcons[name] or LucideIcons[string.lower(name)] or "cube"
+end
+
+local SchemeKeys = {
+	BackgroundColor = "Background", MainColor = "Inline", AccentColor = "Accent", OutlineColor = "Outline",
+	FontColor = "Text", DarkColor = "Tab", SecondaryColor = "Element", InactiveColor = "InactiveText",
+}
+
+local function parseKey(name)
+	if typeof(name) == "EnumItem" then return name end
+	if type(name) ~= "string" or name == "" or name == "None" then return nil end
+	local mouse = { MB1 = "MouseButton1", MB2 = "MouseButton2", MB3 = "MouseButton3" }
+	local input = mouse[name] or (string.find(name, "MouseButton", 1, true) and name)
+	if input then
+		local ok, value = pcall(function() return Enum.UserInputType[input] end)
+		return ok and value or nil
+	end
+	local ok, value = pcall(function() return Enum.KeyCode[name] end)
+	return ok and value or nil
+end
+
+local function keyString(key)
+	if not key then return "None" end
+	local short = { MouseButton1 = "MB1", MouseButton2 = "MB2", MouseButton3 = "MB3" }
+	return short[key.Name] or key.Name
+end
+
+local function wrapWords(text, width)
+	local lines = {}
+	for paragraph in string.gmatch(tostring(text) .. "\n", "(.-)\n") do
+		local line = ""
+		for word in string.gmatch(paragraph, "%S+") do
+			if line ~= "" and #line + #word + 1 > width then
+				table.insert(lines, line)
+				line = word
+			else
+				line = line == "" and word or line .. " " .. word
+			end
+		end
+		if line ~= "" then table.insert(lines, line) end
+	end
+	return lines
+end
+
+function Blossom.Obsidian(defaults)
+	defaults = defaults or {}
+	local Library = {
+		Options = {}, Toggles = {}, Registry = {}, Unloaded = false, Toggled = true, CornerRadius = 6,
+		IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled,
+		ForceCheckbox = false, ShowCustomCursor = false, ShowToggleFrameInKeybinds = true, NotifySide = "Left",
+		Blossom = Blossom,
+	}
+	local Options, Toggles = Library.Options, Library.Toggles
+	local win, WindowObject
+	local boxes, unloadCallbacks, connections = {}, {}, {}
+	local lastCategory
+
+	Library.Registry = setmetatable({}, {
+		__index = function(_, inst)
+			if not Bound[inst] then return nil end
+			return setmetatable({}, {
+				__index = function(_, prop)
+					local source = Bound[inst] and Bound[inst][prop]
+					if type(source) ~= "string" then return source end
+					for key, mapped in pairs(SchemeKeys) do
+						if mapped == source then return key end
+					end
+					return source
+				end,
+				__newindex = function(_, prop, key)
+					if key == nil then
+						unbind(inst, prop)
+					elseif type(key) == "function" then
+						bind(inst, prop, key)
+					elseif SchemeKeys[key] then
+						bind(inst, prop, SchemeKeys[key])
+					end
+				end,
+			})
+		end,
+	})
+
+	Library.Scheme = setmetatable({}, {
+		__index = function(_, key)
+			if key == "Font" then return fontOf(Enum.FontWeight.Medium) end
+			if key == "RedColor" then return RGB(255, 88, 88) end
+			if key == "WhiteColor" then return Color3.new(1, 1, 1) end
+			local mapped = SchemeKeys[key]
+			return mapped and Current[mapped] or nil
+		end,
+	})
+
+	function Library:SafeCallback(callback, ...)
+		if type(callback) ~= "function" then return end
+		local ok, err = pcall(callback, ...)
+		if not ok then warn("[Blossom] callback error: " .. tostring(err)) end
+	end
+
+	function Library:AddToRegistry(inst, props)
+		for prop, key in pairs(props or {}) do
+			if key == "Font" then
+				pcall(function() inst[prop] = fontOf(Enum.FontWeight.Medium) end)
+			elseif type(key) == "function" then
+				bind(inst, prop, key)
+			elseif SchemeKeys[key] then
+				bind(inst, prop, SchemeKeys[key])
+			end
+		end
+	end
+
+	function Library:RemoveFromRegistry(inst)
+		forget(inst)
+	end
+
+	function Library:UpdateColorsUsingRegistry() end
+	function Library:SetDPIScale() end
+	function Library:SetNotifySide(side) self.NotifySide = side end
+	function Library:SetCornerRadius() end
+	function Library:SetFont() end
+	function Library:GetCustomIcon() return nil end
+	function Library:OnUnload(callback) table.insert(unloadCallbacks, callback) end
+
+	function Library:Notify(info, duration)
+		local text, time
+		if type(info) == "table" then
+			local description = info.Description ~= nil and tostring(info.Description) or ""
+			text = description ~= "" and description or info.Title or info.Text
+			time = info.Time or info.Duration
+		else
+			text, time = info, duration
+		end
+		text = tostring(text or "")
+		if not win then
+			print("[nobulem.wtf] " .. text)
+			return
+		end
+		if typeof(time) ~= "number" then time = 4 end
+		for _, line in ipairs(wrapWords(text, 54)) do
+			pcall(win.Notify, win, { Text = line, Duration = time })
+		end
+	end
+
+	function Library:Toggle(visible)
+		if not win then return end
+		if visible == nil then win:Toggle() else win:SetVisible(visible == true) end
+	end
+
+	function Library:Unload()
+		if self.Unloaded then return end
+		self.Unloaded = true
+		for _, callback in ipairs(unloadCallbacks) do self:SafeCallback(callback) end
+		for _, connection in ipairs(connections) do pcall(function() connection:Disconnect() end) end
+		if win then pcall(win.Destroy, win) end
+	end
+
+	function Library:MakeLine(parent, props)
+		local line = new("Frame", { Bg = "Outline", Size = Dim2(1, 0, 0, 1) }, parent)
+		for key, value in pairs(props or {}) do pcall(function() line[key] = value end) end
+		return line
+	end
+
+	function Library:AddOutline(inst)
+		local stroke = new("UIStroke", { ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Thickness = 1 }, inst)
+		bind(stroke, "Color", "Outline")
+		return stroke
+	end
+
+	function Library:AddDraggableLabel(info)
+		local proxy = { Visible = true }
+		function proxy:SetVisible(visible)
+			self.Visible = visible
+		end
+		function proxy:SetText() end
+		return proxy
+	end
+
+	function Library:AddDraggableMenu(title)
+		local holder = new("Frame", { Name = tostring(title), Bg = "Background", Radius = Metrics.FloatRadius, Border = "Outline", Active = true, AutomaticSize = Enum.AutomaticSize.Y, Size = Offset(180, 0), ZIndex = 5 }, win.Screen)
+		new("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 8) }, holder)
+		new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, holder)
+		local header = new("Frame", { Name = "Header", Size = Dim2(1, 0, 0, 22), LayoutOrder = -1000 }, holder)
+		new("Frame", { Bg = "Accent", Position = Offset(0, 5), Size = Offset(2, 12), Radius = Metrics.SmallRadius }, header)
+		label(header, { Text = tostring(title), X = 9, RowH = 22, TextSize = 13, Weight = Enum.FontWeight.SemiBold })
+		new("Frame", { Bg = "Outline", AnchorPoint = Vec2(0, 1), Position = Dim2(0, 0, 1, 2), Size = Dim2(1, 0, 0, 1) }, header)
+		local container = new("Frame", { Name = "Container", AutomaticSize = Enum.AutomaticSize.Y, Size = Dim2(1, 0, 0, 0), LayoutOrder = 0 }, holder)
+		local layout = new("UIListLayout", { Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder }, container)
+		local function fitWidth()
+			local width = math.max(160, math.ceil(layout.AbsoluteContentSize.X))
+			if holder.Size.X.Offset ~= width + 20 then holder.Size = Offset(width + 20, 0) end
+		end
+		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(fitWidth)
+		fitWidth()
+		holder.Position = Offset(math.floor(win.Screen.AbsoluteSize.X - 270), 80)
+		win:_makeDraggable(holder, holder)
+		return holder, container
+	end
+
+	local function boxShown(box)
+		while box do
+			if not box.Active then return false end
+			box = box.Parent
+		end
+		return true
+	end
+
+	local function applyItem(item)
+		local show = item.UserVisible ~= false and boxShown(item.Box)
+		if item.Visible == show then return false end
+		item.Visible = show
+		item.Frame.Visible = show
+		return true
+	end
+
+	local function refreshDeps()
+		for _, box in ipairs(boxes) do
+			local active = true
+			for _, dep in ipairs(box.Deps) do
+				local element, expected = dep[1], dep[2]
+				local current = element and element.Value
+				if type(expected) == "function" then
+					if not expected(current) then active = false break end
+				elseif type(current) == "table" and type(expected) ~= "table" then
+					if not current[expected] then active = false break end
+				elseif current ~= expected then
+					active = false
+					break
+				end
+			end
+			box.Active = active
+		end
+		local dirty = {}
+		for _, box in ipairs(boxes) do
+			for _, item in ipairs(box.Items) do
+				if applyItem(item) then dirty[item.Section] = true end
+			end
+		end
+		for section in pairs(dirty) do section:Layout(true) end
+	end
+	Library.UpdateDependencyBoxes = refreshDeps
+
+	local function setDisabled(item, disabled)
+		if disabled and not item.Blocker then
+			item.Blocker = new("TextButton", { Bg = "Inline", BackgroundTransparency = 0.4, Position = Offset(-4, -2), Size = Dim2(1, 8, 1, 4), ZIndex = 9 }, item.Frame)
+		elseif not disabled and item.Blocker then
+			item.Blocker:Destroy()
+			item.Blocker = nil
+		end
+	end
+
+	local function fitLabel(section, item, inst)
+		inst.TextTruncate = Enum.TextTruncate.None
+		inst.TextWrapped = true
+		inst.RichText = true
+		local measuring, pending = false, false
+		local fit
+		fit = function()
+			if inst.AbsoluteSize.X <= 0 then return end
+			if measuring then pending = true return end
+			measuring, pending = true, false
+			task.spawn(function()
+				local ok, bounds = pcall(function()
+					local params = Instance.new("GetTextBoundsParams")
+					params.Text = inst.ContentText ~= "" and inst.ContentText or inst.Text
+					params.Font = inst.FontFace
+					params.Size = inst.TextSize
+					params.Width = inst.AbsoluteSize.X
+					return game:GetService("TextService"):GetTextBoundsAsync(params)
+				end)
+				measuring = false
+				if pending then return fit() end
+				local height = math.max(Metrics.Row, math.ceil(ok and bounds.Y or inst.TextBounds.Y) + 3)
+				if item.Height == height then return end
+				item.Height = height
+				item.Frame.Size = Dim2(1, 0, 0, height)
+				inst.Size = Dim2(inst.Size.X.Scale, inst.Size.X.Offset, 0, height)
+				section:Layout(true)
+			end)
+		end
+		inst:GetPropertyChangedSignal("Text"):Connect(fit)
+		inst:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
+		fit()
+	end
+
+	local function playerNames(exclude)
+		local names = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			if not (exclude and player == Players.LocalPlayer) then table.insert(names, player.Name) end
+		end
+		table.sort(names)
+		return names
+	end
+
+	local makeContainer
+
+	local function element(object, container, idx, store, kind, callback, items)
+		object.Type = kind
+		object.Changed = {}
+		object.Items = items or { object.Item }
+		for _, item in ipairs(object.Items) do
+			item.Box = container.Box
+			if container.Box then table.insert(container.Box.Items, item) end
+		end
+		object.Callback = function(...)
+			if callback then Library:SafeCallback(callback, ...) end
+			for _, fn in ipairs(object.Changed) do Library:SafeCallback(fn, ...) end
+			refreshDeps()
+		end
+		function object:OnChanged(fn) table.insert(self.Changed, fn) end
+		function object:SetVisible(visible)
+			local dirty = false
+			for _, item in ipairs(self.Items) do
+				item.UserVisible = visible ~= false
+				if applyItem(item) then dirty = true end
+			end
+			if dirty then container.Section:Layout(true) end
+		end
+		function object:SetDisabled(disabled)
+			self.Disabled = disabled == true
+			for _, item in ipairs(self.Items) do setDisabled(item, self.Disabled) end
+		end
+		if idx ~= nil then store[idx] = object end
+		object.Idx = idx
+		return object
+	end
+
+	local function setup(object, info)
+		if info.Visible == false then object:SetVisible(false) else
+			for _, item in ipairs(object.Items) do applyItem(item) end
+		end
+		if info.Disabled then object:SetDisabled(true) end
+	end
+
+	local function addColor(container, item, idx, info)
+		info = info or {}
+		local color = attachColor(container.Section, item, { Default = info.Default or Color3.new(1, 1, 1), Alpha = info.Transparency or 0 })
+		color.Type = "ColorPicker"
+		color.Transparency = color.Alpha
+		color.Changed = {}
+		local callback = info.Callback
+		color.Callback = function(value, alpha)
+			color.Transparency = color.Alpha
+			if callback then Library:SafeCallback(callback, value, alpha) end
+			for _, fn in ipairs(color.Changed) do Library:SafeCallback(fn, value, alpha) end
+		end
+		function color:OnChanged(fn) table.insert(self.Changed, fn) end
+		function color:SetValueRGB(value, transparency) self:Set(value, transparency) end
+		function color:SetValue(value, transparency)
+			if typeof(value) == "Color3" then
+				self:Set(value, transparency)
+			elseif type(value) == "table" then
+				self:Set(Color3.fromHSV(value[1] or 0, value[2] or 0, value[3] or 1), transparency)
+			end
+		end
+		if idx ~= nil then
+			Options[idx] = color
+			win.Flags[idx] = color
+			color.Flag = idx
+		end
+		return color
+	end
+
+	local function addKey(container, item, idx, info, toggle)
+		info = info or {}
+		local picker = {
+			Type = "KeyPicker", Mode = info.Mode or "Toggle", Toggled = false, Changed = {}, Clicked = {},
+			SyncToggleState = info.SyncToggleState == true, Text = info.Text,
+		}
+		if idx == "MenuKeybind" then
+			local key = parseKey(info.Default) or win.MenuKey
+			win.MenuKey = key
+			picker.Value = keyString(key)
+			function picker:GetState() return false end
+			function picker:SetValue(value)
+				local nextKey = parseKey(type(value) == "table" and value[1] or value)
+				if nextKey then win.MenuKey = nextKey self.Value = keyString(nextKey) end
+			end
+			function picker:OnChanged(fn) table.insert(self.Changed, fn) end
+			function picker:OnClick(fn) table.insert(self.Clicked, fn) end
+			Options[idx] = picker
+			return picker
+		end
+		local blossomMode = picker.Mode == "Hold" and "Hold" or "Toggle"
+		local keybind
+		if info.NoUI then
+			keybind = { Key = parseKey(info.Default), Mode = blossomMode, Name = info.Text or idx, Listening = false }
+			function keybind.Refresh() if keybind.OnKeyChanged then keybind.OnKeyChanged() end end
+			function keybind:Set(key) keybind.Key = key keybind.Refresh() end
+			table.insert(win.Binds, keybind)
+		else
+			keybind = attachKeybind(container.Section, item, { Key = parseKey(info.Default), Mode = blossomMode, Name = info.Text or (toggle and item.Name) or idx })
+		end
+		picker.Bind = keybind
+		picker.Value = keyString(keybind.Key)
+		local function mode()
+			if picker.Mode == "Always" then return "Always" end
+			return keybind.Mode
+		end
+		local function fireClicked(state)
+			if info.Callback then Library:SafeCallback(info.Callback, state) end
+			for _, fn in ipairs(picker.Clicked) do Library:SafeCallback(fn, state) end
+		end
+		keybind.OnPress = function()
+			local current = mode()
+			if toggle and picker.SyncToggleState then
+				if current == "Hold" then toggle:SetValue(true) else toggle:SetValue(not toggle.Value) end
+				picker.Toggled = toggle.Value
+			elseif current == "Toggle" then
+				picker.Toggled = not picker.Toggled
+			else
+				picker.Toggled = true
+			end
+			if not toggle then win:SetHotkeyActive(keybind, picker.Toggled) end
+			fireClicked(picker.Toggled)
+		end
+		keybind.OnRelease = function()
+			if mode() ~= "Hold" then return end
+			if toggle and picker.SyncToggleState then toggle:SetValue(false) end
+			picker.Toggled = false
+			if not toggle then win:SetHotkeyActive(keybind, false) end
+			fireClicked(false)
+		end
+		keybind.OnKeyChanged = function()
+			picker.Value = keyString(keybind.Key)
+			if toggle then
+				win:SetHotkeyActive(keybind, toggle.Value)
+			elseif keybind.Chip then
+				win:SetHotkeyActive(keybind, picker.Toggled)
+			end
+			if info.ChangedCallback then Library:SafeCallback(info.ChangedCallback, keybind.Key) end
+			for _, fn in ipairs(picker.Changed) do Library:SafeCallback(fn, keybind.Key) end
+		end
+		if toggle then
+			toggle.Keybind = keybind
+			win:SetHotkeyActive(keybind, toggle.Value)
+		end
+		function picker:GetState()
+			local current = mode()
+			if current == "Always" then return true end
+			if current == "Hold" then
+				local key = keybind.Key
+				if not key then return false end
+				if UserInputService:GetFocusedTextBox() then return false end
+				if key.EnumType == Enum.UserInputType then return UserInputService:IsMouseButtonPressed(key) end
+				return UserInputService:IsKeyDown(key)
+			end
+			if toggle and picker.SyncToggleState then return toggle.Value end
+			return picker.Toggled
+		end
+		function picker:SetValue(value)
+			local key, newMode = value, nil
+			if type(value) == "table" then key, newMode = value[1], value[2] end
+			if newMode then
+				picker.Mode = newMode
+				keybind.Mode = newMode == "Hold" and "Hold" or "Toggle"
+			end
+			keybind:Set(parseKey(key))
+		end
+		function picker:OnChanged(fn) table.insert(self.Changed, fn) end
+		function picker:OnClick(fn) table.insert(self.Clicked, fn) end
+		function picker:Update() end
+		function picker:SetText(text) keybind.Name = text end
+		if idx ~= nil then
+			Options[idx] = picker
+			if not info.NoUI then
+				win.Flags[idx] = keybind
+				keybind.Flag = idx
+			end
+		end
+		return picker
+	end
+
+	local function inlineMethods(object, container, toggle)
+		function object:AddColorPicker(idx, info)
+			addColor(container, self.Item, idx, info)
+			return self
+		end
+		function object:AddKeyPicker(idx, info)
+			addKey(container, self.Item, idx, info, toggle and self or nil)
+			return self
+		end
+	end
+
+	makeContainer = function(section, box)
+		local container = { Section = section, Box = box }
+
+		function container:AddToggle(idx, info)
+			info = info or {}
+			local toggle = section:Toggle({ Name = info.Text or tostring(idx), Default = info.Default == true, Flag = idx, NoSave = info.NoSave })
+			element(toggle, self, idx, Toggles, "Toggle", info.Callback)
+			toggle.Text = info.Text
+			function toggle:SetValue(value)
+				value = value == true
+				if value == self.Value then
+					self.Callback(self.Value)
+				else
+					self:Set(value)
+				end
+			end
+			function toggle:SetText(text) setText(self.Item.Label, text) end
+			inlineMethods(toggle, self, true)
+			setup(toggle, info)
+			return toggle
+		end
+		container.AddCheckbox = container.AddToggle
+
+		function container:AddSlider(idx, info)
+			info = info or {}
+			local minimum, maximum = info.Min or 0, info.Max or 100
+			local slider = section:Slider({
+				Name = info.Text or tostring(idx), Min = minimum, Max = maximum, Default = info.Default or minimum,
+				Decimals = info.Rounding or 0, Suffix = info.Suffix, Flag = idx, NoSave = info.NoSave,
+			})
+			element(slider, self, idx, Options, "Slider", info.Callback)
+			slider.Min, slider.Max, slider.Rounding = minimum, maximum, info.Rounding or 0
+			function slider:SetValue(value) self:Set(tonumber(value) or self.Value) end
+			function slider:SetText() end
+			function slider:SetMin() end
+			function slider:SetMax() end
+			function slider:SetSuffix() end
+			setup(slider, info)
+			return slider
+		end
+
+		function container:AddDropdown(idx, info)
+			info = info or {}
+			local values = info.Values or {}
+			if info.SpecialType == "Player" then values = playerNames(info.ExcludeLocalPlayer) end
+			local default = info.Default
+			if info.Multi then
+				local list = {}
+				if type(default) == "table" then
+					for key, value in pairs(default) do
+						if type(key) == "number" then
+							table.insert(list, type(value) == "number" and values[value] or value)
+						elseif value then
+							table.insert(list, key)
+						end
+					end
+				elseif default ~= nil then
+					table.insert(list, type(default) == "number" and values[default] or default)
+				end
+				default = list
+			elseif type(default) == "number" and values[default] ~= nil and not table.find(values, default) then
+				default = values[default]
+			end
+			local dropdown = section:Dropdown({
+				Name = info.Text or tostring(idx), Options = values, Default = default, Multi = info.Multi == true,
+				MaxRows = 8, Flag = idx, NoSave = info.NoSave,
+			})
+			element(dropdown, self, idx, Options, "Dropdown", info.Callback)
+			dropdown.Values = values
+			dropdown.Text = info.Text
+			function dropdown:SetValue(value)
+				if self.Multi then
+					local list = {}
+					if type(value) == "table" then
+						for key, on in pairs(value) do
+							if type(key) == "number" then table.insert(list, on) elseif on then table.insert(list, key) end
+						end
+					elseif value ~= nil then
+						table.insert(list, value)
+					end
+					self:Set(list)
+				else
+					self:Set(value)
+				end
+			end
+			function dropdown:SetValues(list)
+				self.Values = list or {}
+				self:SetOptions(self.Values)
+			end
+			function dropdown:AddValues(list)
+				local merged = table.clone(self.Values)
+				for _, value in ipairs(type(list) == "table" and list or { list }) do
+					if not table.find(merged, value) then table.insert(merged, value) end
+				end
+				self:SetValues(merged)
+			end
+			function dropdown:GetActiveValues()
+				if not self.Multi then return self.Value ~= nil and 1 or 0 end
+				local list = {}
+				for option, on in pairs(self.Value) do if on then table.insert(list, option) end end
+				return list
+			end
+			function dropdown:SetText(text) setText(self.Item.Frame:FindFirstChildOfClass("TextLabel"), text) end
+			function dropdown:SetDisabledValues() end
+			if info.SpecialType == "Player" then
+				local function refresh() dropdown:SetValues(playerNames(info.ExcludeLocalPlayer)) end
+				table.insert(connections, Players.PlayerAdded:Connect(refresh))
+				table.insert(connections, Players.PlayerRemoving:Connect(function() task.defer(refresh) end))
+			end
+			setup(dropdown, info)
+			return dropdown
+		end
+
+		function container:AddInput(idx, info)
+			info = info or {}
+			local items = {}
+			if info.Text and info.Text ~= "" then
+				local caption = section:Label({ Name = info.Text })
+				table.insert(items, caption.Item)
+			end
+			local box = section:Textbox({ Name = info.Text or tostring(idx), Placeholder = info.Placeholder or info.Text or "", Default = tostring(info.Default or ""), Flag = idx, NoSave = info.NoSave })
+			table.insert(items, box.Item)
+			local callback = info.Callback
+			local last = box.Value
+			element(box, self, idx, Options, "Input", function(value)
+				if info.Numeric and value ~= "" and not tonumber(value) then
+					box.Instance.Text = last
+					box.Value = last
+					return
+				end
+				if info.MaxLength and #value > info.MaxLength then
+					value = string.sub(value, 1, info.MaxLength)
+					box.Instance.Text = value
+					box.Value = value
+				end
+				last = value
+				if callback then callback(value) end
+			end, items)
+			box.Instance.ClearTextOnFocus = info.ClearTextOnFocus == true
+			if not info.Finished then
+				box.Instance:GetPropertyChangedSignal("Text"):Connect(function()
+					if box.Instance:IsFocused() and box.Instance.Text ~= box.Value then
+						box.Value = box.Instance.Text
+						box.Callback(box.Value)
+					end
+				end)
+			end
+			function box:SetValue(value) self:Set(tostring(value or "")) end
+			function box:SetText() end
+			setup(box, info)
+			return box
+		end
+		container.AddTextbox = container.AddInput
+
+		function container:AddButton(a, b)
+			local info = type(a) == "table" and a or { Text = a, Func = b }
+			local button = section:Button({ Name = info.Text or "Button" })
+			element(button, self, info.Idx, Options, "Button", nil)
+			local caption = button.Instance:FindFirstChildOfClass("TextLabel")
+			local armed = false
+			button.Text = info.Text
+			button.Func = info.Func or info.Callback
+			button.Callback = function()
+				if button.Disabled then return end
+				if info.DoubleClick and not armed then
+					armed = true
+					if caption then setText(caption, "Are you sure?") end
+					task.delay(2, function()
+						if armed then
+							armed = false
+							if caption then setText(caption, button.Text) end
+						end
+					end)
+					return
+				end
+				if armed and caption then setText(caption, button.Text) end
+				armed = false
+				Library:SafeCallback(button.Func)
+				refreshDeps()
+			end
+			function button:SetText(text)
+				self.Text = text
+				if caption then setText(caption, text) end
+			end
+			function button:AddButton(...) return container:AddButton(...) end
+			setup(button, info)
+			return button
+		end
+
+		function container:AddLabel(a, b)
+			local idx, info
+			if type(a) == "table" then
+				info = a
+			elseif type(b) == "table" then
+				idx, info = a, b
+			else
+				info = { Text = a, DoesWrap = b }
+			end
+			local object = section:Label({ Name = tostring(info.Text or "") })
+			element(object, self, idx, Options, "Label", nil)
+			object.Text = info.Text
+			fitLabel(section, object.Item, object.Instance)
+			function object:SetText(text)
+				text = tostring(text or "")
+				if self.Text == text then return end
+				self.Text = text
+				self:Set(text)
+			end
+			inlineMethods(object, self, false)
+			setup(object, info)
+			return object
+		end
+
+		function container:AddDivider()
+			local item = section:Divider()
+			local object = { Item = item }
+			element(object, self, nil, Options, "Divider", nil)
+			return object
+		end
+
+		function container:AddImage(idx, info)
+			info = info or {}
+			local height = info.Height or 200
+			local item = section:_item(height, "Image", nil, false)
+			local image = new("ImageLabel", {
+				Size = Dim2(1, 0, 1, 0), Image = info.Image or "", ScaleType = info.ScaleType or Enum.ScaleType.Fit,
+				ImageColor3 = info.Color or Color3.new(1, 1, 1), ImageTransparency = info.Transparency or 0, Radius = Metrics.Radius,
+			}, item.Frame)
+			if info.RectOffset then image.ImageRectOffset = info.RectOffset end
+			if info.RectSize then image.ImageRectSize = info.RectSize end
+			local object = { Item = item, Instance = image, Image = image }
+			element(object, self, idx, Options, "Image", nil)
+			function object:SetImage(value) image.Image = value end
+			function object:SetColor(value) image.ImageColor3 = value end
+			function object:SetHeight(value)
+				item.Height = value
+				item.Frame.Size = Dim2(1, 0, 0, value)
+				section:Layout(true)
+			end
+			setup(object, info)
+			return object
+		end
+
+		function container:AddViewport(idx, info)
+			info = info or {}
+			local height = info.Height or 200
+			local item = section:_item(height, "Viewport", nil, false)
+			local frame = new("Frame", { Bg = "Element", Position = Offset(1, 1), Size = Dim2(1, -2, 1, -2), Radius = Metrics.Radius, Border = "Outline" }, item.Frame)
+			local viewport = new("ViewportFrame", { Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Ambient = Color3.fromRGB(200, 200, 200), LightColor = Color3.new(1, 1, 1) }, frame)
+			local camera = info.Camera or Instance.new("Camera")
+			camera.Parent = viewport
+			viewport.CurrentCamera = camera
+			local object = { Item = item, Viewport = viewport, Camera = camera, Object = nil, Interactive = info.Interactive == true }
+			element(object, self, idx, Options, "Viewport", nil)
+			function object:SetObject(model, clone)
+				if self.Object and self.Object.Parent == viewport then self.Object:Destroy() end
+				if model and clone then model = model:Clone() end
+				self.Object = model
+				if model then model.Parent = viewport end
+				if info.AutoFocus ~= false then self:Focus() end
+			end
+			function object:SetCamera(newCamera)
+				self.Camera = newCamera
+				newCamera.Parent = viewport
+				viewport.CurrentCamera = newCamera
+			end
+			function object:Focus()
+				local model = self.Object
+				if not model then return end
+				local ok, cframe, size = pcall(function()
+					if model:IsA("Model") then return model:GetBoundingBox() end
+					return model.CFrame, model.Size
+				end)
+				if not ok then return end
+				local radius = math.max(size.Magnitude / 2, 0.5)
+				local distance = radius / math.tan(math.rad((self.Camera.FieldOfView or 70) / 2)) * 1.15
+				self.Camera.CFrame = CFrame.lookAt(cframe.Position + Vector3.new(0, radius * 0.15, -distance), cframe.Position)
+			end
+			function object:SetInteractive(value) self.Interactive = value == true end
+			function object:SetHeight(value)
+				item.Height = value
+				item.Frame.Size = Dim2(1, 0, 0, value)
+				section:Layout(true)
+			end
+			function object:Destroy()
+				item.Frame:Destroy()
+				local index = table.find(section.Items, item)
+				if index then table.remove(section.Items, index) end
+				section:Layout(true)
+			end
+			viewport.InputBegan:Connect(function(input)
+				if not object.Interactive or not isClick(input) then return end
+				local last = mousePos()
+				beginDrag(function(point)
+					local model = object.Object
+					local delta = point - last
+					last = point
+					if not model then return end
+					local ok, center = pcall(function()
+						if model:IsA("Model") then return model:GetBoundingBox().Position end
+						return model.Position
+					end)
+					if not ok then return end
+					local cam = object.Camera
+					local offset = cam.CFrame.Position - center
+					local turned = CFrame.Angles(0, -math.rad(delta.X * 0.6), 0) * offset
+					cam.CFrame = CFrame.lookAt(center + turned, center)
+				end)
+			end)
+			if info.Object then object:SetObject(info.Object, info.Clone ~= false) end
+			setup(object, info)
+			return object
+		end
+
+		function container:AddDependencyBox()
+			local depBox = { Parent = box, Items = {}, Deps = {}, Active = true }
+			table.insert(boxes, depBox)
+			local inner = makeContainer(section, depBox)
+			function inner:SetupDependencies(deps)
+				depBox.Deps = deps or {}
+				refreshDeps()
+			end
+			return inner
+		end
+		container.AddDependencyGroupbox = container.AddDependencyBox
+
+		function container:SetupDependencies(deps)
+			if box then
+				box.Deps = deps or {}
+				refreshDeps()
+			end
+		end
+
+		function container:Resize() end
+
+		setmetatable(container, {
+			__index = function(self, key)
+				if key ~= "Container" then return nil end
+				local item = section:_item(Metrics.Row, "Custom", nil, false)
+				item.Box = box
+				if box then table.insert(box.Items, item) end
+				local frame = item.Frame
+				local layout = new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4) }, frame)
+				local function fit()
+					local height = math.max(1, math.ceil(layout.AbsoluteContentSize.Y))
+					if item.Height == height then return end
+					item.Height = height
+					frame.Size = Dim2(1, 0, 0, height)
+					section:Layout(true)
+				end
+				layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(fit)
+				frame.DescendantAdded:Connect(function(inst)
+					if inst:IsA("ScrollingFrame") then win.WheelBlockers[inst] = true end
+				end)
+				rawset(self, "Container", frame)
+				return frame
+			end,
+		})
+		function container:SetVisible(visible) section.Root.Visible = visible ~= false end
+
+		return container
+	end
+
+	local function makeTab(tab)
+		local Tab = { Blossom = tab, Name = tab.Name }
+		function Tab:AddLeftGroupbox(name, icon)
+			return makeContainer(tab:Section({ Name = name, Icon = blossomIcon(icon), Side = 1 }), nil)
+		end
+		function Tab:AddRightGroupbox(name, icon)
+			return makeContainer(tab:Section({ Name = name, Icon = blossomIcon(icon), Side = 2 }), nil)
+		end
+		Tab.AddGroupbox = function(self, info)
+			info = type(info) == "table" and info or { Name = info }
+			return makeContainer(tab:Section({ Name = info.Name, Icon = blossomIcon(info.IconName or info.Icon), Side = info.Side == 2 and 2 or 1 }), nil)
+		end
+		local function tabbox(side, name)
+			local holder = {}
+			function holder:AddTab(tabName, icon)
+				return makeContainer(tab:Section({ Name = tabName, Description = name, Icon = blossomIcon(icon), Side = side }), nil)
+			end
+			return holder
+		end
+		function Tab:AddLeftTabbox(name) return tabbox(1, name) end
+		function Tab:AddRightTabbox(name) return tabbox(2, name) end
+		function Tab:UpdateWarningBox() end
+		function Tab:SetVisible() end
+		function Tab:Show() win:SelectTab(tab) end
+		return Tab
+	end
+
+	function Library:CreateWindow(info)
+		info = info or {}
+		local camera = workspace.CurrentCamera
+		local view = camera and camera.ViewportSize or Vector2.new(1280, 720)
+		local width = math.clamp(math.floor(view.X - 40), 480, defaults.Width or 700)
+		local height = math.clamp(math.floor(view.Y - 40), 300, defaults.Height or 540)
+		local build = defaults.Build or info.Footer or ""
+		win = Blossom.new({
+			Title = defaults.Title or info.Title or "Blossom", Logo = defaults.Logo or info.Icon,
+			Script = defaults.Script or info.Title or "Blossom", Build = build, Theme = defaults.Theme,
+			ConfigFolder = defaults.ConfigFolder, ManualAutoload = true, MenuKey = parseKey(defaults.MenuKey),
+			Size = Vector2.new(width, height), MinSize = Vector2.new(math.min(520, width), math.min(380, height)),
+		})
+		if defaults.Parent then pcall(function() win.Screen.Parent = defaults.Parent end) end
+		Library.Window = win
+		Library.ScreenGui = win.Screen
+		Library.KeybindFrame = win.Hotkeys
+		local setVisible = win.SetVisible
+		win.SetVisible = function(self, visible)
+			setVisible(self, visible)
+			Library.Toggled = self.Visible
+		end
+		local footerLabel
+		for _, child in ipairs(win.Watermark:GetChildren()) do
+			if child:IsA("TextLabel") and child.Text == build and build ~= "" then footerLabel = child break end
+		end
+
+		WindowObject = { Blossom = win }
+		function WindowObject:SetFooter(text)
+			if footerLabel then footerLabel.Text = tostring(text) end
+		end
+		function WindowObject:AddCategory(name)
+			lastCategory = name
+			win:Category(name)
+		end
+		function WindowObject:AddTab(name, icon)
+			if type(name) == "table" then name, icon = name.Name, name.Icon end
+			local category = defaults.Categories and defaults.Categories[name]
+			if category and category ~= lastCategory then self:AddCategory(category) end
+			return makeTab(win:Tab({ Name = name, Icon = blossomIcon(icon) }))
+		end
+		function WindowObject:AddKeyTab(name, icon) return self:AddTab(name, icon) end
+		function WindowObject:Toggle() win:Toggle() end
+		function WindowObject:SetSize(x, y) win:SetSize(x, y) end
+
+		if Library.IsMobile then
+			local button = new("ImageButton", {
+				Name = "MenuButton", Bg = "Background", AutoButtonColor = false, Size = Offset(44, 44), Position = Offset(16, 120),
+				Image = win.Logo or "", ScaleType = Enum.ScaleType.Fit, Radius = 8, Border = "Outline", ZIndex = 60,
+			}, win.Screen)
+			new("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6) }, button)
+			button.InputBegan:Connect(function(input)
+				if input.UserInputType ~= Enum.UserInputType.Touch and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+				local start, origin, moved = input.Position, button.Position, false
+				local move, done
+				move = UserInputService.InputChanged:Connect(function(change)
+					if change.UserInputType ~= Enum.UserInputType.Touch and change.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+					local delta = change.Position - start
+					if delta.Magnitude > 6 then moved = true end
+					if moved then button.Position = Offset(origin.X.Offset + delta.X, origin.Y.Offset + delta.Y) end
+				end)
+				done = input.Changed:Connect(function()
+					if input.UserInputState ~= Enum.UserInputState.End then return end
+					move:Disconnect()
+					done:Disconnect()
+					if not moved then win:Toggle() end
+				end)
+			end)
+			Library.MobileButton = button
+		end
+
+		task.delay(0.6, function()
+			if not win or not win.Hotkeys or #win.HotkeyOrder > 0 then return end
+			for item, object in pairs(win.FlagOwners) do
+				if item.Name == "Hotkey List" and object.Set then pcall(object.Set, object, false) end
+			end
+		end)
+		return WindowObject
+	end
+
+	local SaveManager = { Folder = "Blossom", SubFolder = "", Ignore = {} }
+	function SaveManager:SetLibrary() end
+	function SaveManager:IgnoreThemeSettings() end
+	function SaveManager:SetIgnoreIndexes(list)
+		for _, idx in ipairs(list or {}) do self.Ignore[idx] = true end
+	end
+	function SaveManager:SetFolder(folder) self.Folder = folder end
+	function SaveManager:SetSubFolder(folder) self.SubFolder = folder end
+
+	function SaveManager:_migrate(oldFolder)
+		if not (hasFileApi() and typeof(listfiles) == "function" and typeof(isfolder) == "function") then return end
+		if not isfolder(oldFolder) or #win:ListConfigs() > 0 then return end
+		local moved = 0
+		for _, file in ipairs(listfiles(oldFolder)) do
+			local name = string.match(tostring(file), "([^/\\]+)%.json$")
+			local ok, decoded = pcall(function() return HttpService:JSONDecode(readfile(file)) end)
+			if name and ok and type(decoded) == "table" and type(decoded.objects) == "table" then
+				local data = {}
+				for _, saved in ipairs(decoded.objects) do
+					local idx = type(saved) == "table" and saved.idx
+					local target = idx and not self.Ignore[idx] and win.Flags[idx]
+					if target then
+						if saved.type == "Toggle" then
+							data[idx] = saved.value == true
+						elseif saved.type == "Slider" then
+							data[idx] = tonumber(saved.value)
+						elseif saved.type == "Dropdown" then
+							if saved.multi and type(saved.value) == "table" then
+								local list = {}
+								for option, on in pairs(saved.value) do if on then table.insert(list, option) end end
+								data[idx] = list
+							elseif not saved.multi and saved.value ~= nil then
+								data[idx] = saved.value
+							end
+						elseif saved.type == "ColorPicker" and type(saved.value) == "string" then
+							data[idx] = { Color = saved.value, Alpha = tonumber(saved.transparency) or 0 }
+						elseif saved.type == "KeyPicker" then
+							local key = parseKey(saved.key)
+							data[idx] = { Key = key and key.Name or false, Mode = saved.mode == "Hold" and "Hold" or "Toggle" }
+						elseif saved.type == "Input" then
+							data[idx] = tostring(saved.text or "")
+						end
+					end
+				end
+				ensureFolder(win.ConfigFolder)
+				writefile(win:_configPath(name), HttpService:JSONEncode(data))
+				moved += 1
+			end
+		end
+		local oldAuto = oldFolder .. "/autoload.txt"
+		if moved > 0 and isfile(oldAuto) and not readAutoload(win) then
+			local name = readfile(oldAuto)
+			if type(name) == "string" and name ~= "" and isfile(win:_configPath(name)) then writeAutoload(win, name) end
+		end
+	end
+
+	function SaveManager:BuildConfigSection()
+		if self.Built or not win then return end
+		self.Built = true
+		local base = self.Folder .. (self.SubFolder ~= "" and "/" .. self.SubFolder or "")
+		if not defaults.ConfigFolder then win.ConfigFolder = base .. "/blossom" end
+		pcall(self._migrate, self, self.Folder .. "/settings" .. (self.SubFolder ~= "" and "/" .. self.SubFolder or ""))
+		local tab = WindowObject:AddTab(defaults.SettingsTab or "Settings", "settings")
+		win:BuildSettings(tab.Blossom)
+	end
+
+	function SaveManager:LoadAutoloadConfig()
+		if win then
+			self:BuildConfigSection()
+			win:LoadAutoload()
+			refreshDeps()
+		end
+	end
+	function SaveManager:Load(name) return win and win:LoadConfig(name) end
+	function SaveManager:Save(name) if win then win:SaveConfig(name) return true end end
+	function SaveManager:RefreshConfigList() return win and win:ListConfigs() or {} end
+
+	local ThemeManager = { Folder = "Blossom" }
+	function ThemeManager:SetLibrary() end
+	function ThemeManager:SetFolder(folder) self.Folder = folder end
+	function ThemeManager:ApplyToTab() end
+	function ThemeManager:ApplyToGroupbox() end
+	function ThemeManager:BuildThemeSection() end
+	function ThemeManager:SetDefaultTheme(theme)
+		if type(theme) == "string" and Themes[theme] and win then win:ApplyTheme(theme, true) end
+	end
+	function ThemeManager:ApplyTheme(theme)
+		if type(theme) == "string" and Themes[theme] and win then win:ApplyTheme(theme, true) end
+	end
+
+	return Library, ThemeManager, SaveManager
 end
 
 return Blossom
