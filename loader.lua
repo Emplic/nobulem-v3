@@ -1,72 +1,159 @@
-local LoaderStatus = {}
+local Notify
+do
+    local TweenService = game:GetService("TweenService")
+    local Players = game:GetService("Players")
+    local Fast = TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    local Colors = { success = Color3.fromRGB(112, 205, 132), error = Color3.fromRGB(235, 104, 104), info = Color3.fromRGB(159, 109, 255) }
+    local Gui, Area
+    local Stack = {}
 
-function LoaderStatus.show(text, isError, holdSeconds)
-    pcall(function()
-        local gui = LoaderStatus.gui
-        if not (gui and gui.Parent) then
-            gui = Instance.new("ScreenGui")
-            gui.Name = "NobulemLoaderStatus"
-            gui.IgnoreGuiInset = true
-            gui.ResetOnSpawn = false
-            gui.DisplayOrder = 999999
-            local placed = false
-            if type(gethui) == "function" then placed = pcall(function() gui.Parent = gethui() end) and gui.Parent ~= nil end
-            if not placed then placed = pcall(function() gui.Parent = game:GetService("CoreGui") end) and gui.Parent ~= nil end
-            if not placed then gui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui", 10) end
-            local label = Instance.new("TextLabel")
-            label.Name = "Text"
-            label.AnchorPoint = Vector2.new(0.5, 0)
-            label.Position = UDim2.new(0.5, 0, 0, 48)
-            label.Size = UDim2.new(0.9, 0, 0, 0)
-            label.AutomaticSize = Enum.AutomaticSize.Y
-            label.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-            label.BackgroundTransparency = 0.15
-            label.BorderSizePixel = 0
-            label.Font = Enum.Font.GothamMedium
-            label.TextSize = 15
-            label.TextWrapped = true
-            label.TextColor3 = Color3.new(1, 1, 1)
-            label.Parent = gui
-            local pad = Instance.new("UIPadding")
-            pad.PaddingTop = UDim.new(0, 8)
-            pad.PaddingBottom = UDim.new(0, 8)
-            pad.PaddingLeft = UDim.new(0, 10)
-            pad.PaddingRight = UDim.new(0, 10)
-            pad.Parent = label
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 8)
-            corner.Parent = label
-            local size = Instance.new("UISizeConstraint")
-            size.MaxSize = Vector2.new(520, math.huge)
-            size.Parent = label
-            LoaderStatus.gui = gui
+    local function EnsureGui()
+        if Gui and Gui.Parent then return end
+        Gui = Instance.new("ScreenGui")
+        Gui.Name = "NobulemLoaderNotifications"
+        Gui.IgnoreGuiInset = true
+        Gui.ResetOnSpawn = false
+        Gui.DisplayOrder = 1000
+        local placed = false
+        if type(gethui) == "function" then placed = pcall(function() Gui.Parent = gethui() end) and Gui.Parent ~= nil end
+        if not placed then placed = pcall(function() Gui.Parent = game:GetService("CoreGui") end) and Gui.Parent ~= nil end
+        if not placed then Gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui", 10) end
+        Area = Instance.new("Frame")
+        Area.BackgroundTransparency = 1
+        Area.Position = UDim2.fromOffset(16, 16)
+        Area.Size = UDim2.fromOffset(400, 600)
+        Area.Parent = Gui
+    end
+
+    local function Restack()
+        for index, frame in ipairs(Stack) do
+            TweenService:Create(frame, Fast, { Position = UDim2.fromOffset(0, (#Stack - index) * 36) }):Play()
         end
-        local label = gui:FindFirstChild("Text")
-        label.Text = "nobulem.wtf | " .. tostring(text)
-        label.TextColor3 = isError and Color3.fromRGB(255, 110, 110) or Color3.new(1, 1, 1)
-        local token = {}
-        LoaderStatus.token = token
-        if holdSeconds then
-            task.delay(holdSeconds, function()
-                if LoaderStatus.token == token then LoaderStatus.hide() end
+    end
+
+    local Icons = {
+        success = { { "f", 2, 8.4, 6.2, 2, 45 }, { "f", 5.2, 6.8, 10, 2, -45 } },
+        error = { { "f", 1, 1, 14, 14 }, { "h", 7, 3.6, 2, 6 }, { "h", 7, 10.8, 2, 2 } },
+        info = { { "f", 1, 1, 14, 14 }, { "h", 7, 6.6, 2, 6 }, { "h", 7, 3.4, 2, 2 } },
+    }
+
+    local function Push(text, kind, color, duration)
+        EnsureGui()
+        local frame = Instance.new("Frame")
+        frame.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
+        frame.BorderSizePixel = 0
+        frame.Size = UDim2.fromOffset(60, 28)
+        frame.Position = UDim2.fromOffset(-36, #Stack * 36)
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = frame
+        local stroke = Instance.new("UIStroke")
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = Color3.fromRGB(44, 42, 52)
+        stroke.Parent = frame
+        local icon = Instance.new("Frame")
+        icon.BackgroundTransparency = 1
+        icon.Position = UDim2.fromOffset(8, 7)
+        icon.Size = UDim2.fromOffset(14, 14)
+        icon.Parent = frame
+        local parts = {}
+        for _, part in ipairs(Icons[kind] or Icons.info) do
+            local piece = Instance.new("Frame")
+            piece.BorderSizePixel = 0
+            piece.BackgroundColor3 = part[1] == "h" and frame.BackgroundColor3 or color
+            piece.Position = UDim2.fromScale(part[2] / 16, part[3] / 16)
+            piece.Size = UDim2.fromScale(part[4] / 16, part[5] / 16)
+            piece.Rotation = part[6] or 0
+            local round = Instance.new("UICorner")
+            round.CornerRadius = UDim.new(0.5, 0)
+            round.Parent = piece
+            piece.Parent = icon
+            table.insert(parts, piece)
+        end
+        local label = Instance.new("TextLabel")
+        label.BackgroundTransparency = 1
+        label.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+        label.TextSize = 12
+        label.TextColor3 = Color3.fromRGB(234, 232, 244)
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextYAlignment = Enum.TextYAlignment.Top
+        label.TextTruncate = Enum.TextTruncate.AtEnd
+        label.Position = UDim2.fromOffset(28, 8)
+        label.Size = UDim2.fromOffset(340, 28)
+        label.Text = text
+        label.Parent = frame
+        local function fit() frame.Size = UDim2.fromOffset(math.min(math.ceil(label.TextBounds.X), 340) + 38, 28) end
+        label:GetPropertyChangedSignal("TextBounds"):Connect(fit)
+        fit()
+        frame.Parent = Area
+        table.insert(Stack, 1, frame)
+        Restack()
+        task.delay(duration, function()
+            local index = table.find(Stack, frame)
+            if index then table.remove(Stack, index) end
+            TweenService:Create(frame, Fast, { Position = UDim2.fromOffset(-36, frame.Position.Y.Offset), BackgroundTransparency = 1 }):Play()
+            TweenService:Create(label, Fast, { TextTransparency = 1 }):Play()
+            for _, piece in ipairs(parts) do
+                TweenService:Create(piece, Fast, { BackgroundTransparency = 1 }):Play()
+            end
+            TweenService:Create(stroke, Fast, { Transparency = 1 }):Play()
+            Restack()
+            task.delay(0.3, function()
+                frame:Destroy()
+                if #Stack == 0 and Gui then
+                    Gui:Destroy()
+                    Gui, Area = nil, nil
+                end
             end)
-        end
-    end)
-end
+        end)
+    end
 
-function LoaderStatus.hide()
-    if LoaderStatus.gui then pcall(function() LoaderStatus.gui:Destroy() end) end
-    LoaderStatus.gui = nil
+    Notify = function(text, kind, duration)
+        local lines, line = {}, ""
+        for word in tostring(text):gmatch("%S+") do
+            if line ~= "" and #line + #word + 1 > 52 then
+                table.insert(lines, line)
+                line = word
+            else
+                line = line == "" and word or (line .. " " .. word)
+            end
+        end
+        if line ~= "" then table.insert(lines, line) end
+        for _, chunk in ipairs(lines) do
+            pcall(Push, chunk, kind, Colors[kind] or Colors.info, duration or 6)
+        end
+    end
 end
 
 local LoaderEnv = (type(getgenv) == "function" and getgenv()) or shared
+
+local function FindProvidedKey()
+    local function Clean(value)
+        if type(value) ~= "string" then return nil end
+        local cleaned = value:gsub("%s", "")
+        return #cleaned > 0 and cleaned or nil
+    end
+    local key = Clean(script_key)
+    if key then return key end
+    for level = 1, 3 do
+        local ok, env = pcall(getfenv, level)
+        if ok and type(env) == "table" then
+            local okKey, value = pcall(function() return env.script_key end)
+            key = okKey and Clean(value)
+            if key then return key end
+        end
+    end
+    return Clean(LoaderEnv.script_key)
+        or Clean(_G and _G.script_key)
+        or Clean(type(shared) == "table" and shared.script_key or nil)
+end
+
+local ProvidedScriptKey = FindProvidedKey()
 local previousStart = LoaderEnv.nobulem_loader_started
 if type(previousStart) == "number" and os.clock() - previousStart < 15 then
-    LoaderStatus.show("Already loading, please wait...", false, 4)
     return
 end
 LoaderEnv.nobulem_loader_started = os.clock()
-LoaderStatus.show("Loading...")
 
 local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs/heads/main/key-system.lua")
 
@@ -83,6 +170,7 @@ local LuarmorScriptIds = {
     ProjectSlayersSpiderArm = "08a06d4201aadf0d1eaf19cda5c9256a",
     AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
     ABizarreRun = "1beffe3e89f9490b79c1f8d37520d1ee",
+    ThrowFoodABizarreRun = "5166b69f34db48b2df9b9a6c2e36da8b",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -97,10 +185,10 @@ local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnE
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
 local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
 local ProjectSlayersSpiderArmScriptId = LuarmorScriptIds.ProjectSlayersSpiderArm or ""
+local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
 
 local Games = {
     {
-        -- menu, Town Central (lobby), Trade Central and every mission/raid map
         PlaceIds        = {
             13379208636, 13379349730, 13904207646, 14012874501, 14638336319, 14916516914, 14932214603,
             15030367419, 15220308770, 15374465998, 15824912319, 17688739434, 112374853034490, 126678335159530,
@@ -203,8 +291,16 @@ local Games = {
         UniverseId      = 9867225552,
         GameName        = "A Bizarre Run",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.ABizarreRun or "",
+        LuarmorScriptId = ThrowFoodABizarreRunScriptId ~= "" and ThrowFoodABizarreRunScriptId or LuarmorScriptIds.ABizarreRun or "",
         GetKeyUrl       = LuarmorAdUrls.ABizarreRun or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 120219252362013 },
+        UniverseId      = 10766972131,
+        GameName        = "Throw Food For Animals",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = ThrowFoodABizarreRunScriptId,
+        GetKeyUrl       = LuarmorAdUrls.ThrowFoodForAnimals or LuarmorAdUrls.Default or "",
     },
 }
 
@@ -262,49 +358,9 @@ local function ResolveGame(placeId)
     return nil
 end
 
-local ObsidianLibrary
-local function LoadObsidian()
-    if ObsidianLibrary then return ObsidianLibrary end
-    local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
-    local okL, Library = pcall(function() return loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/Library.lua"))() end)
-    if not okL or not Library then return nil end
-    Library.CornerRadius = 10
-    local okT, ThemeManager = pcall(function() return loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))() end)
-    if okT and ThemeManager then
-        pcall(function()
-            ThemeManager:SetLibrary(Library)
-            ThemeManager:ApplyTheme("Tokyo Night")
-        end)
-    end
-    pcall(function() Library:SetNotifySide("Right") end)
-    ObsidianLibrary = Library
-    return Library
-end
-
-local function Notify(title, text, duration)
-    LoaderStatus.show(title .. ": " .. tostring(text), title:find("Error", 1, true) ~= nil or title:find("Unsupported", 1, true) ~= nil, duration or 6)
-    local Library = LoadObsidian()
-    if Library and Library.Notify then
-        local ok = pcall(function()
-            Library:Notify({ Title = title, Description = text, Time = duration or 6 })
-        end)
-        if ok then return end
-    end
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = title, Text = text, Duration = duration or 6,
-        })
-    end)
-    warn(("[nobulem.wtf] %s: %s"):format(title, text))
-end
-
 local cfg = ResolveGame(game.PlaceId)
 if not cfg then
-    Notify(
-        "Unsupported Game",
-        ("nobulem.wtf does not currently support this game (PlaceId: %d)."):format(game.PlaceId),
-        10
-    )
+    Notify("nobulem.wtf doesn't support this game yet.", "error", 10)
     getgenv().nobulem_loader_started = nil
     return
 end
@@ -312,24 +368,20 @@ end
 local ResolvedName = (cfg.PlaceNames and cfg.PlaceNames[game.PlaceId]) or cfg.GameName
 
 if cfg.LobbyPlaceIds and table.find(cfg.LobbyPlaceIds, game.PlaceId) then
-    Notify(ResolvedName, "You're in the lobby. Please join a game, then execute again.", 10)
+    Notify("You're in the lobby. Join a game, then execute again.", "info", 10)
     getgenv().nobulem_loader_started = nil
     return
 end
 
 local scriptId = LuarmorScriptIds[game.PlaceId] or cfg.LuarmorScriptId
 if type(scriptId) ~= "string" or #scriptId ~= 32 or not scriptId:match("^[0-9a-fA-F]+$") then
-    Notify("Luarmor setup needed", "Set the Luarmor script ID for " .. ResolvedName .. " in loader.lua.", 10)
+    Notify(ResolvedName .. " isn't set up on Luarmor yet.", "error", 10)
     getgenv().nobulem_loader_started = nil
     return
 end
 
 if cfg.Discontinued then
-    Notify(
-        ResolvedName,
-        ("%s is currently discontinued for nobulem at this time. Please try again later."):format(ResolvedName),
-        10
-    )
+    Notify(ResolvedName .. " is discontinued for now. Try again later.", "error", 10)
     getgenv().nobulem_loader_started = nil
     return
 end
@@ -339,6 +391,7 @@ getgenv().NobulemLoaderConfig = {
     GameName        = ResolvedName,
     SaveFile        = cfg.SaveFile,
     LuarmorScriptId = scriptId,
+    ScriptKey       = ProvidedScriptKey,
     GetKeyUrl       = cfg.GetKeyUrl,
     LinkvertiseUrl  = LuarmorAdUrls.Linkvertise,
     Linkvertise12hUrl = LuarmorAdUrls.Linkvertise12h or LuarmorAdUrls.Linkvertise,
@@ -354,7 +407,7 @@ local function InviteDiscord()
     
     if isMobile then
         pcall(function() setclipboard("https://discord.gg/mugcSRnpuG") end)
-        Notify("nobulem.wtf", "Discord invite copied to clipboard!", 5)
+        Notify("Discord invite copied.", "success", 5)
     else
         pcall(function()
             request({
@@ -403,23 +456,17 @@ local function Download(url)
     error("could not download " .. url .. " (" .. tostring(body) .. ")")
 end
 
-LoaderStatus.show("Opening key system for " .. ResolvedName .. "...")
 local ok, err = pcall(function()
     local source = Download(KEYSYSTEM_URL)
     local chunk, compileErr = loadstring(source)
     if not chunk then error("compile: " .. tostring(compileErr)) end
-    task.delay(3, function()
-        if LoaderStatus.gui and not LoaderStatus.failed then LoaderStatus.hide() end
-    end)
     chunk(getgenv().NobulemLoaderConfig)
 end)
 
 if ok then
-    LoaderStatus.hide()
     getgenv().nobulem_loader_started = nil
 else
-    LoaderStatus.failed = true
-    Notify("Loader Error", tostring(err), 15)
+    Notify("The key system failed to open: " .. tostring(err), "error", 15)
     getgenv().nobulem_loader_started = nil
     getgenv().NobulemLoaderConfig = nil
 end
