@@ -2837,12 +2837,26 @@ function Window:_buildWatermark(options)
 		return new("Frame", { Bg = "Outline", Position = Offset(0, 7), Size = Offset(1, 14) }, frame)
 	end
 	local first, firstSep = text(options.Script or "blossom.lua", 12, Enum.FontWeight.Medium), sep()
-	local second, secondSep = text(options.Build or "release", 12, Enum.FontWeight.SemiBold), sep()
+	local second, secondSep = text("", 12, Enum.FontWeight.SemiBold), sep()
+	local duration, durationSep = text("", 12, Enum.FontWeight.Medium), sep()
 	local userIcon = makeIcon(frame, "user", 13, "Text", "Background")
 	local third = text(("%s (@%s)"):format(player.DisplayName, player.Name), 11, Enum.FontWeight.SemiBold)
-	local function layout()
+	local layout
+	function self:SetWatermarkBuild(value)
+		value = tostring(value or "")
+		local game, extra = value:match("^(.-)%s*|%s*(.+)$")
+		if not game then game, extra = value, "" end
+		second.Text = game
+		duration.Text = extra
+		layout()
+	end
+	function layout()
 		local x = 31
-		for _, entry in { { first, firstSep }, { second, secondSep } } do
+		local hasDuration = duration.Text ~= ""
+		duration.Visible, durationSep.Visible = hasDuration, hasDuration
+		local entries = { { first, firstSep }, { second, secondSep } }
+		if hasDuration then table.insert(entries, { duration, durationSep }) end
+		for _, entry in entries do
 			local width = math.ceil(entry[1].TextBounds.X)
 			entry[1].Size = Offset(width + 1, 28)
 			entry[1].Position = Offset(x, entry[1].Position.Y.Offset)
@@ -2858,11 +2872,12 @@ function Window:_buildWatermark(options)
 		frame.Size = Offset(x + width + Metrics.Pad, 28)
 		self:_placeOverlays()
 	end
-	for _, entry in { first, second, third } do
+	for _, entry in { first, second, duration, third } do
 		entry:GetPropertyChangedSignal("TextBounds"):Connect(layout)
 	end
 	self.Watermark = frame
 	self.WatermarkLayout = layout
+	self:SetWatermarkBuild(options.Build or "release")
 	self:_makeDraggable(frame, frame)
 end
 
@@ -4085,14 +4100,9 @@ function Blossom.Obsidian(defaults)
 			setVisible(self, visible)
 			Library.Toggled = self.Visible
 		end
-		local footerLabel
-		for _, child in ipairs(win.Watermark:GetChildren()) do
-			if child:IsA("TextLabel") and child.Text == build and build ~= "" then footerLabel = child break end
-		end
-
 		WindowObject = { Blossom = win }
 		function WindowObject:SetFooter(text)
-			if footerLabel then footerLabel.Text = tostring(text) end
+			win:SetWatermarkBuild(text)
 		end
 		function WindowObject:AddCategory(name)
 			lastCategory = name
