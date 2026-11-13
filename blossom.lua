@@ -122,7 +122,7 @@ local FontOrder = { "Inter", "Builder Sans", "Roboto", "Montserrat", "Source San
 local WeightOrder = { "Regular", "Medium", "SemiBold", "Bold" }
 
 local Current = table.clone(Themes.Obsidian)
-local Casing = "Normal"
+local Casing = "Lower Case"
 local FontFamily = INTER
 local BodyWeight = Enum.FontWeight.SemiBold
 
@@ -2805,7 +2805,7 @@ function Window:BuildSettings(tab)
 
 	local theming = tab:Section({ Name = "Theming", Icon = "cube", Side = 2 })
 	theming:Dropdown({ Name = "Theme", Options = ThemeOrder, Default = self.ThemeName, MaxRows = 11, NoSave = true, Callback = function(value) self:ApplyTheme(value) end })
-	theming:Dropdown({ Name = "Casing", Options = Casings, Default = "Normal", NoSave = true, Callback = function(value) self:SetCasing(value) end })
+	theming:Dropdown({ Name = "Casing", Options = Casings, Default = "Lower Case", NoSave = true, Callback = function(value) self:SetCasing(value) end })
 	theming:Divider()
 	for _, pair in ThemeKeys do
 		local key = pair[2]
