@@ -2563,6 +2563,7 @@ function Window:SetVisible(visible)
 	self.Visible = visible
 	self:CloseFloating()
 	self.ModalButton.Visible = visible
+	self:_setCursor(visible)
 	if not self.Scale.Parent then
 		if not visible then self.Scale.Scale = 1 end
 		self.Scale.Parent = self.Holder
@@ -2579,6 +2580,27 @@ function Window:SetVisible(visible)
 		animate(self.Scale, "Scale", 0.97, "Fast")
 		self.Fader:Hide()
 	end
+end
+
+function Window:_setCursor(visible)
+	if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then return end
+	local bindName = "BlossomCursor" .. tostring(self.Screen)
+	pcall(function() RunService:UnbindFromRenderStep(bindName) end)
+	self.Cursor.Visible = false
+	if not visible then
+		if self.SavedMouseIcon ~= nil then
+			pcall(function() UserInputService.MouseIconEnabled = self.SavedMouseIcon end)
+			self.SavedMouseIcon = nil
+		end
+		return
+	end
+	if self.SavedMouseIcon == nil then self.SavedMouseIcon = UserInputService.MouseIconEnabled end
+	RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value, function()
+		UserInputService.MouseIconEnabled = false
+		local position = UserInputService:GetMouseLocation()
+		self.Cursor.Position = UDim2.fromOffset(position.X, position.Y)
+		self.Cursor.Visible = true
+	end)
 end
 
 function Window:Toggle()
@@ -2872,6 +2894,7 @@ function Window:_placeOverlays()
 end
 
 function Window:Destroy()
+	pcall(function() self:_setCursor(false) end)
 	for _, connection in self.Connections do connection:Disconnect() end
 	table.clear(Jobs)
 	table.clear(HoverSet)
@@ -2940,6 +2963,16 @@ function Blossom.new(options)
 	win.Fader = newFader(holder)
 	-- A Modal button frees the cursor from first-person camera lock while the menu is open.
 	win.ModalButton = new("TextButton", { Modal = true, Size = Offset(1, 1) }, holder)
+
+	local cursor = new("Frame", { Name = "Cursor", BackgroundTransparency = 1, Size = Offset(1, 1), ZIndex = 1000, Visible = false }, screen)
+	local cursorParts = {
+		{ Offset(15, 3), Vector2.new(0.5, 0.5), Color3.new(0, 0, 0) }, { Offset(3, 15), Vector2.new(0.5, 0.5), Color3.new(0, 0, 0) },
+		{ Offset(13, 1), Vector2.new(0.5, 0.5), Color3.new(1, 1, 1) }, { Offset(1, 13), Vector2.new(0.5, 0.5), Color3.new(1, 1, 1) },
+	}
+	for index, part in ipairs(cursorParts) do
+		new("Frame", { BackgroundTransparency = 0, BackgroundColor3 = part[3], AnchorPoint = part[2], Position = Offset(0, 0), Size = part[1], ZIndex = 1000 + index, BorderSizePixel = 0 }, cursor)
+	end
+	win.Cursor = cursor
 
 	local sidebar = new("Frame", { Size = Dim2(0, Metrics.SidebarW, 1, 0) }, root)
 	win.Sidebar = sidebar
