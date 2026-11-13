@@ -1965,21 +1965,33 @@ function Window:Notify(options)
 	if type(options) == "string" then options = { Text = options } end
 	local frame = new("Frame", { Bg = "Background", Size = Offset(60, 28), Radius = Metrics.FloatRadius, Border = "Outline", Visible = false }, self.Notifications)
 	makeIcon(frame, options.Icon or "check", 14, function() return RGB(112, 205, 132) end, "Background", { Position = Offset(8, 7) })
-	local text = label(frame, { Text = options.Text, TextSize = 12, X = 28, RowH = 28, W = 340, Truncate = Enum.TextTruncate.AtEnd })
-	local entry = { Frame = frame, Fader = newFader(frame) }
-	local function fit() frame.Size = Offset(math.min(math.ceil(text.TextBounds.X), 340) + 38, 28) end
+	local text = label(frame, { Text = options.Text, TextSize = 12, X = 28, RowH = 28, W = 340 })
+	text.TextWrapped = true
+	text.TextYAlignment = Enum.TextYAlignment.Top
+	local entry = { Frame = frame, Fader = newFader(frame), Height = 28 }
+	local stack
+	local function fit()
+		local lines = math.max(math.ceil(text.TextBounds.Y), 14)
+		local height = math.max(28, lines + 14)
+		entry.Height = height
+		frame.Size = Offset(math.min(math.ceil(text.TextBounds.X), 340) + 38, height)
+		text.Size = Offset(340, lines + 2)
+		text.Position = Offset(28, math.floor((height - lines) / 2))
+		if stack then stack() end
+	end
 	text:GetPropertyChangedSignal("TextBounds"):Connect(fit)
 	fit()
 	table.insert(self.NotifyStack, 1, entry)
-	local function stack()
-		local count = #self.NotifyStack
-		for index, item in self.NotifyStack do
-			local y = (count - index) * 36
+	stack = function()
+		local y = 0
+		for index = #self.NotifyStack, 1, -1 do
+			local item = self.NotifyStack[index]
 			if not item.Placed then
 				item.Placed = true
 				item.Frame.Position = Offset(-36, y)
 			end
 			animate(item.Frame, "Position", Offset(0, y), "Settle")
+			y = y + item.Height + 8
 		end
 	end
 	function entry.Dismiss()
@@ -1992,7 +2004,6 @@ function Window:Notify(options)
 	end
 	stack()
 	entry.Fader:Show()
-	-- Rapid actions shouldn't bury the screen.
 	if #self.NotifyStack > 6 then self.NotifyStack[#self.NotifyStack].Dismiss() end
 	task.delay(options.Duration or 3, entry.Dismiss)
 end
@@ -3343,9 +3354,7 @@ function Blossom.Obsidian(defaults)
 			return
 		end
 		if typeof(time) ~= "number" then time = 4 end
-		for _, line in ipairs(wrapWords(text, 54)) do
-			pcall(win.Notify, win, { Text = line, Duration = time })
-		end
+		pcall(win.Notify, win, { Text = text, Duration = time })
 	end
 
 	function Library:Toggle(visible)
