@@ -730,6 +730,43 @@ local Icons = {
 		{ "f", 9.6, 10, 4.4, 4.4, FULL }, { "h", 3.35, 11.35, 1.7, 1.7, FULL }, { "h", 10.95, 11.35, 1.7, 1.7, FULL },
 	},
 	sword = { { "f", 7, 0.2, 2.6, 11.6, 0.6, 45 }, { "f", 1.4, 10, 7.2, 2.2, 0.6, 45 }, { "f", 0.6, 12.4, 2.6, 3.2, 0.6, 45 } },
+	fish = {
+		{ "f", 0.8, 4.2, 10.8, 7.6, FULL }, { "f", 9.9, 4.9, 6.2, 6.2, 0.8, 45 }, { "h", 13.4, 5.1, 5.8, 5.8, 0, 45 },
+		{ "h", 3, 6.4, 1.9, 1.9, FULL },
+	},
+	skull = {
+		{ "f", 1.8, 0.8, 12.4, 11, FULL }, { "f", 4.4, 8.6, 7.2, 6.6, 1.6 }, { "h", 4, 4.8, 3.2, 3.4, FULL },
+		{ "h", 8.8, 4.8, 3.2, 3.4, FULL }, { "h", 7.2, 8.8, 1.6, 2, FULL }, { "h", 6.6, 12.6, 0.9, 2.6, 0 },
+		{ "h", 8.5, 12.6, 0.9, 2.6, 0 },
+	},
+	snowflake = {
+		{ "f", 7.1, 0.4, 1.8, 15.2, FULL, 0 }, { "f", 7.1, 0.4, 1.8, 15.2, FULL, 60 }, { "f", 7.1, 0.4, 1.8, 15.2, FULL, 120 },
+		{ "f", 5.6, 5.6, 4.8, 4.8, FULL }, { "h", 6.9, 6.9, 2.2, 2.2, FULL },
+	},
+	wind = { { "f", 0.8, 2.6, 10.4, 2.1, FULL }, { "f", 0.8, 7, 14.4, 2.1, FULL }, { "f", 3.4, 11.4, 8.6, 2.1, FULL } },
+	flag = { { "f", 2, 1, 2, 14.5, FULL }, { "f", 3.4, 1.6, 10, 7.4, 1 }, { "h", 11.6, 3.5, 3.6, 3.6, 0, 45 } },
+	pin = { { "f", 3, 0.8, 10, 10, FULL }, { "f", 5.2, 7.8, 5.6, 5.6, 0.6, 45 }, { "h", 5.9, 3.7, 4.2, 4.2, FULL } },
+	bird = { { "f", 0.4, 5.6, 8.6, 2.2, FULL, 28 }, { "f", 7, 5.6, 8.6, 2.2, FULL, -28 }, { "f", 6.6, 7.2, 2.8, 4.6, FULL } },
+	dumbbell = {
+		{ "f", 3, 7, 10, 2, 0.5 }, { "f", 0.6, 4, 3.4, 8, 1 }, { "f", 12, 4, 3.4, 8, 1 },
+		{ "f", 3.4, 5.2, 1.8, 5.6, 0.6 }, { "f", 10.8, 5.2, 1.8, 5.6, 0.6 },
+	},
+	flame = { { "f", 2.8, 5.2, 10.4, 10.4, FULL }, { "f", 4.33, 1.93, 7.35, 7.35, 1, 45 }, { "h", 6.3, 10.4, 3.4, 3.4, FULL } },
+	moon = { { "f", 1, 1, 14, 14, FULL }, { "h", 5, 0, 11, 11, FULL } },
+	swords = {
+		{ "f", 7, 0.5, 2, 14, 0.6, 45 }, { "f", 7, 0.5, 2, 14, 0.6, -45 },
+		{ "f", 2.1, 10, 5, 1.8, 0.6, 45 }, { "f", 8.9, 10, 5, 1.8, 0.6, -45 },
+	},
+	compass = { { "r", 1, 1, 14, 14, FULL, 0, 1.6 }, { "f", 5, 5, 6, 6, 0.5, 45 }, { "h", 7.1, 7.1, 1.8, 1.8, FULL } },
+	trophy = {
+		{ "r", 0.8, 2, 4, 4.6, FULL, 0, 1.3 }, { "r", 11.2, 2, 4, 4.6, FULL, 0, 1.3 }, { "f", 3.6, 1, 8.8, 8, 3 },
+		{ "f", 7, 8.4, 2, 3.4, 0 }, { "f", 4.4, 11.6, 7.2, 2.6, 0.8 },
+	},
+	pulse = {
+		{ "f", 0.05, 7.1, 4.4, 1.8, FULL }, { "f", 1.86, 4.6, 6.29, 1.8, FULL, -68.2 }, { "f", 1.83, 7.1, 11.34, 1.8, FULL, 73.3 },
+		{ "f", 6.86, 9.6, 6.29, 1.8, FULL, -68.2 }, { "f", 10.55, 7.1, 5.4, 1.8, FULL },
+	},
+	navigate = { { "f", 3.5, 3.5, 9, 9, 0.8, 45 }, { "h", 5.75, 8.5, 4.5, 4.5, 0, 45 } },
 	logo = (function()
 		local parts = { { "f", 0.6, 0.6, 14.8, 14.8, FULL } }
 		for arm = 0, 2 do
@@ -745,11 +782,46 @@ local Icons = {
 	end)(),
 }
 
+local LucideLib
+do
+	local env = getgenv and getgenv() or _G
+	if type(env.NobulemLucide) == "table" then
+		LucideLib = env.NobulemLucide
+	else
+		local ok, lib = pcall(function()
+			return loadstring(game:HttpGet("https://raw.githubusercontent.com/notpoiu/lucide-roblox-direct/refs/heads/main/source.lua"))()
+		end)
+		if ok and type(lib) == "table" and type(lib.GetAsset) == "function" then
+			LucideLib = lib
+			env.NobulemLucide = lib
+		end
+	end
+end
+
+local function lucideData(name)
+	if not LucideLib or type(name) ~= "string" then return nil end
+	local ok, data = pcall(LucideLib.GetAsset, name)
+	if ok and type(data) == "table" and data.Url then return data end
+	return nil
+end
+
+local function pickIcon(name)
+	if type(name) == "string" and not string.find(name, "rbxasset", 1, true) and not string.find(name, "lucide:", 1, true) and lucideData(name) then
+		return "lucide:" .. name
+	end
+	return name
+end
+
 local function makeIcon(parent, name, size, color, hole, props)
 	props = props or {}
 	local root = new("Frame", { Name = "Icon", Size = Offset(size, size), Position = props.Position, AnchorPoint = props.AnchorPoint, ZIndex = props.ZIndex }, parent)
 	local icon = { Root = root, Parts = {} }
-	if type(name) == "string" and string.find(name, "rbxasset", 1, true) then
+	local sprite = type(name) == "string" and string.sub(name, 1, 7) == "lucide:" and lucideData(string.sub(name, 8))
+	if sprite then
+		local image = new("ImageLabel", { Size = Dim2(1, 0, 1, 0), Image = sprite.Url, ImageRectOffset = sprite.ImageRectOffset, ImageRectSize = sprite.ImageRectSize }, root)
+		bind(image, "ImageColor3", color)
+		table.insert(icon.Parts, image)
+	elseif type(name) == "string" and string.find(name, "rbxasset", 1, true) then
 		local image = new("ImageLabel", { Size = Dim2(1, 0, 1, 0), Image = name }, root)
 		bind(image, "ImageColor3", color)
 		table.insert(icon.Parts, image)
@@ -1731,7 +1803,7 @@ function Tab:Section(options)
 	local header = new("TextButton", { Size = Dim2(1, 0, 0, headerH - 8) }, root)
 	local hovering = false
 	local titleColor = function() return hovering and Current.Text or Current.InactiveText end
-	local icon = makeIcon(header, options.Icon or "cube", 16, titleColor, "Tab")
+	local icon = makeIcon(header, pickIcon(options.Icon) or "cube", 16, titleColor, "Tab")
 	local title = label(header, { Text = options.Name, X = 27, Fg = titleColor, Truncate = Enum.TextTruncate.AtEnd })
 	if options.Description then
 		label(header, { Fg = "InactiveText", Text = options.Description, TextSize = 11, RowH = 14, Y = 18, Truncate = Enum.TextTruncate.AtEnd })
@@ -1797,7 +1869,7 @@ function Window:Tab(options)
 	local isActive = function() return self.CurrentTab == tab end
 	local color = function() return (isActive() or hovering) and Current.Text or Current.InactiveText end
 	local hole = function() return isActive() and Current.Inline or Current.Background end
-	tab.Icon = makeIcon(button, options.Icon or "cube", 16, color, hole, { Position = Offset(6, 6) })
+	tab.Icon = makeIcon(button, pickIcon(options.Icon) or "cube", 16, color, hole, { Position = Offset(6, 6) })
 	tab.Label = label(button, { Text = options.Name, X = 33, TextSize = 13, RowH = Metrics.TabH, Fg = color, Right = 6, Truncate = Enum.TextTruncate.AtEnd })
 	tab.LabelY = tab.Label.Position.Y.Offset
 
@@ -3086,9 +3158,20 @@ local LucideIcons = {
 	puzzle = "cube", inbox = "cube", monitor = "layout", layers = "layout", ["list-ordered"] = "list", ["arrow-right-left"] = "reset",
 }
 
+for name, icon in {
+	fish = "fish", anchor = "fish", skull = "skull", snowflake = "snowflake", wind = "wind", mountain = "flag",
+	["mountain-snow"] = "flag", flag = "flag", route = "pin", ["map-pin"] = "pin", map = "pin", bird = "bird", dumbbell = "dumbbell",
+	flame = "flame", moon = "moon", swords = "swords", compass = "compass", award = "trophy", trophy = "trophy", medal = "trophy",
+	activity = "pulse", ["heart-pulse"] = "pulse", navigation = "navigate", ["navigation-2"] = "navigate", footprints = "navigate",
+} do
+	LucideIcons[name] = icon
+end
+
 local function blossomIcon(name)
 	if type(name) ~= "string" or name == "" then return "cube" end
-	if string.find(name, "rbxasset", 1, true) or Icons[name] then return name end
+	if string.find(name, "rbxasset", 1, true) then return name end
+	if lucideData(name) then return "lucide:" .. name end
+	if Icons[name] then return name end
 	return LucideIcons[name] or LucideIcons[string.lower(name)] or "cube"
 end
 
@@ -3996,8 +4079,27 @@ function Blossom.Obsidian(defaults)
 			lastCategory = name
 			win:Category(name)
 		end
+		local settingsTab
+		function WindowObject:GetSettingsTab()
+			if not settingsTab then
+				local category = defaults.Categories and defaults.Categories[defaults.SettingsTab or "Settings"]
+				if category and category ~= lastCategory then self:AddCategory(category) end
+				settingsTab = makeTab(win:Tab({ Name = defaults.SettingsTab or "Settings", Icon = blossomIcon("settings") }))
+			end
+			return settingsTab
+		end
 		function WindowObject:AddTab(name, icon)
 			if type(name) == "table" then name, icon = name.Name, name.Icon end
+			if name == "Misc" then
+				return setmetatable({}, { __index = function(_, key)
+					local real = self:GetSettingsTab()
+					local value = real[key]
+					if type(value) == "function" then
+						return function(_, ...) return value(real, ...) end
+					end
+					return value
+				end })
+			end
 			local category = defaults.Categories and defaults.Categories[name]
 			if category and category ~= lastCategory then self:AddCategory(category) end
 			return makeTab(win:Tab({ Name = name, Icon = blossomIcon(icon) }))
@@ -4103,7 +4205,7 @@ function Blossom.Obsidian(defaults)
 		local base = self.Folder .. (self.SubFolder ~= "" and "/" .. self.SubFolder or "")
 		if not defaults.ConfigFolder then win.ConfigFolder = base .. "/blossom" end
 		pcall(self._migrate, self, self.Folder .. "/settings" .. (self.SubFolder ~= "" and "/" .. self.SubFolder or ""))
-		local tab = WindowObject:AddTab(defaults.SettingsTab or "Settings", "settings")
+		local tab = WindowObject:GetSettingsTab()
 		win:BuildSettings(tab.Blossom)
 	end
 
