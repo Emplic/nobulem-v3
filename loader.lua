@@ -171,6 +171,7 @@ local LuarmorScriptIds = {
     AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
     ABizarreRun = "1beffe3e89f9490b79c1f8d37520d1ee",
     ThrowFoodABizarreRun = "5166b69f34db48b2df9b9a6c2e36da8b",
+    UrbanReloadBeyondNen = "a95faedf4db50a30ced44fd85e6c6ef1",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -186,6 +187,7 @@ local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
 local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
 local ProjectSlayersSpiderArmScriptId = LuarmorScriptIds.ProjectSlayersSpiderArm or ""
 local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
+local UrbanReloadBeyondNenScriptId = LuarmorScriptIds.UrbanReloadBeyondNen or ""
 
 local Games = {
     {
@@ -229,8 +231,21 @@ local Games = {
         UniverseId      = 10769552054,
         GameName        = "Urban Reload",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.UrbanReload or "",
-        GetKeyUrl       = LuarmorAdUrls.UrbanReload or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = UrbanReloadBeyondNenScriptId ~= "" and UrbanReloadBeyondNenScriptId or LuarmorScriptIds.UrbanReload or "",
+        GetKeyUrl       = LuarmorAdUrls.UrbanReloadBeyondNen or LuarmorAdUrls.UrbanReload or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = {
+            6016716328, 7005753990, 9451104557, 9484492325, 10958232317, 13864209831, 15130508163, 17003530886,
+            74767246064721, 77244271732649, 78073853031462, 86991121097984, 91386853670890, 92047435191451,
+            92742253895919, 96127042759796, 99388499587789, 102319792688611, 103998171025949, 105638469971133,
+            113623351751174, 123343333878430, 125055808970188, 125380695993213, 128763370767026, 133204612069550,
+        },
+        UniverseId      = 2174306620,
+        GameName        = "Beyond Nen",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = UrbanReloadBeyondNenScriptId,
+        GetKeyUrl       = LuarmorAdUrls.UrbanReloadBeyondNen or LuarmorAdUrls.BeyondNen or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 14438406081 },
