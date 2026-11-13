@@ -2586,7 +2586,6 @@ function Window:_setCursor(visible)
 	if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then return end
 	local bindName = "BlossomCursor" .. tostring(self.Screen)
 	pcall(function() RunService:UnbindFromRenderStep(bindName) end)
-	self.Cursor.Visible = false
 	if not visible then
 		if self.SavedMouseIcon ~= nil then
 			pcall(function() UserInputService.MouseIconEnabled = self.SavedMouseIcon end)
@@ -2596,10 +2595,7 @@ function Window:_setCursor(visible)
 	end
 	if self.SavedMouseIcon == nil then self.SavedMouseIcon = UserInputService.MouseIconEnabled end
 	RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value, function()
-		UserInputService.MouseIconEnabled = false
-		local position = UserInputService:GetMouseLocation()
-		self.Cursor.Position = UDim2.fromOffset(position.X, position.Y)
-		self.Cursor.Visible = true
+		UserInputService.MouseIconEnabled = true
 	end)
 end
 
@@ -2963,16 +2959,6 @@ function Blossom.new(options)
 	win.Fader = newFader(holder)
 	-- A Modal button frees the cursor from first-person camera lock while the menu is open.
 	win.ModalButton = new("TextButton", { Modal = true, Size = Offset(1, 1) }, holder)
-
-	local cursor = new("Frame", { Name = "Cursor", BackgroundTransparency = 1, Size = Offset(1, 1), ZIndex = 1000, Visible = false }, screen)
-	local cursorParts = {
-		{ Offset(15, 3), Vector2.new(0.5, 0.5), Color3.new(0, 0, 0) }, { Offset(3, 15), Vector2.new(0.5, 0.5), Color3.new(0, 0, 0) },
-		{ Offset(13, 1), Vector2.new(0.5, 0.5), Color3.new(1, 1, 1) }, { Offset(1, 13), Vector2.new(0.5, 0.5), Color3.new(1, 1, 1) },
-	}
-	for index, part in ipairs(cursorParts) do
-		new("Frame", { BackgroundTransparency = 0, BackgroundColor3 = part[3], AnchorPoint = part[2], Position = Offset(0, 0), Size = part[1], ZIndex = 1000 + index, BorderSizePixel = 0 }, cursor)
-	end
-	win.Cursor = cursor
 
 	local sidebar = new("Frame", { Size = Dim2(0, Metrics.SidebarW, 1, 0) }, root)
 	win.Sidebar = sidebar
