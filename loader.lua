@@ -162,12 +162,11 @@ local LuarmorScriptIds = {
     Flick = "2d3b779daff5c319a93d5d8f38b1bdc0",
     UrbanReload = "40c127c6813852ae8c544277c726345d",
     Wanted = "b59527dfe5520d0cd523a37e7ddf2b47",
-    ProjectSlayers = "9955c61131117e72e978555014354b74",
+    ProjectSlayers = "87e8b11127b9704a640347ccd6c6c033",
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
     WantedBreakAndStealAnEgg = "e47e9632261b3364b61f4442e3a03571",
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
     HypershotVenomEvolution = "8934f8215d1c598724cbbf2d65308305",
-    ProjectSlayersSpiderArm = "08a06d4201aadf0d1eaf19cda5c9256a",
     AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
     ABizarreRun = "1beffe3e89f9490b79c1f8d37520d1ee",
     ThrowFoodABizarreRun = "5166b69f34db48b2df9b9a6c2e36da8b",
@@ -185,7 +184,6 @@ for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[na
 local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnEgg or ""
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
 local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
-local ProjectSlayersSpiderArmScriptId = LuarmorScriptIds.ProjectSlayersSpiderArm or ""
 local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
 local UrbanReloadBeyondNenScriptId = LuarmorScriptIds.UrbanReloadBeyondNen or ""
 
@@ -271,16 +269,8 @@ local Games = {
         UniverseId      = 5595353122,
         GameName        = "Project Slayers 2",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = ProjectSlayersSpiderArmScriptId ~= "" and ProjectSlayersSpiderArmScriptId or LuarmorScriptIds.ProjectSlayers or "",
-        GetKeyUrl       = LuarmorAdUrls.ProjectSlayersSpiderArm or LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
-    },
-    {
-        PlaceIds        = { 117734411290994, 76196077709659, 101278483792069 },
-        UniverseId      = 10771997908,
-        GameName        = "+1 Spider Arm",
-        SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = ProjectSlayersSpiderArmScriptId,
-        GetKeyUrl       = LuarmorAdUrls.ProjectSlayersSpiderArm or LuarmorAdUrls.SpiderArm or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = LuarmorScriptIds.ProjectSlayers or "",
+        GetKeyUrl       = LuarmorAdUrls.ProjectSlayers or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = {
