@@ -123,7 +123,9 @@ local WeightOrder = { "Regular", "Medium", "SemiBold", "Bold" }
 
 local Current = table.clone(Themes.Obsidian)
 local Casing = "Lower Case"
-local FontFamily = INTER
+local FontFamily = Fonts["Builder Sans"]
+local FontBoost = { [Fonts["Builder Sans"]] = 1 }
+local AppliedBoost = 0
 local BodyWeight = Enum.FontWeight.SemiBold
 
 -------------------------------------------------------------------------------
@@ -350,12 +352,18 @@ local function setText(inst, text, prop)
 end
 
 local function applyTextSettings()
+	local boost = FontBoost[FontFamily] or 0
 	for inst, entry in Cased do
 		for prop, raw in entry do
 			if prop == "Text" or prop == "PlaceholderText" then inst[prop] = applyCase(raw) end
 		end
 		inst.FontFace = fontOf(entry.Weight)
+		if not entry.FixedSize then
+			entry.BaseSize = entry.BaseSize or inst.TextSize - AppliedBoost
+			inst.TextSize = entry.BaseSize + boost
+		end
 	end
+	AppliedBoost = boost
 end
 
 local TEXT_CLASSES = { TextLabel = true, TextButton = true, TextBox = true }
@@ -410,6 +418,11 @@ local function new(class, props, parent)
 		stroke.Thickness = 1
 		bind(stroke, "Color", border)
 		stroke.Parent = inst
+	end
+	if Cased[inst] then
+		AppliedBoost = FontBoost[FontFamily] or 0
+		Cased[inst].BaseSize = inst.TextSize
+		inst.TextSize += AppliedBoost
 	end
 	if parent then inst.Parent = parent end
 	return inst
@@ -2829,7 +2842,7 @@ function Window:BuildSettings(tab)
 	menuBind.OnKeyChanged = function() self.MenuKey = menuBind.Key end
 	menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self.Watermark.Visible = value end })
 	menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self.Hotkeys.Visible = value end })
-	menu:Dropdown({ Name = "Font", Options = FontOrder, Default = "Inter", NoSave = true, Callback = function(value) self:SetFont(value) end })
+	menu:Dropdown({ Name = "Font", Options = FontOrder, Default = "Builder Sans", NoSave = true, Callback = function(value) self:SetFont(value) end })
 	menu:Dropdown({ Name = "Text Weight", Options = WeightOrder, Default = BodyWeight.Name, NoSave = true, Callback = function(value) self:SetTextWeight(value) end })
 
 	if saved and not self.ManualAutoload then
@@ -2994,6 +3007,7 @@ function Blossom.new(options)
 	local titleX = logoX + logoSize + 8
 	local titleW = Metrics.SidebarW - titleX - Metrics.Pad
 	local title = label(sidebar, { Text = win.Title, TextSize = 16, Weight = Enum.FontWeight.Bold, X = titleX, Y = 11, RowH = 28, W = titleW })
+	Cased[title].FixedSize = true
 	local function fitTitle()
 		local size = 16
 		title.TextSize = size
@@ -3495,6 +3509,7 @@ function Blossom.Obsidian(defaults)
 			end)
 		end
 		inst:GetPropertyChangedSignal("Text"):Connect(fit)
+		inst:GetPropertyChangedSignal("TextSize"):Connect(fit)
 		inst:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
 		fit()
 	end
