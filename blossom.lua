@@ -2955,7 +2955,7 @@ function Blossom.new(options)
 		Title = options.Title or "Blossom", Tabs = {}, Sections = {}, Columns = {}, Index = {}, Binds = {}, Colors = {}, Flags = {},
 		ThemeRows = {}, HotkeyEntries = {}, HotkeyOrder = {}, WheelBlockers = setmetatable({}, { __mode = "k" }), NotifyStack = {}, Connections = {}, Jobs = {}, Moved = {}, PendingThemeKeys = {}, FlagOwners = {},
 		ThemeClock = 0, SidebarY = Metrics.FirstCategory, SidebarHasTabs = false, SidebarAfterCategory = false,
-		Visible = true, ThemeName = options.Theme or "Obsidian", ConfigFolder = options.ConfigFolder or "Blossom", ManualAutoload = options.ManualAutoload == true, MenuKey = options.MenuKey or Enum.KeyCode.RightShift,
+		Visible = true, ThemeName = options.Theme or "Obsidian", ConfigFolder = options.ConfigFolder or "Blossom", ManualAutoload = options.ManualAutoload == true, MenuKey = options.MenuKey or Enum.KeyCode.Delete,
 		LastPopupTime = 0, DropdownClosedAt = 0,
 	}, Window)
 	if options.Logo then
