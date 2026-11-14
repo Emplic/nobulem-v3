@@ -3467,10 +3467,11 @@ function Blossom.Obsidian(defaults)
 	local function fitLabel(section, item, inst)
 		inst.TextTruncate = Enum.TextTruncate.None
 		inst.TextWrapped = true
-		inst.RichText = true
 		local measuring, pending = false, false
 		local fit
 		fit = function()
+			local rich = string.find(inst.Text, "<%a") ~= nil or string.find(inst.Text, "</", 1, true) ~= nil
+			if inst.RichText ~= rich then inst.RichText = rich end
 			if inst.AbsoluteSize.X <= 0 then return end
 			if measuring then pending = true return end
 			measuring, pending = true, false
