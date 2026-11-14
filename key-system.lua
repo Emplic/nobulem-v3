@@ -522,6 +522,46 @@ local Icons = {
     },
 }
 
+local LucideLib
+do
+    local env = getgenv and getgenv() or _G
+    if type(env.NobulemLucide) == "table" then
+        LucideLib = env.NobulemLucide
+    else
+        local ok, lib = pcall(function()
+            return loadstring(game:HttpGet("https://raw.githubusercontent.com/notpoiu/lucide-roblox-direct/refs/heads/main/source.lua"))()
+        end)
+        if ok and type(lib) == "table" and type(lib.GetAsset) == "function" then
+            LucideLib = lib
+            env.NobulemLucide = lib
+        end
+    end
+end
+
+local LucideNames = {
+    key = "key",
+    check = "circle-check",
+    cross = "x",
+    alert = "triangle-alert",
+    info = "info",
+    gem = "gem",
+    globe = "globe",
+    user = "user",
+    file = "file-text",
+    gear = "settings",
+    cube = "box",
+    tick = "check",
+}
+
+Icons.tick = Icons.check
+
+local function LucideData(name)
+    if not LucideLib then return nil end
+    local ok, data = pcall(LucideLib.GetAsset, LucideNames[name] or name)
+    if ok and type(data) == "table" and data.Url then return data end
+    return nil
+end
+
 local function MakeIcon(parent, name, size, color, hole, props)
     props = props or {}
     local root = New("Frame", {
@@ -531,6 +571,22 @@ local function MakeIcon(parent, name, size, color, hole, props)
         AnchorPoint = props.AnchorPoint or Vector2.zero,
         ZIndex = props.ZIndex or 1,
     }, parent)
+    local sprite = LucideData(name)
+    if sprite then
+        local image = New("ImageLabel", {
+            Size = UDim2.fromScale(1, 1),
+            Image = sprite.Url,
+            ImageRectOffset = sprite.ImageRectOffset,
+            ImageRectSize = sprite.ImageRectSize,
+            ImageColor3 = color,
+            ZIndex = props.ZIndex or 1,
+        }, root)
+        local lucideIcon = { Root = root }
+        function lucideIcon.Set(newColor, _, instant)
+            if instant then image.ImageColor3 = newColor else Tween(image, Fast, { ImageColor3 = newColor }) end
+        end
+        return lucideIcon
+    end
     local fills, holes = {}, {}
     local scale = size / 16
     for _, part in Icons[name] or Icons.cube do
@@ -949,7 +1005,7 @@ end
 
 local function CheckRow(section, text)
     local row = Row(section.Card, section.Order())
-    MakeIcon(row, "check", 12, Theme.Success, Theme.Inline, { Position = Offset(0, 2) })
+    MakeIcon(row, "tick", 12, Theme.Success, Theme.Inline, { Position = Offset(0, 2) })
     Text(row, { Text = text, X = 20, TextSize = 12, Truncate = Enum.TextTruncate.AtEnd })
 end
 
