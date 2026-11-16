@@ -2710,14 +2710,25 @@ function Window:ListConfigs()
 	return names
 end
 
-function Window:SaveConfig(name)
-	local json = self:_serialize()
+function Window:_writeConfig(name, json)
 	if hasFileApi() then
 		ensureFolder(self.ConfigFolder)
 		writefile(self:_configPath(name), json)
 	else
 		ConfigMemory[self.ConfigFolder .. "/" .. name] = json
 	end
+end
+
+function Window:SaveConfig(name)
+	self:_writeConfig(name, self:_serialize())
+end
+
+function Window:_applyConfig(json, name)
+	self.LoadingConfig = true
+	local ok, err = pcall(self._deserialize, self, json)
+	self.LoadingConfig = false
+	if not ok then warn("[Blossom] config " .. tostring(name) .. ": " .. tostring(err)) end
+	return ok
 end
 
 function Window:LoadConfig(name)
@@ -2729,11 +2740,129 @@ function Window:LoadConfig(name)
 		json = ConfigMemory[self.ConfigFolder .. "/" .. name]
 	end
 	if not json then return false end
-	self.LoadingConfig = true
-	local ok, err = pcall(self._deserialize, self, json)
-	self.LoadingConfig = false
-	if not ok then warn("[Blossom] config " .. tostring(name) .. ": " .. tostring(err)) end
-	return ok
+	return self:_applyConfig(json, name)
+end
+
+local CloudDefaultUrl = ""
+
+local function cloudSender()
+	local candidates = {
+		typeof(syn) == "table" and syn.request or nil,
+		typeof(http) == "table" and http.request or nil,
+		http_request, request,
+		typeof(fluxus) == "table" and fluxus.request or nil,
+	}
+	for index = 1, 5 do
+		if typeof(candidates[index]) == "function" then return candidates[index] end
+	end
+	return nil
+end
+
+local function cloudKey()
+	local env = typeof(getgenv) == "function" and getgenv() or {}
+	local key = env.script_key or rawget(_G, "script_key")
+	if typeof(key) ~= "string" then return nil end
+	key = (string.gsub(key, "%s", ""))
+	return key ~= "" and key or nil
+end
+
+local function urlEncode(text)
+	return (string.gsub(tostring(text), "[^%w%-_%.~]", function(char) return string.format("%%%02X", string.byte(char)) end))
+end
+
+local function validCloudName(name)
+	return typeof(name) == "string" and #name >= 1 and #name <= 40 and string.match(name, "^[%w _%.%-%(%)]+$") ~= nil
+end
+
+function Window:_cloudUrl()
+	local env = typeof(getgenv) == "function" and getgenv() or {}
+	local url = self.CloudUrl or env.NobulemCloudUrl or CloudDefaultUrl
+	if typeof(url) ~= "string" or url == "" then return nil end
+	return (string.gsub(url, "/+$", ""))
+end
+
+function Window:CloudAvailable()
+	return self:_cloudUrl() ~= nil and cloudKey() ~= nil and cloudSender() ~= nil
+end
+
+function Window:_cloud(method, path, body)
+	local base, key, send = self:_cloudUrl(), cloudKey(), cloudSender()
+	if not base then return false, "Cloud configs aren't set up." end
+	if not key then return false, "Cloud configs need a key." end
+	if not send then return false, "Your executor can't send web requests." end
+	local ok, response = pcall(send, {
+		Url = base .. path, Method = method, Body = body,
+		Headers = { ["Content-Type"] = "application/json", ["X-Nobulem-Key"] = key },
+	})
+	if not ok or typeof(response) ~= "table" then return false, "Couldn't reach the config server." end
+	local decoded
+	pcall(function() decoded = HttpService:JSONDecode(response.Body) end)
+	local status = tonumber(response.StatusCode) or 0
+	if status < 200 or status >= 300 or typeof(decoded) ~= "table" or decoded.ok ~= true then
+		return false, typeof(decoded) == "table" and typeof(decoded.error) == "string" and decoded.error or ("The config server answered with " .. status .. ".")
+	end
+	return true, decoded
+end
+
+function Window:_cloudScope()
+	return "?scope=" .. urlEncode(self.ConfigFolder)
+end
+
+function Window:CloudList()
+	local ok, result = self:_cloud("GET", "/configs" .. self:_cloudScope())
+	if not ok then return false, result end
+	local names = {}
+	for _, entry in typeof(result.configs) == "table" and result.configs or {} do
+		if typeof(entry) == "table" and typeof(entry.name) == "string" then table.insert(names, entry.name) end
+	end
+	return true, names
+end
+
+function Window:CloudSave(name)
+	if not validCloudName(name) then return false, "Config names can use letters, numbers, spaces and _ . - ( ) up to 40 characters." end
+	return self:_cloud("PUT", "/configs/" .. urlEncode(name) .. self:_cloudScope(), self:_serialize())
+end
+
+function Window:CloudFetch(name)
+	local ok, result = self:_cloud("GET", "/configs/" .. urlEncode(name) .. self:_cloudScope())
+	if not ok then return false, result end
+	if typeof(result.data) ~= "string" then return false, "That cloud config is empty." end
+	return true, result.data
+end
+
+function Window:CloudLoad(name)
+	local ok, data = self:CloudFetch(name)
+	if not ok then return false, data end
+	if not self:_applyConfig(data, name) then return false, "That cloud config couldn't be applied." end
+	return true
+end
+
+function Window:CloudDelete(name)
+	return self:_cloud("DELETE", "/configs/" .. urlEncode(name) .. self:_cloudScope())
+end
+
+function Window:CloudShare(name)
+	local ok, result = self:_cloud("POST", "/share" .. self:_cloudScope() .. "&name=" .. urlEncode(name), "{}")
+	if not ok then return false, result end
+	return true, result.code
+end
+
+function Window:CloudImport(code)
+	code = string.upper((string.gsub(tostring(code or ""), "[^%w]", "")))
+	if #code ~= 8 then return false, "Share codes are 8 letters and numbers." end
+	local ok, result = self:_cloud("GET", "/share/" .. code .. self:_cloudScope())
+	if not ok then return false, result end
+	if typeof(result.data) ~= "string" then return false, "That share code is empty." end
+	local base = validCloudName(result.name) and result.name or "shared"
+	local existing = {}
+	for _, name in self:ListConfigs() do existing[name] = true end
+	local name, index = base, 2
+	while existing[name] do
+		name = base .. " " .. index
+		index += 1
+	end
+	self:_writeConfig(name, result.data)
+	return true, name
 end
 
 function Window:DeleteConfig(name)
@@ -2847,6 +2976,107 @@ function Window:BuildSettings(tab)
 		autoloadName = value
 		storeAutoload()
 	end })
+
+	if self:CloudAvailable() then
+		local cloudSelected
+		local cloudBusy = false
+		local cloud = tab:Section({ Name = "Cloud", Icon = "cube", Side = 1 })
+		local cloudList = cloud:Listbox({ Height = 121, Empty = "No cloud configs yet", Options = {}, Callback = function(value) cloudSelected = value end })
+		local cloudName = cloud:Textbox({ Placeholder = "Cloud config name", NoSave = true })
+		local function cloudJob(job)
+			if cloudBusy then return end
+			cloudBusy = true
+			task.spawn(function()
+				local ok, err = pcall(job)
+				cloudBusy = false
+				if not ok then self:Notify(tostring(err)) end
+			end)
+		end
+		local function refreshCloud(quiet)
+			local ok, names = self:CloudList()
+			if not ok then
+				if not quiet then self:Notify(names) end
+				return
+			end
+			if not table.find(names, cloudSelected) then cloudSelected = nil end
+			cloudList:SetOptions(names)
+			cloudList:Set(cloudSelected, true)
+		end
+		local function needSelected()
+			if not cloudSelected then self:Notify("Pick a cloud config first.") end
+			return cloudSelected
+		end
+		cloud:Button({ Name = "Save To Cloud", Callback = function()
+			local name = cloudName.Instance.Text ~= "" and cloudName.Instance.Text or cloudSelected
+			if not name then self:Notify("Enter a name or pick a cloud config first."); return end
+			cloudJob(function()
+				local ok, err = self:CloudSave(name)
+				if not ok then self:Notify(err); return end
+				cloudSelected = name
+				refreshCloud(true)
+				self:Notify(('Saved "%s" to the cloud.'):format(name))
+			end)
+		end })
+		cloud:Button({ Name = "Load From Cloud", Callback = function()
+			local name = needSelected()
+			if not name then return end
+			cloudJob(function()
+				local ok, err = self:CloudLoad(name)
+				self:Notify(ok and ('Loaded "%s" from the cloud.'):format(name) or err)
+			end)
+		end })
+		cloud:Button({ Name = "Download To Local", Callback = function()
+			local name = needSelected()
+			if not name then return end
+			cloudJob(function()
+				local ok, data = self:CloudFetch(name)
+				if not ok then self:Notify(data); return end
+				self:_writeConfig(name, data)
+				refreshList()
+				self:Notify(('Downloaded "%s" to your configs.'):format(name))
+			end)
+		end })
+		cloud:Button({ Name = "Delete From Cloud", Callback = function()
+			local name = needSelected()
+			if not name then return end
+			cloudJob(function()
+				local ok, err = self:CloudDelete(name)
+				if not ok then self:Notify(err); return end
+				cloudSelected = nil
+				refreshCloud(true)
+				self:Notify(('Deleted "%s" from the cloud.'):format(name))
+			end)
+		end })
+		cloud:Button({ Name = "Refresh", Callback = function()
+			cloudJob(function() refreshCloud(false) end)
+		end })
+
+		local sharing = tab:Section({ Name = "Sharing", Icon = "cube", Side = 1 })
+		sharing:Button({ Name = "Copy Share Code", Callback = function()
+			local name = needSelected()
+			if not name then return end
+			cloudJob(function()
+				local ok, code = self:CloudShare(name)
+				if not ok then self:Notify(code); return end
+				local copied = typeof(setclipboard) == "function" and pcall(setclipboard, code)
+				self:Notify(copied and ('Share code %s copied.'):format(code) or ('Share code: %s'):format(code))
+			end)
+		end })
+		local shareCode = sharing:Textbox({ Placeholder = "Share code", NoSave = true })
+		sharing:Button({ Name = "Import Code", Callback = function()
+			local code = shareCode.Instance.Text
+			if code == "" then self:Notify("Paste a share code first."); return end
+			cloudJob(function()
+				local ok, name = self:CloudImport(code)
+				if not ok then self:Notify(name); return end
+				shareCode:Set("", true)
+				refreshList()
+				self:Notify(('Imported "%s" into your configs.'):format(name))
+			end)
+		end })
+
+		cloudJob(function() refreshCloud(true) end)
+	end
 
 	local theming = tab:Section({ Name = "Theming", Icon = "cube", Side = 2 })
 	theming:Dropdown({ Name = "Theme", Options = ThemeOrder, Default = self.ThemeName, MaxRows = 11, NoSave = true, Callback = function(value) self:ApplyTheme(value) end })
@@ -2997,7 +3227,7 @@ function Blossom.new(options)
 		Title = options.Title or "Blossom", Tabs = {}, Sections = {}, Columns = {}, Index = {}, Binds = {}, Colors = {}, Flags = {},
 		ThemeRows = {}, HotkeyEntries = {}, HotkeyOrder = {}, WheelBlockers = setmetatable({}, { __mode = "k" }), NotifyStack = {}, Connections = {}, Jobs = {}, Moved = {}, PendingThemeKeys = {}, FlagOwners = {},
 		ThemeClock = 0, SidebarY = Metrics.FirstCategory, SidebarHasTabs = false, SidebarAfterCategory = false,
-		Visible = true, ThemeName = options.Theme or "Obsidian", ConfigFolder = options.ConfigFolder or "Blossom", ManualAutoload = options.ManualAutoload == true, MenuKey = options.MenuKey or Enum.KeyCode.Delete,
+		Visible = true, ThemeName = options.Theme or "Obsidian", ConfigFolder = options.ConfigFolder or "Blossom", CloudUrl = options.CloudUrl, ManualAutoload = options.ManualAutoload == true, MenuKey = options.MenuKey or Enum.KeyCode.Delete,
 		LastPopupTime = 0, DropdownClosedAt = 0,
 	}, Window)
 	if options.Logo then
@@ -4142,7 +4372,7 @@ function Blossom.Obsidian(defaults)
 		win = Blossom.new({
 			Title = defaults.Title or info.Title or "Blossom", Logo = defaults.Logo or info.Icon,
 			Script = defaults.Script or info.Title or "Blossom", Build = build, Theme = defaults.Theme,
-			ConfigFolder = defaults.ConfigFolder, ManualAutoload = true, MenuKey = parseKey(defaults.MenuKey),
+			ConfigFolder = defaults.ConfigFolder, CloudUrl = defaults.CloudUrl, ManualAutoload = true, MenuKey = parseKey(defaults.MenuKey),
 			Size = Vector2.new(width, height), MinSize = Vector2.new(math.min(520, width), math.min(380, height)),
 		})
 		if defaults.Parent then pcall(function() win.Screen.Parent = defaults.Parent end) end
