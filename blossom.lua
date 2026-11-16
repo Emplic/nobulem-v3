@@ -2743,7 +2743,7 @@ function Window:LoadConfig(name)
 	return self:_applyConfig(json, name)
 end
 
-local CloudDefaultUrl = ""
+local CloudDefaultUrl = "https://nobulem-configs.fazelsa3.workers.dev"
 
 local function cloudSender()
 	local candidates = {
