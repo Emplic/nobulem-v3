@@ -2853,7 +2853,13 @@ function Window:CloudImport(code)
 	local ok, result = self:_cloud("GET", "/share/" .. code .. self:_cloudScope())
 	if not ok then return false, result end
 	if typeof(result.data) ~= "string" then return false, "That share code is empty." end
-	local base = validCloudName(result.name) and result.name or "shared"
+	local name = self:_uniqueConfigName(result.name, "shared")
+	self:_writeConfig(name, result.data)
+	return true, name
+end
+
+function Window:_uniqueConfigName(wanted, fallback)
+	local base = validCloudName(wanted) and wanted or fallback
 	local existing = {}
 	for _, name in self:ListConfigs() do existing[name] = true end
 	local name, index = base, 2
@@ -2861,8 +2867,255 @@ function Window:CloudImport(code)
 		name = base .. " " .. index
 		index += 1
 	end
-	self:_writeConfig(name, result.data)
-	return true, name
+	return name
+end
+
+function Window:MarketList(sort, query, mine)
+	local path = "/market" .. self:_cloudScope() .. "&sort=" .. urlEncode(sort or "popular")
+	if query and query ~= "" then path ..= "&q=" .. urlEncode(query) end
+	if mine then path ..= "&mine=1" end
+	local ok, result = self:_cloud("GET", path)
+	if not ok then return false, result end
+	return true, typeof(result.listings) == "table" and result.listings or {}
+end
+
+function Window:MarketFetch(id)
+	local ok, result = self:_cloud("GET", "/market/" .. urlEncode(id) .. self:_cloudScope())
+	if not ok then return false, result end
+	if typeof(result.data) ~= "string" then return false, "That listing is empty." end
+	return true, result.data, result.listing
+end
+
+function Window:MarketPublish(title, description, author)
+	local ok, result = self:_cloud("POST", "/market" .. self:_cloudScope(), HttpService:JSONEncode({
+		title = title, description = description, author = author, data = self:_serialize(),
+	}))
+	if not ok then return false, result end
+	return true, result.id
+end
+
+function Window:MarketUpdate(id)
+	return self:_cloud("PUT", "/market/" .. urlEncode(id), HttpService:JSONEncode({ data = self:_serialize() }))
+end
+
+function Window:MarketDelete(id)
+	return self:_cloud("DELETE", "/market/" .. urlEncode(id))
+end
+
+function Window:MarketLike(id)
+	local ok, result = self:_cloud("POST", "/market/" .. urlEncode(id) .. "/like", "{}")
+	if not ok then return false, result end
+	return true, result.liked == true, tonumber(result.likes) or 0
+end
+
+function Window:MarketReport(id)
+	return self:_cloud("POST", "/market/" .. urlEncode(id) .. "/report", "{}")
+end
+
+local function wrapLines(text, width, count)
+	local lines, line = {}, ""
+	for word in string.gmatch(text or "", "%S+") do
+		if line == "" then
+			line = word
+		elseif #line + 1 + #word <= width then
+			line ..= " " .. word
+		else
+			table.insert(lines, line)
+			line = word
+		end
+	end
+	if line ~= "" then table.insert(lines, line) end
+	if #lines > count then
+		lines[count] = string.sub(lines[count], 1, width - 3) .. "..."
+	end
+	local result = {}
+	for index = 1, count do result[index] = lines[index] or "" end
+	return result
+end
+
+function Window:_buildMarketplace(job, refreshLocal)
+	local market = self:Tab({ Name = "Marketplace", Icon = lucideData("store") and "store" or "cube" })
+	local sortNames = { Popular = "popular", Newest = "new", ["Most Liked"] = "liked" }
+	local sort, query = "popular", ""
+	local shown, current = {}, nil
+	local mineShown, mineSelected = {}, nil
+
+	local browse = market:Section({ Name = "Browse", Icon = "cube", Side = 1 })
+	browse:Dropdown({ Name = "Sort", Options = { "Popular", "Newest", "Most Liked" }, Default = "Popular", NoSave = true, Callback = function(value)
+		sort = sortNames[value] or "popular"
+		job(function() self._marketSearch(false) end)
+	end })
+	browse:Textbox({ Placeholder = "Search configs", NoSave = true, Callback = function(value)
+		if value == query then return end
+		query = value
+		job(function() self._marketSearch(false) end)
+	end })
+	local results = browse:Listbox({ Height = 265, Empty = "No configs found", Options = {}, Callback = function(value)
+		current = shown[value]
+		self._marketShow()
+	end })
+	browse:Button({ Name = "Refresh", Callback = function()
+		job(function() self._marketSearch(false) end)
+	end })
+
+	local selected = market:Section({ Name = "Selected", Icon = "cube", Side = 2 })
+	local titleLabel = selected:Label({ Name = "Pick a config" })
+	local authorLabel = selected:Label({ Name = " " })
+	local statsLabel = selected:Label({ Name = " " })
+	local descLabels = {}
+	for index = 1, 3 do descLabels[index] = selected:Label({ Name = " " }) end
+
+	function self._marketShow()
+		if not current then
+			titleLabel:Set("Pick a config")
+			authorLabel:Set(" ")
+			statsLabel:Set(" ")
+			for _, item in descLabels do item:Set(" ") end
+			return
+		end
+		titleLabel:Set(tostring(current.title))
+		authorLabel:Set("By " .. tostring(current.author))
+		local updated = tonumber(current.updated)
+		local date = updated and os.date("%d %b %Y", math.floor(updated / 1000)) or "?"
+		statsLabel:Set(("%d uses  ·  %d likes%s  ·  %s"):format(tonumber(current.downloads) or 0, tonumber(current.likes) or 0, current.liked and " (you)" or "", date))
+		local lines = wrapLines(current.description ~= "" and current.description or "No description.", 34, 3)
+		for index, item in descLabels do item:Set(lines[index] ~= "" and lines[index] or " ") end
+	end
+
+	local function needCurrent()
+		if not current then self:Notify("Pick a config first.") end
+		return current
+	end
+	selected:Button({ Name = "Load Config", Callback = function()
+		local listing = needCurrent()
+		if not listing then return end
+		job(function()
+			local ok, data, fresh = self:MarketFetch(listing.id)
+			if not ok then self:Notify(data); return end
+			if typeof(fresh) == "table" then listing.downloads = fresh.downloads end
+			self._marketShow()
+			self:Notify(self:_applyConfig(data, listing.title) and ('Loaded "%s".'):format(listing.title) or "That config couldn't be applied.")
+		end)
+	end })
+	selected:Button({ Name = "Save To My Configs", Callback = function()
+		local listing = needCurrent()
+		if not listing then return end
+		job(function()
+			local ok, data = self:MarketFetch(listing.id)
+			if not ok then self:Notify(data); return end
+			local name = self:_uniqueConfigName(listing.title, "market")
+			self:_writeConfig(name, data)
+			refreshLocal()
+			self:Notify(('Saved "%s" to your configs.'):format(name))
+		end)
+	end })
+	selected:Button({ Name = "Like", Callback = function()
+		local listing = needCurrent()
+		if not listing then return end
+		job(function()
+			local ok, liked, likes = self:MarketLike(listing.id)
+			if not ok then self:Notify(liked); return end
+			listing.liked, listing.likes = liked, likes
+			self._marketShow()
+			self:Notify(liked and ('Liked "%s".'):format(listing.title) or "Like removed.")
+		end)
+	end })
+	selected:Button({ Name = "Report", Callback = function()
+		local listing = needCurrent()
+		if not listing then return end
+		job(function()
+			local ok, err = self:MarketReport(listing.id)
+			self:Notify(ok and "Thanks, it's been reported." or err)
+		end)
+	end })
+
+	local publish = market:Section({ Name = "Publish", Icon = "cube", Side = 2 })
+	local titleBox = publish:Textbox({ Placeholder = "Title", NoSave = true })
+	local descBox = publish:Textbox({ Placeholder = "Description", NoSave = true })
+	local authorBox = publish:Textbox({ Placeholder = "Author name (optional)", NoSave = true })
+	publish:Button({ Name = "Publish Current Settings", Callback = function()
+		local title = titleBox.Instance.Text
+		if #title < 3 then self:Notify("Titles need at least 3 characters."); return end
+		local description, author = descBox.Instance.Text, authorBox.Instance.Text
+		job(function()
+			local ok, id = self:MarketPublish(title, description, author)
+			if not ok then self:Notify(id); return end
+			titleBox:Set("", true)
+			descBox:Set("", true)
+			self._marketSearch(true)
+			self:Notify(('Published "%s".'):format(title))
+		end)
+	end })
+	publish:Label({ Name = "Your listings" })
+	local mine = publish:Listbox({ Height = 97, Empty = "Nothing published yet", Options = {}, Callback = function(value)
+		mineSelected = mineShown[value]
+	end })
+	publish:Button({ Name = "Update With Current Settings", Callback = function()
+		local listing = mineSelected
+		if not listing then self:Notify("Pick one of your listings first."); return end
+		job(function()
+			local ok, err = self:MarketUpdate(listing.id)
+			if not ok then self:Notify(err); return end
+			self._marketSearch(true)
+			self:Notify(('Updated "%s".'):format(listing.title))
+		end)
+	end })
+	publish:Button({ Name = "Unpublish", Callback = function()
+		local listing = mineSelected
+		if not listing then self:Notify("Pick one of your listings first."); return end
+		job(function()
+			local ok, err = self:MarketDelete(listing.id)
+			if not ok then self:Notify(err); return end
+			mineSelected = nil
+			if current and current.id == listing.id then current = nil end
+			self._marketSearch(true)
+			self:Notify(('Unpublished "%s".'):format(listing.title))
+		end)
+	end })
+
+	local function labelled(list, format)
+		local map, names, used = {}, {}, {}
+		for _, listing in list do
+			if typeof(listing) == "table" and typeof(listing.id) == "string" then
+				local name = format(listing)
+				if used[name] then name ..= " #" .. listing.id end
+				used[name] = true
+				map[name] = listing
+				table.insert(names, name)
+			end
+		end
+		return map, names
+	end
+
+	function self._marketSearch(quiet)
+		local ok, list = self:MarketList(sort, query, false)
+		if not ok then
+			if not quiet then self:Notify(list) end
+		else
+			local names
+			shown, names = labelled(list, function(listing) return tostring(listing.title) .. "  ·  " .. tostring(listing.author) end)
+			local keep
+			for name, listing in shown do
+				if current and listing.id == current.id then keep = name end
+			end
+			current = keep and shown[keep] or nil
+			results:SetOptions(names)
+			results:Set(keep, true)
+			self._marketShow()
+		end
+		local okMine, own = self:MarketList("new", "", true)
+		if okMine then
+			local names
+			mineShown, names = labelled(own, function(listing) return tostring(listing.title) .. (listing.hidden and " (hidden)" or "") end)
+			local keep
+			for name, listing in mineShown do
+				if mineSelected and listing.id == mineSelected.id then keep = name end
+			end
+			mineSelected = keep and mineShown[keep] or nil
+			mine:SetOptions(names)
+			mine:Set(keep, true)
+		end
+	end
 end
 
 function Window:DeleteConfig(name)
@@ -3075,7 +3328,11 @@ function Window:BuildSettings(tab)
 			end)
 		end })
 
-		cloudJob(function() refreshCloud(true) end)
+		self:_buildMarketplace(cloudJob, refreshList)
+		cloudJob(function()
+			refreshCloud(true)
+			self._marketSearch(true)
+		end)
 	end
 
 	local theming = tab:Section({ Name = "Theming", Icon = "cube", Side = 2 })
