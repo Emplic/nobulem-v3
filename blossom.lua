@@ -2768,6 +2768,27 @@ local function writeAutoload(win, name)
 	end
 end
 
+local AutoCloseMemory = {}
+
+local function readAutoClose(win)
+	local path = win.ConfigFolder .. "/autoclose.txt"
+	if hasFileApi() then
+		local ok, text = pcall(function() return isfile(path) and readfile(path) or nil end)
+		return ok and tonumber(text) or 0
+	end
+	return AutoCloseMemory[path] or 0
+end
+
+local function writeAutoClose(win, seconds)
+	local path = win.ConfigFolder .. "/autoclose.txt"
+	if hasFileApi() then
+		ensureFolder(win.ConfigFolder)
+		pcall(writefile, path, tostring(seconds))
+	else
+		AutoCloseMemory[path] = seconds
+	end
+end
+
 function Window:LoadAutoload()
 	local saved = readAutoload(self)
 	if saved and self:LoadConfig(saved) then
@@ -2842,8 +2863,16 @@ function Window:BuildSettings(tab)
 	menuBind.OnKeyChanged = function() self.MenuKey = menuBind.Key end
 	menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self.Watermark.Visible = value end })
 	menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self.Hotkeys.Visible = value end })
+	menu:Slider({ Name = "Auto Close Next Execute", Min = 0, Max = 60, Default = readAutoClose(self), Suffix = "s", NoSave = true, Callback = function(value) writeAutoClose(self, value) end })
 	menu:Dropdown({ Name = "Font", Options = FontOrder, Default = "Builder Sans", NoSave = true, Callback = function(value) self:SetFont(value) end })
 	menu:Dropdown({ Name = "Text Weight", Options = WeightOrder, Default = BodyWeight.Name, NoSave = true, Callback = function(value) self:SetTextWeight(value) end })
+
+	local closeAfter = readAutoClose(self)
+	if closeAfter > 0 then
+		task.delay(closeAfter, function()
+			if self.Screen.Parent ~= nil and self.Visible then self:SetVisible(false) end
+		end)
+	end
 
 	if saved and not self.ManualAutoload then
 		task.defer(function() self:LoadAutoload() end)
