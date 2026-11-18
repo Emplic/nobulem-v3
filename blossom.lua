@@ -1993,6 +1993,7 @@ function Window:Notify(options)
 	local text = label(frame, { Text = tostring(options.Text or ""), TextSize = 12, X = 28, RowH = 28, W = 340 })
 	text.TextWrapped = true
 	text.TextYAlignment = Enum.TextYAlignment.Top
+	text.Size = Offset(340, 2000)
 	local entry = { Frame = frame, Fader = newFader(frame), Height = 28 }
 	local stack
 	local function fit()
@@ -2000,7 +2001,6 @@ function Window:Notify(options)
 		local height = math.max(28, lines + 14)
 		entry.Height = height
 		frame.Size = Offset(math.min(math.ceil(text.TextBounds.X), 340) + 38, height)
-		text.Size = Offset(340, lines + 2)
 		text.Position = Offset(28, math.floor((height - lines) / 2))
 		if stack then stack() end
 	end
