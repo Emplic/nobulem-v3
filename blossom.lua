@@ -722,6 +722,9 @@ local Icons = {
 	},
 	grip = { { "f", 5.5, 11.3, 11, 1.5, FULL, -45 }, { "f", 10.2, 12.7, 5.6, 1.5, FULL, -45 } },
 	check = { { "f", 2, 8.4, 6.2, 2, FULL, 45 }, { "f", 5.2, 6.8, 10, 2, FULL, -45 } },
+	cross = { { "f", 1.6, 7, 12.8, 2, FULL, 45 }, { "f", 1.6, 7, 12.8, 2, FULL, -45 } },
+	alert = { { "f", 1, 1, 14, 14, FULL }, { "h", 7.1, 3.4, 1.8, 6, FULL }, { "h", 7.1, 10.8, 1.8, 1.8, FULL } },
+	info = { { "f", 1, 1, 14, 14, FULL }, { "h", 7.1, 3.4, 1.8, 1.8, FULL }, { "h", 7.1, 6.6, 1.8, 6, FULL } },
 	layout = { { "f", 0.5, 1, 15, 4.5, 1 }, { "f", 0.5, 6.5, 7, 8.5, 1 }, { "f", 8.5, 6.5, 7, 8.5, 1 } },
 	reset = { { "r", 2.6, 2.6, 10.8, 10.8, FULL, 0, 1.8 }, { "h", 9.5, 0.5, 6, 5.5, 0 }, { "f", 9.2, 1.2, 4.6, 4.6, 0.5, 45 } },
 	eye = { { "r", 0.8, 3.6, 14.4, 8.8, FULL, 0, 1.6 }, { "f", 5.6, 5.6, 4.8, 4.8, FULL } },
@@ -1974,11 +1977,20 @@ function Window:SetHotkeyActive(object, active)
 	end
 end
 
+local NotifyKinds = {
+	success = { Icon = "check", Color = RGB(112, 205, 132) },
+	error = { Icon = "cross", Color = RGB(255, 92, 92), Border = RGB(122, 46, 50), Duration = 5 },
+	warning = { Icon = "alert", Color = RGB(245, 184, 76), Border = RGB(112, 86, 40), Duration = 4 },
+	info = { Icon = "info", Color = RGB(113, 159, 226) },
+}
+
 function Window:Notify(options)
 	if type(options) == "string" then options = { Text = options } end
-	local frame = new("Frame", { Bg = "Background", Size = Offset(60, 28), Radius = Metrics.FloatRadius, Border = "Outline", Visible = false }, self.Notifications)
-	makeIcon(frame, options.Icon or "check", 14, function() return RGB(112, 205, 132) end, "Background", { Position = Offset(8, 7) })
-	local text = label(frame, { Text = options.Text, TextSize = 12, X = 28, RowH = 28, W = 340 })
+	local kindName = string.lower(tostring(options.Type or (options.Error and "error") or "success"))
+	local kind = NotifyKinds[kindName] or NotifyKinds.success
+	local frame = new("Frame", { Bg = "Background", Size = Offset(60, 28), Radius = Metrics.FloatRadius, Border = kind.Border and function() return kind.Border end or "Outline", Visible = false }, self.Notifications)
+	makeIcon(frame, options.Icon or kind.Icon, 14, function() return kind.Color end, "Background", { Position = Offset(8, 7) })
+	local text = label(frame, { Text = tostring(options.Text or ""), TextSize = 12, X = 28, RowH = 28, W = 340 })
 	text.TextWrapped = true
 	text.TextYAlignment = Enum.TextYAlignment.Top
 	local entry = { Frame = frame, Fader = newFader(frame), Height = 28 }
@@ -2018,7 +2030,11 @@ function Window:Notify(options)
 	stack()
 	entry.Fader:Show()
 	if #self.NotifyStack > 6 then self.NotifyStack[#self.NotifyStack].Dismiss() end
-	task.delay(options.Duration or 3, entry.Dismiss)
+	task.delay(options.Duration or kind.Duration or 3, entry.Dismiss)
+end
+
+function Window:NotifyError(text, duration)
+	return self:Notify({ Text = text, Duration = duration, Type = "error" })
 end
 
 function Window:ApplyTheme(name, silent)
@@ -2983,7 +2999,7 @@ function Window:_buildMarketplace(job, refreshLocal)
 	end
 
 	local function needCurrent()
-		if not current then self:Notify("Pick a config first.") end
+		if not current then self:Notify({ Type = "warning", Text = "Pick a config first." }) end
 		return current
 	end
 	selected:Button({ Name = "Load Config", Callback = function()
@@ -2991,10 +3007,10 @@ function Window:_buildMarketplace(job, refreshLocal)
 		if not listing then return end
 		job(function()
 			local ok, data, fresh = self:MarketFetch(listing.id)
-			if not ok then self:Notify(data); return end
+			if not ok then self:NotifyError(data); return end
 			if typeof(fresh) == "table" then listing.downloads = fresh.downloads end
 			self._marketShow()
-			self:Notify(self:_applyConfig(data, listing.title) and ('Loaded "%s".'):format(listing.title) or "That config couldn't be applied.")
+			if self:_applyConfig(data, listing.title) then self:Notify(('Loaded "%s".'):format(listing.title)) else self:NotifyError("That config couldn't be applied.") end
 		end)
 	end })
 	selected:Button({ Name = "Save To My Configs", Callback = function()
@@ -3002,7 +3018,7 @@ function Window:_buildMarketplace(job, refreshLocal)
 		if not listing then return end
 		job(function()
 			local ok, data = self:MarketFetch(listing.id)
-			if not ok then self:Notify(data); return end
+			if not ok then self:NotifyError(data); return end
 			local name = self:_uniqueConfigName(listing.title, "market")
 			self:_writeConfig(name, data)
 			refreshLocal()
@@ -3014,7 +3030,7 @@ function Window:_buildMarketplace(job, refreshLocal)
 		if not listing then return end
 		job(function()
 			local ok, liked, likes = self:MarketLike(listing.id)
-			if not ok then self:Notify(liked); return end
+			if not ok then self:NotifyError(liked); return end
 			listing.liked, listing.likes = liked, likes
 			self._marketShow()
 			self:Notify(liked and ('Liked "%s".'):format(listing.title) or "Like removed.")
@@ -3025,7 +3041,7 @@ function Window:_buildMarketplace(job, refreshLocal)
 		if not listing then return end
 		job(function()
 			local ok, err = self:MarketReport(listing.id)
-			self:Notify(ok and "Thanks, it's been reported." or err)
+			if ok then self:Notify("Thanks, it's been reported.") else self:NotifyError(err) end
 		end)
 	end })
 
@@ -3035,11 +3051,11 @@ function Window:_buildMarketplace(job, refreshLocal)
 	local authorBox = publish:Textbox({ Placeholder = "Author name (optional)", NoSave = true })
 	publish:Button({ Name = "Publish Current Settings", Callback = function()
 		local title = titleBox.Instance.Text
-		if #title < 3 then self:Notify("Titles need at least 3 characters."); return end
+		if #title < 3 then self:Notify({ Type = "warning", Text = "Titles need at least 3 characters." }); return end
 		local description, author = descBox.Instance.Text, authorBox.Instance.Text
 		job(function()
 			local ok, id = self:MarketPublish(title, description, author)
-			if not ok then self:Notify(id); return end
+			if not ok then self:NotifyError(id); return end
 			titleBox:Set("", true)
 			descBox:Set("", true)
 			self._marketSearch(true)
@@ -3052,20 +3068,20 @@ function Window:_buildMarketplace(job, refreshLocal)
 	end })
 	publish:Button({ Name = "Update With Current Settings", Callback = function()
 		local listing = mineSelected
-		if not listing then self:Notify("Pick one of your listings first."); return end
+		if not listing then self:Notify({ Type = "warning", Text = "Pick one of your listings first." }); return end
 		job(function()
 			local ok, err = self:MarketUpdate(listing.id)
-			if not ok then self:Notify(err); return end
+			if not ok then self:NotifyError(err); return end
 			self._marketSearch(true)
 			self:Notify(('Updated "%s".'):format(listing.title))
 		end)
 	end })
 	publish:Button({ Name = "Unpublish", Callback = function()
 		local listing = mineSelected
-		if not listing then self:Notify("Pick one of your listings first."); return end
+		if not listing then self:Notify({ Type = "warning", Text = "Pick one of your listings first." }); return end
 		job(function()
 			local ok, err = self:MarketDelete(listing.id)
-			if not ok then self:Notify(err); return end
+			if not ok then self:NotifyError(err); return end
 			mineSelected = nil
 			if current and current.id == listing.id then current = nil end
 			self._marketSearch(true)
@@ -3090,7 +3106,7 @@ function Window:_buildMarketplace(job, refreshLocal)
 	function self._marketSearch(quiet)
 		local ok, list = self:MarketList(sort, query, false)
 		if not ok then
-			if not quiet then self:Notify(list) end
+			if not quiet then self:NotifyError(list) end
 		else
 			local names
 			shown, names = labelled(list, function(listing) return tostring(listing.title) .. "  ·  " .. tostring(listing.author) end)
@@ -3196,13 +3212,14 @@ function Window:BuildSettings(tab)
 	end
 	profiles:Button({ Name = "Create", Callback = function()
 		local name = nameBox.Instance.Text
-		if name == "" then self:Notify({ Text = "Enter a config name first." }); return end
+		if name == "" then self:Notify({ Type = "warning", Text = "Enter a config name first." }); return end
 		self:SaveConfig(name)
 		refreshList()
 		self:Notify(('Created "%s".'):format(name))
 	end })
 	profiles:Button({ Name = "Load", Callback = function()
-		if selected and self:LoadConfig(selected) then self:Notify(('Loaded "%s".'):format(selected)) end
+		if not selected then return end
+		if self:LoadConfig(selected) then self:Notify(('Loaded "%s".'):format(selected)) else self:NotifyError(('Could not load "%s".'):format(selected)) end
 	end })
 	profiles:Button({ Name = "Delete", Callback = function()
 		if selected then
@@ -3242,13 +3259,13 @@ function Window:BuildSettings(tab)
 			task.spawn(function()
 				local ok, err = pcall(job)
 				cloudBusy = false
-				if not ok then self:Notify(tostring(err)) end
+				if not ok then self:NotifyError(tostring(err)) end
 			end)
 		end
 		local function refreshCloud(quiet)
 			local ok, names = self:CloudList()
 			if not ok then
-				if not quiet then self:Notify(names) end
+				if not quiet then self:NotifyError(names) end
 				return
 			end
 			if not table.find(names, cloudSelected) then cloudSelected = nil end
@@ -3256,15 +3273,15 @@ function Window:BuildSettings(tab)
 			cloudList:Set(cloudSelected, true)
 		end
 		local function needSelected()
-			if not cloudSelected then self:Notify("Pick a cloud config first.") end
+			if not cloudSelected then self:Notify({ Type = "warning", Text = "Pick a cloud config first." }) end
 			return cloudSelected
 		end
 		cloud:Button({ Name = "Save To Cloud", Callback = function()
 			local name = cloudName.Instance.Text ~= "" and cloudName.Instance.Text or cloudSelected
-			if not name then self:Notify("Enter a name or pick a cloud config first."); return end
+			if not name then self:Notify({ Type = "warning", Text = "Enter a name or pick a cloud config first." }); return end
 			cloudJob(function()
 				local ok, err = self:CloudSave(name)
-				if not ok then self:Notify(err); return end
+				if not ok then self:NotifyError(err); return end
 				cloudSelected = name
 				refreshCloud(true)
 				self:Notify(('Saved "%s" to the cloud.'):format(name))
@@ -3275,7 +3292,7 @@ function Window:BuildSettings(tab)
 			if not name then return end
 			cloudJob(function()
 				local ok, err = self:CloudLoad(name)
-				self:Notify(ok and ('Loaded "%s" from the cloud.'):format(name) or err)
+				if ok then self:Notify(('Loaded "%s" from the cloud.'):format(name)) else self:NotifyError(err) end
 			end)
 		end })
 		cloud:Button({ Name = "Download To Local", Callback = function()
@@ -3283,7 +3300,7 @@ function Window:BuildSettings(tab)
 			if not name then return end
 			cloudJob(function()
 				local ok, data = self:CloudFetch(name)
-				if not ok then self:Notify(data); return end
+				if not ok then self:NotifyError(data); return end
 				self:_writeConfig(name, data)
 				refreshList()
 				self:Notify(('Downloaded "%s" to your configs.'):format(name))
@@ -3294,7 +3311,7 @@ function Window:BuildSettings(tab)
 			if not name then return end
 			cloudJob(function()
 				local ok, err = self:CloudDelete(name)
-				if not ok then self:Notify(err); return end
+				if not ok then self:NotifyError(err); return end
 				cloudSelected = nil
 				refreshCloud(true)
 				self:Notify(('Deleted "%s" from the cloud.'):format(name))
@@ -3310,7 +3327,7 @@ function Window:BuildSettings(tab)
 			if not name then return end
 			cloudJob(function()
 				local ok, code = self:CloudShare(name)
-				if not ok then self:Notify(code); return end
+				if not ok then self:NotifyError(code); return end
 				local copied = typeof(setclipboard) == "function" and pcall(setclipboard, code)
 				self:Notify(copied and ('Share code %s copied.'):format(code) or ('Share code: %s'):format(code))
 			end)
@@ -3318,10 +3335,10 @@ function Window:BuildSettings(tab)
 		local shareCode = sharing:Textbox({ Placeholder = "Share code", NoSave = true })
 		sharing:Button({ Name = "Import Code", Callback = function()
 			local code = shareCode.Instance.Text
-			if code == "" then self:Notify("Paste a share code first."); return end
+			if code == "" then self:Notify({ Type = "warning", Text = "Paste a share code first." }); return end
 			cloudJob(function()
 				local ok, name = self:CloudImport(code)
-				if not ok then self:Notify(name); return end
+				if not ok then self:NotifyError(name); return end
 				shareCode:Set("", true)
 				refreshList()
 				self:Notify(('Imported "%s" into your configs.'):format(name))
@@ -3869,12 +3886,13 @@ function Blossom.Obsidian(defaults)
 	function Library:GetCustomIcon() return nil end
 	function Library:OnUnload(callback) table.insert(unloadCallbacks, callback) end
 
-	function Library:Notify(info, duration)
+	function Library:Notify(info, duration, kind)
 		local text, time
 		if type(info) == "table" then
 			local description = info.Description ~= nil and tostring(info.Description) or ""
 			text = description ~= "" and description or info.Title or info.Text
 			time = info.Time or info.Duration
+			kind = info.Type or (info.Error and "error") or kind
 		else
 			text, time = info, duration
 		end
@@ -3883,8 +3901,16 @@ function Blossom.Obsidian(defaults)
 			print("[nobulem.wtf] " .. text)
 			return
 		end
-		if typeof(time) ~= "number" then time = 4 end
-		pcall(win.Notify, win, { Text = text, Duration = time })
+		if typeof(time) ~= "number" then time = kind == "error" and 5 or 4 end
+		pcall(win.Notify, win, { Text = text, Duration = time, Type = kind })
+	end
+
+	function Library:NotifyError(info, duration)
+		if type(info) == "table" then
+			info.Type = "error"
+			return self:Notify(info)
+		end
+		return self:Notify(info, duration, "error")
 	end
 
 	function Library:Toggle(visible)
