@@ -160,10 +160,9 @@ local LuarmorScriptIds = {
     WarTycoon = "450d986ceeb9678f3455712371a99053",
     Flick = "2d3b779daff5c319a93d5d8f38b1bdc0",
     UrbanReload = "40c127c6813852ae8c544277c726345d",
-    Wanted = "b59527dfe5520d0cd523a37e7ddf2b47",
     ProjectSlayers = "87e8b11127b9704a640347ccd6c6c033",
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
-    WantedBreakAndStealAnEgg = "e47e9632261b3364b61f4442e3a03571",
+    AnimeAdventuresBreakAndStealAnEgg = "cbdfe8c2c2d4d465c0e4f0c147e2985b",
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
     HypershotVenomEvolution = "8934f8215d1c598724cbbf2d65308305",
     AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
@@ -180,7 +179,7 @@ local LuarmorAdUrls = {
 for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptIds[name] = id end
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
-local WantedBreakAndStealAnEggScriptId = LuarmorScriptIds.WantedBreakAndStealAnEgg or ""
+local AnimeAdventuresBreakAndStealAnEggScriptId = LuarmorScriptIds.AnimeAdventuresBreakAndStealAnEgg or ""
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
 local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
 local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
@@ -245,20 +244,21 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.UrbanReloadBeyondNen or LuarmorAdUrls.BeyondNen or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 14438406081 },
-        UniverseId      = 4987856151,
-        GameName        = "Wanted",
+        PlaceIds        = { 8304191830, 14229839966 },
+        SubplaceRoots   = { 8304191830 },
+        UniverseId      = 3183403065,
+        GameName        = "Anime Adventures",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = WantedBreakAndStealAnEggScriptId ~= "" and WantedBreakAndStealAnEggScriptId or LuarmorScriptIds.Wanted or "",
-        GetKeyUrl       = LuarmorAdUrls.WantedBreakAndStealAnEgg or LuarmorAdUrls.Wanted or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = AnimeAdventuresBreakAndStealAnEggScriptId,
+        GetKeyUrl       = LuarmorAdUrls.AnimeAdventuresBreakAndStealAnEgg or LuarmorAdUrls.AnimeAdventures or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 114326934417838 },
         UniverseId      = 10765288803,
         GameName        = "Break and Steal an Egg",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = WantedBreakAndStealAnEggScriptId,
-        GetKeyUrl       = LuarmorAdUrls.WantedBreakAndStealAnEgg or LuarmorAdUrls.BreakAndStealAnEgg or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = AnimeAdventuresBreakAndStealAnEggScriptId,
+        GetKeyUrl       = LuarmorAdUrls.AnimeAdventuresBreakAndStealAnEgg or LuarmorAdUrls.BreakAndStealAnEgg or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = {
