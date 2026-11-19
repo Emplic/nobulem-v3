@@ -164,7 +164,7 @@ local LuarmorScriptIds = {
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
     AnimeAdventuresBreakAndStealAnEgg = "cbdfe8c2c2d4d465c0e4f0c147e2985b",
     AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
-    HypershotVenomEvolution = "8934f8215d1c598724cbbf2d65308305",
+    HypershotRivals = "8b838f74ee38005fcef5ecec8aea09e8",
     AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
     ABizarreRun = "1beffe3e89f9490b79c1f8d37520d1ee",
     ThrowFoodABizarreRun = "5166b69f34db48b2df9b9a6c2e36da8b",
@@ -181,7 +181,7 @@ for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[na
 
 local AnimeAdventuresBreakAndStealAnEggScriptId = LuarmorScriptIds.AnimeAdventuresBreakAndStealAnEgg or ""
 local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
-local HypershotVenomEvolutionScriptId = LuarmorScriptIds.HypershotVenomEvolution or ""
+local HypershotRivalsScriptId = LuarmorScriptIds.HypershotRivals or ""
 local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
 local UrbanReloadBeyondNenScriptId = LuarmorScriptIds.UrbanReloadBeyondNen or ""
 
@@ -279,16 +279,16 @@ local Games = {
         UniverseId      = 5995470825,
         GameName        = "Hypershot",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = HypershotVenomEvolutionScriptId ~= "" and HypershotVenomEvolutionScriptId or LuarmorScriptIds.Hypershot or "",
-        GetKeyUrl       = LuarmorAdUrls.HypershotVenomEvolution or LuarmorAdUrls.Hypershot or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = HypershotRivalsScriptId ~= "" and HypershotRivalsScriptId or LuarmorScriptIds.Hypershot or "",
+        GetKeyUrl       = LuarmorAdUrls.HypershotRivals or LuarmorAdUrls.Hypershot or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 116448925875915 },
-        UniverseId      = 10769464063,
-        GameName        = "Venom Evolution",
+        PlaceIds        = { 17625359962, 18126510175, 71874690745115, 117398147513099, 129604661913557, 133215910299950 },
+        UniverseId      = 6035872082,
+        GameName        = "Rivals",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = HypershotVenomEvolutionScriptId,
-        GetKeyUrl       = LuarmorAdUrls.HypershotVenomEvolution or LuarmorAdUrls.VenomEvolution or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = HypershotRivalsScriptId,
+        GetKeyUrl       = LuarmorAdUrls.HypershotRivals or LuarmorAdUrls.Rivals or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 108055619068945 },
