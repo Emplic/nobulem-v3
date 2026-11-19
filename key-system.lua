@@ -24,7 +24,6 @@ local RunService = Service("RunService")
 
 local getgenv = getgenv or function() return shared end
 local setclipboard = setclipboard or toclipboard or (syn and syn.write_clipboard) or nil
-local getclipboard = getclipboard or (syn and syn.get_clipboard) or nil
 local protectgui = protectgui or (syn and syn.protect_gui) or function() end
 local gethui = gethui or function() return CoreGui end
 
@@ -1302,8 +1301,7 @@ function OpenWindow(opts)
     RegisterControl(input)
 
     local actionRow = ButtonRow(redeem.Card, redeem.Order())
-    local paste = Button(actionRow, { Text = "Paste", Order = 1, Size = UDim2.fromScale(0, 1) })
-    local unlock = Button(actionRow, { Text = "Unlock", Order = 2, Size = UDim2.fromScale(0, 1), Primary = true })
+    local unlock = Button(actionRow, { Text = "Unlock", Order = 1,Size = UDim2.fromScale(0, 1), Primary = true })
     local statusLabel = Paragraph(redeem.Card, redeem.Order(), "")
 
     local lifetime = Section(columns[2], "Lifetime", "gem")
@@ -1378,7 +1376,6 @@ function OpenWindow(opts)
     local function SetBusy(busy)
         State.busy = busy
         unlock.SetEnabled(not busy)
-        paste.SetEnabled(not busy)
         input.TextEditable = not busy
         unlock.SetText(busy and "Checking..." or "Unlock")
     end
@@ -1568,23 +1565,6 @@ function OpenWindow(opts)
     end)
 
     unlock.OnClick(function() Submit(input.Text) end)
-
-    paste.OnClick(function()
-        if not getclipboard then
-            SetStatus("error", IsMobile and "Your executor can't read the clipboard. Hold the key box to paste."
-                or "Your executor can't read the clipboard. Paste with Ctrl+V.")
-            return
-        end
-        local ok, data = pcall(getclipboard)
-        local key = ExtractKey(ok and type(data) == "string" and data or "")
-        if key == "" then
-            SetStatus("error", "Your clipboard is empty. Copy your key first.")
-            Shake()
-            return
-        end
-        input.Text = key
-        Submit(key)
-    end)
 
     local idleText = "Paste a key and press Unlock."
     local lastAuto = nil
