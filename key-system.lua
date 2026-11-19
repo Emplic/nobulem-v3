@@ -1043,7 +1043,12 @@ local function StartScript(key, sdk, result)
         getgenv().NobulemKeySystemClosed = true
         task.wait()
         sdk.script_id = config.LuarmorScriptId
-        local ok, err = pcall(sdk.load_script)
+        local ok, err
+        for attempt = 1, 4 do
+            ok, err = pcall(sdk.load_script)
+            if ok or getgenv().NobulemKeySystemClosed ~= true then break end
+            if attempt < 4 then task.wait(attempt * 2) end
+        end
         keyInfo.Started = true
         if not ok then
             ClearKeyGlobals()
