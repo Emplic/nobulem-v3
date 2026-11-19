@@ -158,12 +158,11 @@ local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs
 
 local LuarmorScriptIds = {
     WarTycoon = "450d986ceeb9678f3455712371a99053",
-    Flick = "2d3b779daff5c319a93d5d8f38b1bdc0",
+    BloxFruits = "443bb156072c62a1b2f84b7b353547bb",
     UrbanReload = "40c127c6813852ae8c544277c726345d",
     ProjectSlayers = "87e8b11127b9704a640347ccd6c6c033",
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
     AnimeAdventuresBreakAndStealAnEgg = "cbdfe8c2c2d4d465c0e4f0c147e2985b",
-    AnimeEyesFlick = "4fa70478d26de77a26c693dc707b4025",
     HypershotRivals = "8b838f74ee38005fcef5ecec8aea09e8",
     AOTR = "a63c0c5667d3bff2e6b5416d51e03769",
     ABizarreRun = "1beffe3e89f9490b79c1f8d37520d1ee",
@@ -180,7 +179,7 @@ for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptI
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
 local AnimeAdventuresBreakAndStealAnEggScriptId = LuarmorScriptIds.AnimeAdventuresBreakAndStealAnEgg or ""
-local AnimeEyesFlickScriptId = LuarmorScriptIds.AnimeEyesFlick or ""
+local BloxFruitsScriptId = LuarmorScriptIds.BloxFruits or ""
 local HypershotRivalsScriptId = LuarmorScriptIds.HypershotRivals or ""
 local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
 local UrbanReloadBeyondNenScriptId = LuarmorScriptIds.UrbanReloadBeyondNen or ""
@@ -207,20 +206,13 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.WarTycoon or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 136801880565837 },
-        UniverseId      = 8795154789,
-        GameName        = "Flick",
+        PlaceIds        = { 2753915549, 4442272183, 7449423635 },
+        SubplaceRoots   = { 2753915549 },
+        UniverseId      = 994732206,
+        GameName        = "Blox Fruits",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = AnimeEyesFlickScriptId ~= "" and AnimeEyesFlickScriptId or LuarmorScriptIds.Flick or "",
-        GetKeyUrl       = LuarmorAdUrls.AnimeEyesFlick or LuarmorAdUrls.Flick or LuarmorAdUrls.Default or "",
-    },
-    {
-        PlaceIds        = { 97617452700163 },
-        UniverseId      = 10770933473,
-        GameName        = "Anime Eyes",
-        SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = AnimeEyesFlickScriptId,
-        GetKeyUrl       = LuarmorAdUrls.AnimeEyesFlick or LuarmorAdUrls.AnimeEyes or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = BloxFruitsScriptId,
+        GetKeyUrl       = LuarmorAdUrls.BloxFruits or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 84448037861644 },
