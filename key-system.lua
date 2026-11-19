@@ -254,7 +254,7 @@ local KeyMessages = {
     KEY_INVALID = { "Key not found - make sure you copied all of it.", "rejected" },
     SCRIPT_ID_INCORRECT = { GameName .. " is not set up on Luarmor yet.", "error" },
     SCRIPT_ID_INVALID = { GameName .. " is not set up on Luarmor yet.", "error" },
-    INVALID_EXECUTOR = { "Luarmor does not support your executor.", "error" },
+    INVALID_EXECUTOR = { "Your executor isn't supported. Get a supported one at nobulem.com/executors.", "error" },
 }
 
 local CachedSdk = nil
@@ -323,13 +323,24 @@ end
 
 local function GetExecutorName()
     if PreviewMode and type(LoaderConfig.PreviewExecutor) == "string" then return LoaderConfig.PreviewExecutor end
-    local ok, name = pcall(function()
+    local ok, name, version = pcall(function()
         if not identifyexecutor then return "Unknown" end
-        local n = identifyexecutor()
-        return type(n) == "table" and n[1] or n
+        local n, v = identifyexecutor()
+        if type(n) == "table" then return n[1], n[2] end
+        return n, v
     end)
-    return ok and name and tostring(name) or "Unknown"
+    if not ok or not name then return "Unknown" end
+    return tostring(name), version and tostring(version) or nil
 end
+
+local UnsupportedName = (function()
+    local name = GetExecutorName()
+    local lower = name:lower()
+    for _, bad in config.UnsupportedExecutors do
+        if lower:find(bad, 1, true) then return name end
+    end
+    return nil
+end)()
 
 local function GetDeviceType()
     if IsMobile then return "Mobile" end
@@ -351,7 +362,8 @@ local Offset = UDim2.fromOffset
 local Dim2 = UDim2.new
 local floor, round = math.floor, math.round
 local FULL = 99
-local INTER = "rbxassetid://12187365364"
+local FONT_FAMILY = "rbxasset://fonts/families/BuilderSans.json"
+local FONT_BOOST = 1
 
 local Theme = {
     Background = RGB(16, 16, 18),
@@ -390,7 +402,7 @@ local function Tween(instance, info, props)
 end
 
 local function FontOf(weight)
-    return Font.new(INTER, weight or Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+    return Font.new(FONT_FAMILY, weight or Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
 end
 
 local function Hex(color)
@@ -433,6 +445,7 @@ local function New(className, props, parent)
             instance[key] = value
         end
     end
+    if TextClasses[className] then instance.TextSize += FONT_BOOST end
     if radius then
         local corner = Instance.new("UICorner")
         corner.CornerRadius = radius >= FULL and UDim.new(0.5, 0) or UDim.new(0, radius)
@@ -683,6 +696,7 @@ end
 
 local NotifyGui, NotifyArea = nil, nil
 local NotifyStack = {}
+local NotifyMaxW = 560
 local NotifyColors = { success = Theme.Success, error = Theme.Error, info = Theme.Accent, warning = Theme.Warning }
 local NotifyIcons = { success = "check", error = "alert", info = "info", warning = "alert" }
 
@@ -696,18 +710,19 @@ local function EnsureNotifyGui()
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
     })
     ParentGui(NotifyGui)
-    NotifyArea = New("Frame", { Name = "Notifications", Position = Offset(16, 16), Size = Offset(400, 600), ZIndex = 50 }, NotifyGui)
+    NotifyArea = New("Frame", { Name = "Notifications", Position = Offset(16, 16), Size = Offset(NotifyMaxW + 40, 600), ZIndex = 50 }, NotifyGui)
 end
 
 local function Restack()
-    local count = #NotifyStack
-    for index, item in NotifyStack do
-        local y = (count - index) * 36
+    local y = 0
+    for index = #NotifyStack, 1, -1 do
+        local item = NotifyStack[index]
         if not item.Placed then
             item.Placed = true
             item.Frame.Position = Offset(-36, y)
         end
         Tween(item.Frame, Smooth, { Position = Offset(0, y) })
+        y += item.Height + 8
     end
 end
 
@@ -722,14 +737,23 @@ local function PushNotification(text, kind, duration)
         ZIndex = 50,
     }, NotifyArea)
     MakeIcon(frame, NotifyIcons[kind] or "check", 14, NotifyColors[kind] or Theme.Success, Theme.Background, { Position = Offset(8, 7), ZIndex = 50 })
-    local label = Text(frame, { Text = text, TextSize = 12, X = 28, RowH = 28, W = 340, Truncate = Enum.TextTruncate.AtEnd, ZIndex = 50 })
+    local label = Text(frame, { Text = text, TextSize = 12, X = 28, RowH = 28, W = NotifyMaxW, ZIndex = 50 })
+    label.TextWrapped = true
+    label.TextYAlignment = Enum.TextYAlignment.Top
+    label.Size = Offset(NotifyMaxW, 2000)
+
+    local entry = { Frame = frame, Height = 28 }
     local function fit()
-        frame.Size = Offset(math.min(math.ceil(label.TextBounds.X), 340) + 38, 28)
+        local lines = math.max(math.ceil(label.TextBounds.Y), 14)
+        local height = math.max(28, lines + 14)
+        entry.Height = height
+        frame.Size = Offset(math.min(math.ceil(label.TextBounds.X), NotifyMaxW) + 38, height)
+        label.Position = Offset(28, math.floor((height - lines) / 2))
+        if table.find(NotifyStack, entry) then Restack() end
     end
     label:GetPropertyChangedSignal("TextBounds"):Connect(fit)
     fit()
 
-    local entry = { Frame = frame }
     table.insert(NotifyStack, 1, entry)
     function entry.Dismiss()
         if entry.Gone then return end
@@ -757,35 +781,8 @@ local function PushNotification(text, kind, duration)
     return entry
 end
 
-local function SplitLines(text, width)
-    local lines = {}
-    for paragraph in (tostring(text) .. "\n"):gmatch("(.-)\n") do
-        local line = ""
-        for word in paragraph:gmatch("%S+") do
-            while #word > width do
-                if line ~= "" then
-                    table.insert(lines, line)
-                    line = ""
-                end
-                table.insert(lines, word:sub(1, width))
-                word = word:sub(width + 1)
-            end
-            if line ~= "" and #line + #word + 1 > width then
-                table.insert(lines, line)
-                line = word
-            else
-                line = line == "" and word or (line .. " " .. word)
-            end
-        end
-        if line ~= "" then table.insert(lines, line) end
-    end
-    return lines
-end
-
 local function Notify(text, kind, duration)
-    for _, line in SplitLines(text, 52) do
-        pcall(PushNotification, line, kind or "info", duration)
-    end
+    pcall(PushNotification, tostring(text), kind or "info", duration)
 end
 
 if InvalidScriptId then
@@ -962,7 +959,7 @@ end
 
 local SectionCount = 0
 
-local function Section(column, name, icon)
+local function Section(column, name, icon, tint)
     SectionCount += 1
     local root = New("Frame", {
         AutomaticSize = Enum.AutomaticSize.Y,
@@ -970,8 +967,9 @@ local function Section(column, name, icon)
         LayoutOrder = SectionCount,
     }, column)
     local header = New("Frame", { Size = Dim2(1, 0, 0, M.HeaderH - 8) }, root)
-    MakeIcon(header, icon, 16, Theme.InactiveText, Theme.Tab)
-    Text(header, { Text = name, X = 27, Fg = "InactiveText", Right = 60, Truncate = Enum.TextTruncate.AtEnd })
+    MakeIcon(header, icon, 16, tint or Theme.InactiveText, Theme.Tab)
+    local nameLabel = Text(header, { Text = name, X = 27, Fg = "InactiveText", Right = 60, Truncate = Enum.TextTruncate.AtEnd })
+    if tint then nameLabel.TextColor3 = tint end
     local aside = Text(header, { Text = "", Fg = "InactiveText", TextSize = 11, Align = Enum.TextXAlignment.Right })
     local card = New("Frame", {
         Bg = "Inline",
@@ -979,7 +977,7 @@ local function Section(column, name, icon)
         Position = Offset(1, M.HeaderH + 1),
         Size = Dim2(1, -2, 0, 0),
         Radius = M.CardRadius,
-        Border = "Outline",
+        Border = tint or "Outline",
     }, root)
     New("UIPadding", {
         PaddingTop = UDim.new(0, 9),
@@ -1171,6 +1169,12 @@ function OpenWindow(opts)
     end
 
     local mainPage, columns = NewPage(true)
+    local banner = UnsupportedName and New("Frame", {
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Position = Offset(M.Pad, 0),
+        Size = Dim2(1, -M.Pad * 2, 0, 0),
+    }, mainPage)
+    if banner then New("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }, banner) end
 
     local layouts = {}
     local function Resize()
@@ -1182,7 +1186,15 @@ function OpenWindow(opts)
         end
         local factor = holder.AbsoluteSize.Y > 0 and holder.Size.Y.Offset > 0 and holder.AbsoluteSize.Y / holder.Size.Y.Offset or 1
         local height = math.ceil(tallest / math.max(factor, 0.01))
-        local target = M.TopBarH + 1 + M.Pad * 2 + height
+        local top = 0
+        if banner and mainPage.Visible then
+            top = math.ceil(banner.AbsoluteSize.Y / math.max(factor, 0.01)) + M.SectionGap
+            for _, column in columns do
+                column.Position = Offset(column.Position.X.Offset, top)
+                column.Size = Dim2(0, COLUMN_W, 1, -top)
+            end
+        end
+        local target = M.TopBarH + 1 + M.Pad * 2 + top + height
         target += target % 2
         if target ~= WINDOW_H and height > 0 then
             WINDOW_H = target
@@ -1198,6 +1210,7 @@ function OpenWindow(opts)
         end
     end
     WatchColumns(columns)
+    if banner then Track(banner:GetPropertyChangedSignal("AbsoluteSize"):Connect(Resize)) end
 
     local getKey = Section(columns[1], "Get a key", "key")
     Paragraph(getKey.Card, getKey.Order(), "Pick a length, copy a link and open it in your browser. Your key shows up at the end.")
@@ -1301,8 +1314,28 @@ function OpenWindow(opts)
     RegisterControl(input)
 
     local actionRow = ButtonRow(redeem.Card, redeem.Order())
-    local unlock = Button(actionRow, { Text = "Unlock", Order = 1,Size = UDim2.fromScale(0, 1), Primary = true })
+    local unlock = Button(actionRow, { Text = "Unlock", Order = 1, Size = UDim2.fromScale(0, 1), Primary = true })
     local statusLabel = Paragraph(redeem.Card, redeem.Order(), "")
+
+    if banner then
+        local warn = Section(banner, "Unsupported executor", "alert", Theme.Warning)
+        local warnRow = New("Frame", {
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Size = Dim2(1, 0, 0, M.ButtonH),
+            LayoutOrder = warn.Order(),
+        }, warn.Card)
+        local warnText = Paragraph(warnRow, 0,
+            ("<font color=\"%s\">%s</font> isn't supported, so the script may break or not load at all. Get a supported executor at <font color=\"%s\">nobulem.com/executors</font>.")
+                :format(Hex(Theme.Text), UnsupportedName, Hex(Theme.Warning)))
+        warnText.Size = Dim2(1, -150, 0, 0)
+        local copyLink = Button(warnRow, {
+            Text = "Copy link",
+            Size = Offset(130, M.ButtonH),
+            Callback = function() CopyText(config.ExecutorsUrl, "Executors link copied. Open it in your browser.") end,
+        })
+        copyLink.Instance.AnchorPoint = Vector2.new(1, 0.5)
+        copyLink.Instance.Position = Dim2(1, 0, 0.5, 0)
+    end
 
     local lifetime = Section(columns[2], "Lifetime", "gem")
     lifetime.Aside.Text = "skip the links"
@@ -1329,7 +1362,39 @@ function OpenWindow(opts)
     })
 
     local support = Section(columns[2], "Support", "globe")
-    InfoRow(support, "Executor", GetExecutorName() .. " / " .. GetDeviceType())
+    local executorName, executorVersion = GetExecutorName()
+    local known = executorName ~= "Unknown"
+    local statusColor = UnsupportedName and Theme.Warning or (known and Theme.Success or Theme.InactiveText)
+    support.Aside.Text = UnsupportedName and "unsupported" or (known and "supported" or "")
+    support.Aside.TextColor3 = statusColor
+    local setupRow = Row(support.Card, support.Order(), 22)
+    New("Frame", { BackgroundColor3 = statusColor, BackgroundTransparency = 0, Position = Offset(1, 8), Size = Offset(6, 6), Radius = FULL }, setupRow)
+    Text(setupRow, {
+        Text = executorVersion and ("%s <font color=\"%s\">v%s</font>"):format(executorName, Hex(Theme.InactiveText), (executorVersion:gsub("^[vV]", ""))) or executorName,
+        X = 14,
+        Right = 70,
+        RowH = 22,
+        Rich = true,
+        Truncate = Enum.TextTruncate.AtEnd,
+    })
+    local devicePill = New("Frame", {
+        Bg = "Element",
+        AnchorPoint = Vector2.new(1, 0),
+        Position = Dim2(1, 0, 0, 1),
+        Size = Offset(40, 20),
+        Radius = M.PillRadius,
+        Border = "Outline",
+    }, setupRow)
+    local deviceLabel = Text(devicePill, {
+        Text = GetDeviceType(),
+        Fg = "InactiveText",
+        TextSize = 11,
+        RowH = 20,
+        Align = Enum.TextXAlignment.Center,
+    })
+    local function FitPill() devicePill.Size = Offset(math.ceil(deviceLabel.TextBounds.X) + 16, 20) end
+    Track(deviceLabel:GetPropertyChangedSignal("TextBounds"):Connect(FitPill))
+    FitPill()
     local supportRow = ButtonRow(support.Card, support.Order())
     Button(supportRow, {
         Text = "Discord",
@@ -1622,18 +1687,8 @@ local function ProvidedKey()
     return nil
 end
 
-local function UnsupportedExecutor()
-    local name = GetExecutorName()
-    local lower = name:lower()
-    for _, bad in config.UnsupportedExecutors do
-        if lower:find(bad, 1, true) then return name end
-    end
-    return nil
-end
-
-local unsupported = UnsupportedExecutor()
-if unsupported then
-    Notify(unsupported .. " isn't supported and may break features. See nobulem.com/executors", "warning", 10)
+if UnsupportedName then
+    Notify(UnsupportedName .. " isn't supported. Get a supported executor at nobulem.com/executors", "warning", 12)
 end
 
 local providedKey = ProvidedKey()
