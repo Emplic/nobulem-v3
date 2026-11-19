@@ -1990,17 +1990,17 @@ function Window:Notify(options)
 	local kind = NotifyKinds[kindName] or NotifyKinds.success
 	local frame = new("Frame", { Bg = "Background", Size = Offset(60, 28), Radius = Metrics.FloatRadius, Border = kind.Border and function() return kind.Border end or "Outline", Visible = false }, self.Notifications)
 	makeIcon(frame, options.Icon or kind.Icon, 14, function() return kind.Color end, "Background", { Position = Offset(8, 7) })
-	local text = label(frame, { Text = tostring(options.Text or ""), TextSize = 12, X = 28, RowH = 28, W = 340 })
+	local text = label(frame, { Text = tostring(options.Text or ""), TextSize = 12, X = 28, RowH = 28, W = 560 })
 	text.TextWrapped = true
 	text.TextYAlignment = Enum.TextYAlignment.Top
-	text.Size = Offset(340, 2000)
+	text.Size = Offset(560, 2000)
 	local entry = { Frame = frame, Fader = newFader(frame), Height = 28 }
 	local stack
 	local function fit()
 		local lines = math.max(math.ceil(text.TextBounds.Y), 14)
 		local height = math.max(28, lines + 14)
 		entry.Height = height
-		frame.Size = Offset(math.min(math.ceil(text.TextBounds.X), 340) + 38, height)
+		frame.Size = Offset(math.min(math.ceil(text.TextBounds.X), 560) + 38, height)
 		text.Position = Offset(28, math.floor((height - lines) / 2))
 		if stack then stack() end
 	end
@@ -3580,7 +3580,7 @@ function Blossom.new(options)
 	win.DragLayer = new("Frame", { Name = "Drag", Size = Dim2(1, 0, 1, 0), ZIndex = 30 }, screen)
 	win.Popups = new("Frame", { Name = "Popups", Size = Dim2(1, 0, 1, 0), ZIndex = 40 }, screen)
 	win.Dropdowns = new("Frame", { Name = "Dropdowns", Size = Dim2(1, 0, 1, 0), ZIndex = 45 }, screen)
-	win.Notifications = new("Frame", { Name = "Notifications", Position = Offset(16, 16), Size = Offset(400, 600), ZIndex = 50 }, screen)
+	win.Notifications = new("Frame", { Name = "Notifications", Position = Offset(16, 16), Size = Offset(600, 600), ZIndex = 50 }, screen)
 
 	win:_buildWatermark(options)
 	win:_buildHotkeys()
@@ -3789,23 +3789,6 @@ local function keyString(key)
 	if not key then return "None" end
 	local short = { MouseButton1 = "MB1", MouseButton2 = "MB2", MouseButton3 = "MB3" }
 	return short[key.Name] or key.Name
-end
-
-local function wrapWords(text, width)
-	local lines = {}
-	for paragraph in string.gmatch(tostring(text) .. "\n", "(.-)\n") do
-		local line = ""
-		for word in string.gmatch(paragraph, "%S+") do
-			if line ~= "" and #line + #word + 1 > width then
-				table.insert(lines, line)
-				line = word
-			else
-				line = line == "" and word or line .. " " .. word
-			end
-		end
-		if line ~= "" then table.insert(lines, line) end
-	end
-	return lines
 end
 
 function Blossom.Obsidian(defaults)
