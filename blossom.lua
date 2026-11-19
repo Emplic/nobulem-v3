@@ -377,6 +377,8 @@ local function new(class, props, parent)
 	if class == "TextButton" then
 		inst.AutoButtonColor = false
 		inst.Text = ""
+	elseif class == "TextBox" then
+		inst.Text = ""
 	end
 	if TEXT_CLASSES[class] then
 		if class ~= "TextButton" then Cased[inst] = {} end
@@ -1424,9 +1426,39 @@ local function buildDropdown(win, parent, options)
 	local panelStroke = new("UIStroke", { ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Thickness = 1, Transparency = 1 }, panel)
 	bind(panelStroke, "Color", "Outline")
 	local list = new("ScrollingFrame", { Size = Dim2(1, 0, 1, 0), ScrollBarThickness = 0, CanvasSize = Offset(0, 0) }, panel)
-	local rows, panelH, flipped = {}, 0, false
+	local rows, panelH, listH, flipped = {}, 0, 0, false
 	local emptyText = label(panel, { Fg = "InactiveText", Text = options.Empty or "No options", TextSize = 13, X = 9, RowH = Metrics.ListRowH, Right = 8, TextTransparency = 1 })
+	local emptyY = emptyText.Position.Y.Offset
 	dropdown.Reveal = 0
+
+	local searchH, searching, query, top, shown = 30, false, "", 0, {}
+	local searchField = new("Frame", { Bg = "Element", BackgroundTransparency = 1, Position = Offset(5, 5), Size = Dim2(1, -10, 0, searchH - 8), Radius = Metrics.Radius, Visible = false }, panel)
+	local searchStroke = new("UIStroke", { ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Thickness = 1, Transparency = 1 }, searchField)
+	bind(searchStroke, "Color", "Outline")
+	local searchIcon = makeIcon(searchField, "search", 12, "InactiveText", "Element", { Position = Offset(6, 5) })
+	local searchBox = new("TextBox", {
+		Fg = "Text", PlaceholderText = "Search...", TextSize = 13, ClearTextOnFocus = false, TextTransparency = 1,
+		Position = Offset(24, capOffset(searchH - 8, 13)), Size = Dim2(1, -30, 0, 18),
+	}, searchField)
+	bind(searchBox, "PlaceholderColor3", "InactiveText")
+
+	local function updateSearchable()
+		searching = options.Search == true or (options.Search == nil and #dropdown.Options > 6)
+		searchField.Visible = searching
+		top = searching and searchH or 0
+		list.Position = Offset(0, top)
+		list.Size = Dim2(1, 0, 1, -top)
+		emptyText.Position = Offset(9, top + emptyY)
+	end
+
+	local function filtered()
+		if not searching or query == "" then return dropdown.Options end
+		local needle, result = string.lower(query), {}
+		for _, option in dropdown.Options do
+			if string.find(string.lower(tostring(option)), needle, 1, true) then table.insert(result, option) end
+		end
+		return result
+	end
 
 	local function isSelected(option)
 		if dropdown.Multi then return dropdown.Value[option] == true end
@@ -1456,6 +1488,18 @@ local function buildDropdown(win, parent, options)
 		panel.BackgroundTransparency = 1 - reveal
 		panelStroke.Transparency = 1 - reveal
 		emptyText.TextTransparency = 1 - reveal
+		searchField.BackgroundTransparency = 1 - reveal
+		searchStroke.Transparency = 1 - reveal
+		searchBox.TextTransparency = 1 - reveal
+		for _, part in searchIcon.Parts do
+			if part:IsA("UIStroke") then
+				part.Transparency = 1 - reveal
+			elseif part:IsA("ImageLabel") then
+				part.ImageTransparency = 1 - reveal
+			else
+				part.BackgroundTransparency = 1 - reveal
+			end
+		end
 		for _, row in rows do applyRow(row) end
 	end
 
@@ -1479,8 +1523,10 @@ local function buildDropdown(win, parent, options)
 	local function rebuild()
 		for _, row in rows do row.Button:Destroy() end
 		rows = {}
-		local count = #dropdown.Options
-		for index, option in dropdown.Options do
+		updateSearchable()
+		shown = filtered()
+		local count = #shown
+		for index, option in shown do
 			local row = { Option = option, Sel = 0, Hov = 0, Hovering = false }
 			row.Button = new("TextButton", {
 				Bg = function() return row.Hovering and Current.Inline or Current.Tab end,
@@ -1517,12 +1563,28 @@ local function buildDropdown(win, parent, options)
 		end
 		list.CanvasSize = Offset(0, count * Metrics.ListRowH)
 		emptyText.Visible = count == 0
+		setText(emptyText, (searching and query ~= "") and "No results" or options.Empty or "No options")
 		paint(false)
 	end
 
 	local function measure()
-		panelH = math.clamp(#dropdown.Options, 1, options.MaxRows or 10) * Metrics.ListRowH
+		updateSearchable()
+		listH = math.clamp(#dropdown.Options, 1, options.MaxRows or 10) * Metrics.ListRowH
+		panelH = top + listH
 	end
+
+	searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+		if searchBox.Text == query then return end
+		query = searchBox.Text
+		rebuild()
+		list.CanvasPosition = Vec2(0, 0)
+	end)
+
+	searchBox.FocusLost:Connect(function(enterPressed)
+		if not enterPressed or not dropdown.Open or dropdown.Multi or #shown == 0 then return end
+		dropdown:Set(shown[1])
+		dropdown:Toggle(false)
+	end)
 
 	-- Called each frame while open, so the panel stays attached while the page scrolls or the window moves.
 	local function follow()
@@ -1544,14 +1606,19 @@ local function buildDropdown(win, parent, options)
 		if open then
 			if win.OpenDropdown and win.OpenDropdown ~= dropdown then win.OpenDropdown:Toggle(false) end
 			win.OpenDropdown = dropdown
+			if query ~= "" then
+				query = ""
+				searchBox.Text = ""
+				rebuild()
+			end
 			measure()
 			follow()
 			panel.Visible = true
 			panel.Size = Offset(width, panelH)
 			animate(dropdown, "Reveal", 1, "Fast", { Step = applyReveal })
 			local selectedIndex = not dropdown.Multi and table.find(dropdown.Options, dropdown.Value)
-			local furthest = math.max(0, #dropdown.Options * Metrics.ListRowH - panelH)
-			list.CanvasPosition = Vec2(0, selectedIndex and math.clamp(floor((selectedIndex - 1) * Metrics.ListRowH - (panelH - Metrics.ListRowH) / 2), 0, furthest) or 0)
+			local furthest = math.max(0, #dropdown.Options * Metrics.ListRowH - listH)
+			list.CanvasPosition = Vec2(0, selectedIndex and math.clamp(floor((selectedIndex - 1) * Metrics.ListRowH - (listH - Metrics.ListRowH) / 2), 0, furthest) or 0)
 			for index, row in rows do
 				local y = (index - 1) * Metrics.ListRowH
 				row.Button.Position = Offset(0, y + 6)
@@ -1559,7 +1626,13 @@ local function buildDropdown(win, parent, options)
 					if row.Button.Parent then place(row.Button, "Position", Offset(0, y), dropdown.Open, "Smooth") end
 				end)
 			end
+			if searching and UserInputService.KeyboardEnabled and not UserInputService.TouchEnabled then
+				task.defer(function()
+					if dropdown.Open then searchBox:CaptureFocus() end
+				end)
+			end
 		else
+			if searchBox:IsFocused() then searchBox:ReleaseFocus() end
 			if win.OpenDropdown == dropdown then win.OpenDropdown = nil end
 			animate(dropdown, "Reveal", 0, "Fast", {
 				Step = applyReveal,
@@ -4303,7 +4376,7 @@ function Blossom.Obsidian(defaults)
 			end
 			local dropdown = section:Dropdown({
 				Name = info.Text or tostring(idx), Options = values, Default = default, Multi = info.Multi == true,
-				MaxRows = 8, Flag = idx, NoSave = info.NoSave,
+				MaxRows = 8, Flag = idx, NoSave = info.NoSave, Search = info.Searchable,
 			})
 			element(dropdown, self, idx, Options, "Dropdown", info.Callback)
 			dropdown.Values = values
