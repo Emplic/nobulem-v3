@@ -21,13 +21,16 @@ do
         Area = Instance.new("Frame")
         Area.BackgroundTransparency = 1
         Area.Position = UDim2.fromOffset(16, 16)
-        Area.Size = UDim2.fromOffset(400, 600)
+        Area.Size = UDim2.fromOffset(600, 600)
         Area.Parent = Gui
     end
 
     local function Restack()
-        for index, frame in ipairs(Stack) do
-            TweenService:Create(frame, Fast, { Position = UDim2.fromOffset(0, (#Stack - index) * 36) }):Play()
+        local y = 0
+        for index = #Stack, 1, -1 do
+            local item = Stack[index]
+            TweenService:Create(item.Frame, Fast, { Position = UDim2.fromOffset(0, y) }):Play()
+            y += item.Height + 8
         end
     end
 
@@ -43,7 +46,7 @@ do
         frame.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
         frame.BorderSizePixel = 0
         frame.Size = UDim2.fromOffset(60, 28)
-        frame.Position = UDim2.fromOffset(-36, #Stack * 36)
+        frame.Position = UDim2.fromOffset(-36, 0)
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 6)
         corner.Parent = frame
@@ -72,24 +75,32 @@ do
         end
         local label = Instance.new("TextLabel")
         label.BackgroundTransparency = 1
-        label.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
-        label.TextSize = 12
+        label.FontFace = Font.new("rbxasset://fonts/families/BuilderSans.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+        label.TextSize = 13
         label.TextColor3 = Color3.fromRGB(234, 232, 244)
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextYAlignment = Enum.TextYAlignment.Top
-        label.TextTruncate = Enum.TextTruncate.AtEnd
+        label.TextWrapped = true
         label.Position = UDim2.fromOffset(28, 8)
-        label.Size = UDim2.fromOffset(340, 28)
+        label.Size = UDim2.fromOffset(560, 2000)
         label.Text = text
         label.Parent = frame
-        local function fit() frame.Size = UDim2.fromOffset(math.min(math.ceil(label.TextBounds.X), 340) + 38, 28) end
+        local item = { Frame = frame, Height = 28 }
+        local function fit()
+            local lines = math.max(math.ceil(label.TextBounds.Y), 14)
+            local height = math.max(28, lines + 14)
+            item.Height = height
+            frame.Size = UDim2.fromOffset(math.min(math.ceil(label.TextBounds.X), 560) + 38, height)
+            label.Position = UDim2.fromOffset(28, math.floor((height - lines) / 2))
+            if table.find(Stack, item) then Restack() end
+        end
         label:GetPropertyChangedSignal("TextBounds"):Connect(fit)
         fit()
         frame.Parent = Area
-        table.insert(Stack, 1, frame)
+        table.insert(Stack, 1, item)
         Restack()
         task.delay(duration, function()
-            local index = table.find(Stack, frame)
+            local index = table.find(Stack, item)
             if index then table.remove(Stack, index) end
             TweenService:Create(frame, Fast, { Position = UDim2.fromOffset(-36, frame.Position.Y.Offset), BackgroundTransparency = 1 }):Play()
             TweenService:Create(label, Fast, { TextTransparency = 1 }):Play()
@@ -109,19 +120,7 @@ do
     end
 
     Notify = function(text, kind, duration)
-        local lines, line = {}, ""
-        for word in tostring(text):gmatch("%S+") do
-            if line ~= "" and #line + #word + 1 > 52 then
-                table.insert(lines, line)
-                line = word
-            else
-                line = line == "" and word or (line .. " " .. word)
-            end
-        end
-        if line ~= "" then table.insert(lines, line) end
-        for _, chunk in ipairs(lines) do
-            pcall(Push, chunk, kind, Colors[kind] or Colors.info, duration or 6)
-        end
+        pcall(Push, tostring(text), kind, Colors[kind] or Colors.info, duration or 6)
     end
 end
 
