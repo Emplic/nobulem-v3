@@ -159,6 +159,8 @@ local KEYSYSTEM_URL = ("https://raw.githubusercontent.com/Emplic/nobulem-v3/refs
 local LuarmorScriptIds = {
     WarTycoon = "450d986ceeb9678f3455712371a99053",
     BloxFruits = "443bb156072c62a1b2f84b7b353547bb",
+    Wanted = "b59527dfe5520d0cd523a37e7ddf2b47",
+    BloxFruitsWanted = "185ed36aa2d9c5e6e7e910f805761af8",
     UrbanReload = "40c127c6813852ae8c544277c726345d",
     ProjectSlayers = "87e8b11127b9704a640347ccd6c6c033",
     Hypershot = "df41b2339aac3a6c2e5b10079fd0a0f7",
@@ -179,7 +181,7 @@ for name, id in pairs(getgenv().NobulemLuarmorScriptIds or {}) do LuarmorScriptI
 for name, url in pairs(getgenv().NobulemLuarmorAdUrls or {}) do LuarmorAdUrls[name] = url end
 
 local AnimeAdventuresBreakAndStealAnEggScriptId = LuarmorScriptIds.AnimeAdventuresBreakAndStealAnEgg or ""
-local BloxFruitsScriptId = LuarmorScriptIds.BloxFruits or ""
+local BloxFruitsWantedScriptId = LuarmorScriptIds.BloxFruitsWanted or ""
 local HypershotRivalsScriptId = LuarmorScriptIds.HypershotRivals or ""
 local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
 local UrbanReloadBeyondNenScriptId = LuarmorScriptIds.UrbanReloadBeyondNen or ""
@@ -211,8 +213,16 @@ local Games = {
         UniverseId      = 994732206,
         GameName        = "Blox Fruits",
         SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = BloxFruitsScriptId,
-        GetKeyUrl       = LuarmorAdUrls.BloxFruits or LuarmorAdUrls.Default or "",
+        LuarmorScriptId = BloxFruitsWantedScriptId ~= "" and BloxFruitsWantedScriptId or LuarmorScriptIds.BloxFruits or "",
+        GetKeyUrl       = LuarmorAdUrls.BloxFruitsWanted or LuarmorAdUrls.BloxFruits or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 14438406081 },
+        UniverseId      = 4987856151,
+        GameName        = "Wanted",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = BloxFruitsWantedScriptId ~= "" and BloxFruitsWantedScriptId or LuarmorScriptIds.Wanted or "",
+        GetKeyUrl       = LuarmorAdUrls.BloxFruitsWanted or LuarmorAdUrls.Wanted or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 84448037861644 },
