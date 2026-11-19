@@ -244,7 +244,7 @@ local Games = {
         GetKeyUrl       = LuarmorAdUrls.UrbanReloadBeyondNen or LuarmorAdUrls.BeyondNen or LuarmorAdUrls.Default or "",
     },
     {
-        PlaceIds        = { 8304191830, 14229839966 },
+        PlaceIds        = { 8304191830, 8349889591, 10098525303, 14229762361, 14229839966, 14918509670 },
         SubplaceRoots   = { 8304191830 },
         UniverseId      = 3183403065,
         GameName        = "Anime Adventures",
