@@ -173,6 +173,7 @@ local LuarmorScriptIds = {
     StealAnExploit = "e77b45a02e6245c432c5cc5a78e19e09",
     Nights99 = "5f6e43e55f49da0e5488283804c5e97b",
     BloxNG = "fd3ae3fc30a4b504a9e4fd003e680638",
+    VoxSeas = "c6babdd7e383c3a8c682860d0949f378",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -337,6 +338,15 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.StealAnExploit or "",
         GetKeyUrl       = LuarmorAdUrls.StealAnExploit or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 104067066727140 },
+        SubplaceRoots   = { 104067066727140 },
+        UniverseId      = 7174773198,
+        GameName        = "Vox Seas",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.VoxSeas or "",
+        GetKeyUrl       = LuarmorAdUrls.VoxSeas or LuarmorAdUrls.Default or "",
     },
 }
 
