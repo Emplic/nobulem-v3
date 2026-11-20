@@ -171,6 +171,7 @@ local LuarmorScriptIds = {
     ThrowFoodABizarreRun = "5166b69f34db48b2df9b9a6c2e36da8b",
     UrbanReloadBeyondNen = "a95faedf4db50a30ced44fd85e6c6ef1",
     StealAnExploit = "e77b45a02e6245c432c5cc5a78e19e09",
+    Nights99 = "5f6e43e55f49da0e5488283804c5e97b",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -188,6 +189,15 @@ local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
 local UrbanReloadBeyondNenScriptId = LuarmorScriptIds.UrbanReloadBeyondNen or ""
 
 local Games = {
+    {
+        PlaceIds        = { 79546208627805, 126371807511901, 126509999114328 },
+        SubplaceRoots   = { 79546208627805 },
+        UniverseId      = 7326934954,
+        GameName        = "99 Nights in the Forest",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.Nights99 or "",
+        GetKeyUrl       = LuarmorAdUrls.Nights99 or LuarmorAdUrls.Default or "",
+    },
     {
         PlaceIds        = {
             13379208636, 13379349730, 13904207646, 14012874501, 14638336319, 14916516914, 14932214603,
