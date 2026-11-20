@@ -3467,25 +3467,38 @@ function Window:_buildWatermark(options)
 		return new("Frame", { Bg = "Outline", Position = Offset(0, 7), Size = Offset(1, 14) }, frame)
 	end
 	local first, firstSep = text(options.Script or "blossom.lua", 12, Enum.FontWeight.Medium), sep()
-	local second, secondSep = text("", 12, Enum.FontWeight.SemiBold), sep()
-	local duration, durationSep = text("", 12, Enum.FontWeight.Medium), sep()
 	local userIcon = makeIcon(frame, "user", 13, "Text", "Background")
 	local third = text(("%s (@%s)"):format(player.DisplayName, player.Name), 11, Enum.FontWeight.SemiBold)
+	local blocks = {}
 	local layout
+	local function block(index)
+		local entry = blocks[index]
+		if entry then return entry end
+		entry = { text("", 12, index == 1 and Enum.FontWeight.SemiBold or Enum.FontWeight.Medium), sep() }
+		entry[1]:GetPropertyChangedSignal("TextBounds"):Connect(function() layout() end)
+		blocks[index] = entry
+		return entry
+	end
 	function self:SetWatermarkBuild(value)
-		value = tostring(value or "")
-		local game, extra = value:match("^(.-)%s*|%s*(.+)$")
-		if not game then game, extra = value, "" end
-		second.Text = game
-		duration.Text = extra
+		local parts = {}
+		for part in (tostring(value or "") .. "|"):gmatch("(.-)|") do
+			part = part:match("^%s*(.-)%s*$")
+			if part ~= "" then table.insert(parts, part) end
+		end
+		for index = 1, math.max(#parts, #blocks) do
+			local entry = block(index)
+			local part = parts[index]
+			entry[1].Text = part or ""
+			entry[1].Visible, entry[2].Visible = part ~= nil, part ~= nil
+		end
 		layout()
 	end
 	function layout()
 		local x = 31
-		local hasDuration = duration.Text ~= ""
-		duration.Visible, durationSep.Visible = hasDuration, hasDuration
-		local entries = { { first, firstSep }, { second, secondSep } }
-		if hasDuration then table.insert(entries, { duration, durationSep }) end
+		local entries = { { first, firstSep } }
+		for _, entry in blocks do
+			if entry[1].Visible then table.insert(entries, entry) end
+		end
 		for _, entry in entries do
 			local width = math.ceil(entry[1].TextBounds.X)
 			entry[1].Size = Offset(width + 1, 28)
@@ -3502,7 +3515,7 @@ function Window:_buildWatermark(options)
 		frame.Size = Offset(x + width + Metrics.Pad, 28)
 		self:_placeOverlays()
 	end
-	for _, entry in { first, second, duration, third } do
+	for _, entry in { first, third } do
 		entry:GetPropertyChangedSignal("TextBounds"):Connect(layout)
 	end
 	self.Watermark = frame
