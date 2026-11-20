@@ -1319,7 +1319,13 @@ function OpenWindow(opts)
     }, redeem.Card)
     Gradient(field)
     local fieldStroke = field:FindFirstChildOfClass("UIStroke")
+    local fieldHit = New("TextButton", {
+        Size = Dim2(1, 0, 1, 0),
+        ZIndex = 1,
+    }, field)
+    RegisterControl(fieldHit)
     local input = New("TextBox", {
+        ZIndex = 2,
         Fg = "Text",
         PlaceholderText = "Paste your key...",
         PlaceholderColor3 = Theme.InactiveText,
@@ -1332,6 +1338,9 @@ function OpenWindow(opts)
         TextTruncate = Enum.TextTruncate.AtEnd,
     }, field)
     RegisterControl(input)
+    fieldHit.Activated:Connect(function()
+        if input.TextEditable and not input:IsFocused() then input:CaptureFocus() end
+    end)
 
     local actionRow = ButtonRow(redeem.Card, redeem.Order())
     local unlock = Button(actionRow, { Text = "Unlock", Order = 1, Size = UDim2.fromScale(0, 1), Primary = true })
@@ -1476,13 +1485,23 @@ function OpenWindow(opts)
 
     Track(root.InputBegan:Connect(function(dragStart)
         if not IsClick(dragStart) then return end
-        local start = MousePos()
-        if OverControl(start) then return end
+        local touch = dragStart.UserInputType == Enum.UserInputType.Touch
+        local function Point()
+            if touch then return Vector2.new(dragStart.Position.X, dragStart.Position.Y) end
+            return MousePos()
+        end
+        local start = Point()
+        if OverControl(start) or input:IsFocused() then return end
         local origin = holder.Position
+        local threshold = touch and 8 or 1
+        local dragging = false
         local step, ended
         step = Track(RunService.RenderStepped:Connect(function()
-            local delta = MousePos() - start
-            if delta.Magnitude < 1 and not moved then return end
+            local delta = Point() - start
+            if not dragging then
+                if delta.Magnitude < threshold then return end
+                dragging = true
+            end
             moved = true
             local screen = Gui and Gui.AbsoluteSize or Vector2.new(1920, 1080)
             local half = holder.AbsoluteSize / 2
