@@ -163,6 +163,7 @@ do
         Stats.lastKey = tonumber(decoded.lastKey) or 0
         Stats.keyId = tostring(decoded.keyId or "")
         Stats.keyFirstSeen = tonumber(decoded.keyFirstSeen) or 0
+        Stats.lifetimeKey = type(decoded.lifetimeKey) == "string" and decoded.lifetimeKey or nil
     end
 end
 
@@ -297,7 +298,8 @@ local function CheckOnce(key)
         if expiresAt and expiresAt > 1e11 then expiresAt //= 1000 end
         local neverExpires = expiresAt ~= nil and expiresAt <= 0
         if neverExpires then expiresAt = nil end
-        return { ok = true, sdk = sdk, expiresAt = expiresAt, neverExpires = neverExpires }
+        local executions = tonumber(data.total_executions) or 0
+        return { ok = true, sdk = sdk, expiresAt = expiresAt, neverExpires = neverExpires, executions = executions }
     end
     if code == "INVALID_EXECUTOR" then
         return { ok = true, sdk = sdk, unverified = true }
@@ -1018,9 +1020,18 @@ local function PublishKeyInfo(key, result)
     local info = { Lifetime = false, ExpiresAt = type(result) == "table" and result.expiresAt or nil }
     env.NobulemKeyInfo = info
     if info.ExpiresAt or type(result) ~= "table" or not result.neverExpires or PreviewMode then return info end
+    local id = HashKey(key)
+    if (result.executions or 0) > 0 or Stats.lifetimeKey == id then
+        info.Lifetime = true
+        return info
+    end
     task.spawn(function()
-        for attempt = 1, 8 do
-            task.wait(attempt == 1 and 3 or 8)
+        local waited = 0
+        while not info.Started and waited < 30 do
+            waited += task.wait(0.25)
+        end
+        for attempt = 1, 6 do
+            task.wait(attempt == 1 and 0.5 or 3)
             if env.NobulemKeyInfo ~= info then return end
             local again = CheckOnce(key)
             if env.NobulemKeyInfo ~= info then return end
@@ -1028,8 +1039,10 @@ local function PublishKeyInfo(key, result)
                 info.ExpiresAt = again.expiresAt
                 return
             end
-            if again.ok and again.neverExpires and (info.Started or attempt >= 4) then
+            if again.ok and again.neverExpires then
                 info.Lifetime = true
+                Stats.lifetimeKey = id
+                SaveStats()
                 return
             end
         end
