@@ -254,7 +254,6 @@ local KeyMessages = {
     KEY_INVALID = { "Key not found - make sure you copied all of it.", "rejected" },
     SCRIPT_ID_INCORRECT = { GameName .. " is not set up on Luarmor yet.", "error" },
     SCRIPT_ID_INVALID = { GameName .. " is not set up on Luarmor yet.", "error" },
-    INVALID_EXECUTOR = { "Your executor isn't supported. Get a supported one at nobulem.com/executors.", "error" },
 }
 
 local CachedSdk = nil
@@ -299,6 +298,9 @@ local function CheckOnce(key)
         local neverExpires = expiresAt ~= nil and expiresAt <= 0
         if neverExpires then expiresAt = nil end
         return { ok = true, sdk = sdk, expiresAt = expiresAt, neverExpires = neverExpires }
+    end
+    if code == "INVALID_EXECUTOR" then
+        return { ok = true, sdk = sdk, unverified = true }
     end
 
     local known = KeyMessages[code]
@@ -1610,6 +1612,10 @@ function OpenWindow(opts)
             SetBusy(false)
             SetStatus("success", "Key accepted.")
             Notify("Key accepted.", "success", 3)
+            if result.unverified then
+                StartScript(key, result.sdk, result)
+                return
+            end
             SaveKey(key)
             local isLifetime = IsLifetimeKey(key, result.expiresAt, result.neverExpires)
             if NoteKeyInUse(key) and not isLifetime then CountCheckpoint() end
@@ -1706,6 +1712,11 @@ local lastFailure = nil
 for _, key in candidates do
     local isSaved = key == savedKey
     local result = CheckKey(key)
+    if result.ok and result.unverified then
+        State.accepted = true
+        StartScript(key, result.sdk, result)
+        return
+    end
     if result.ok then
         State.accepted = true
         if not isSaved then SaveKey(key) end
