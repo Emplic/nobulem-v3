@@ -174,6 +174,7 @@ local LuarmorScriptIds = {
     Nights99 = "5f6e43e55f49da0e5488283804c5e97b",
     BloxNG = "fd3ae3fc30a4b504a9e4fd003e680638",
     VoxSeas = "c6babdd7e383c3a8c682860d0949f378",
+    DandysWorld = "644062c908b8938baeed4b4475e244e5",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -347,6 +348,15 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.VoxSeas or "",
         GetKeyUrl       = LuarmorAdUrls.VoxSeas or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 16116270224, 16552821455 },
+        SubplaceRoots   = { 16116270224 },
+        UniverseId      = 5569032992,
+        GameName        = "Dandy's World",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.DandysWorld or "",
+        GetKeyUrl       = LuarmorAdUrls.DandysWorld or LuarmorAdUrls.Default or "",
     },
 }
 
