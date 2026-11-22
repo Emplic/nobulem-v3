@@ -175,6 +175,7 @@ local LuarmorScriptIds = {
     BloxNG = "fd3ae3fc30a4b504a9e4fd003e680638",
     VoxSeas = "c6babdd7e383c3a8c682860d0949f378",
     DandysWorld = "644062c908b8938baeed4b4475e244e5",
+    Fisch = "87217dca71aa4ee51f5f977113815ac6",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -357,6 +358,26 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.DandysWorld or "",
         GetKeyUrl       = LuarmorAdUrls.DandysWorld or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = {
+            16732694052, 17800150007, 70451556031302, 72907489978215, 85537329004957,
+            99519129453387, 105044186406168, 106011698424775, 112780263016678, 131716211654599,
+        },
+        SubplaceRoots   = { 16732694052 },
+        UniverseId      = 5750914919,
+        GameName        = "Fisch",
+        PlaceNames      = {
+            [72907489978215]  = "Fisch (Second Sea)",
+            [70451556031302]  = "Fisch (Deep Sea)",
+            [106011698424775] = "Fisch (Deep Sea)",
+            [85537329004957]  = "Fisch (Back In Time)",
+            [99519129453387]  = "Fisch (Trade Plaza)",
+            [112780263016678] = "Fisch (AFK Mine)",
+        },
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.Fisch or "",
+        GetKeyUrl       = LuarmorAdUrls.Fisch or LuarmorAdUrls.Default or "",
     },
 }
 
