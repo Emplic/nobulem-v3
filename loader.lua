@@ -175,6 +175,7 @@ local LuarmorScriptIds = {
     BloxNG = "fd3ae3fc30a4b504a9e4fd003e680638",
     VoxSeas = "c6babdd7e383c3a8c682860d0949f378",
     DandysWorld = "644062c908b8938baeed4b4475e244e5",
+    RagdollSoccer = "f1b0ee66f27e3a388688c3f069ded352",
     Fisch = "87217dca71aa4ee51f5f977113815ac6",
 }
 local LuarmorAdUrls = {
@@ -358,6 +359,19 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.DandysWorld or "",
         GetKeyUrl       = LuarmorAdUrls.DandysWorld or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 106931373443671, 76989843787467, 134415766792804 },
+        SubplaceRoots   = { 106931373443671 },
+        UniverseId      = 10770730129,
+        GameName        = "Ragdoll Soccer",
+        PlaceNames      = {
+            [76989843787467]  = "Ragdoll Soccer (8v8)",
+            [134415766792804] = "Ragdoll Soccer (Private Servers)",
+        },
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.RagdollSoccer or "",
+        GetKeyUrl       = LuarmorAdUrls.RagdollSoccer or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = {
