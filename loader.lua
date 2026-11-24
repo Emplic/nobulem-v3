@@ -177,6 +177,7 @@ local LuarmorScriptIds = {
     DandysWorld = "644062c908b8938baeed4b4475e244e5",
     RagdollSoccer = "f1b0ee66f27e3a388688c3f069ded352",
     Fisch = "87217dca71aa4ee51f5f977113815ac6",
+    BeeSwarm = "548c8e94838fad97c4350e3a4eb112e3",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -392,6 +393,21 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.Fisch or "",
         GetKeyUrl       = LuarmorAdUrls.Fisch or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 1537690962, 15579077077, 17579225831, 17579226768, 137594107439804 },
+        SubplaceRoots   = { 1537690962 },
+        UniverseId      = 601130232,
+        GameName        = "Bee Swarm Simulator",
+        PlaceNames      = {
+            [15579077077]     = "Bee Swarm Simulator (Hive Hub)",
+            [17579225831]     = "Bee Swarm Simulator (Retro Swarm Challenge)",
+            [17579226768]     = "Bee Swarm Simulator (Retro Swarm Lobby)",
+            [137594107439804] = "Bee Swarm Simulator (Test Place)",
+        },
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = LuarmorScriptIds.BeeSwarm or "",
+        GetKeyUrl       = LuarmorAdUrls.BeeSwarm or LuarmorAdUrls.Default or "",
     },
 }
 
