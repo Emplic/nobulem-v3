@@ -4773,12 +4773,16 @@ function Blossom.Obsidian(defaults)
 		function WindowObject:Toggle() win:Toggle() end
 		function WindowObject:SetSize(x, y) win:SetSize(x, y) end
 
-		if Library.IsMobile then
+		if UserInputService.TouchEnabled then
 			local button = new("ImageButton", {
 				Name = "MenuButton", Bg = "Background", AutoButtonColor = false, Size = Offset(44, 44), Position = Offset(16, 120),
 				Image = win.Logo or "", ScaleType = Enum.ScaleType.Fit, Radius = 8, Border = "Outline", ZIndex = 60,
 			}, win.Screen)
-			new("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6) }, button)
+			if win.Logo then
+				new("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6) }, button)
+			else
+				makeIcon(button, "logo", 24, "Accent", "Background", { Position = Offset(10, 10) })
+			end
 			button.InputBegan:Connect(function(input)
 				if input.UserInputType ~= Enum.UserInputType.Touch and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 				local start, origin, moved = input.Position, button.Position, false
