@@ -170,7 +170,6 @@ local LuarmorScriptIds = {
     ABizarreRun = "1beffe3e89f9490b79c1f8d37520d1ee",
     ThrowFoodABizarreRun = "5166b69f34db48b2df9b9a6c2e36da8b",
     UrbanReloadBeyondNen = "a95faedf4db50a30ced44fd85e6c6ef1",
-    StealAnExploit = "e77b45a02e6245c432c5cc5a78e19e09",
     Nights99 = "5f6e43e55f49da0e5488283804c5e97b",
     BloxNG = "fd3ae3fc30a4b504a9e4fd003e680638",
     VoxSeas = "c6babdd7e383c3a8c682860d0949f378",
@@ -333,15 +332,6 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = ThrowFoodABizarreRunScriptId,
         GetKeyUrl       = LuarmorAdUrls.ThrowFoodForAnimals or LuarmorAdUrls.Default or "",
-    },
-    {
-        PlaceIds        = { 121035400884186 },
-        SubplaceRoots   = { 121035400884186 },
-        UniverseId      = 10649680176,
-        GameName        = "Steal an Exploit",
-        SaveFile        = "nobulem_key.txt",
-        LuarmorScriptId = LuarmorScriptIds.StealAnExploit or "",
-        GetKeyUrl       = LuarmorAdUrls.StealAnExploit or LuarmorAdUrls.Default or "",
     },
     {
         PlaceIds        = { 104067066727140 },
