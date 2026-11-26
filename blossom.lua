@@ -3680,6 +3680,36 @@ function Blossom.new(options)
 
 	win:_makeDraggable(root, holder, function(point) return not win:_overControl(point) end)
 
+	if UserInputService.TouchEnabled then
+		local button = new("ImageButton", {
+			Name = "MenuButton", Bg = "Background", AutoButtonColor = false, Size = Offset(44, 44), Position = Offset(16, 120),
+			Image = win.Logo or "", ScaleType = Enum.ScaleType.Fit, Radius = 8, Border = "Outline", ZIndex = 60,
+		}, win.Screen)
+		if win.Logo then
+			new("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6) }, button)
+		else
+			makeIcon(button, "logo", 24, "Accent", "Background", { Position = Offset(10, 10) })
+		end
+		button.InputBegan:Connect(function(input)
+			if input.UserInputType ~= Enum.UserInputType.Touch and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+			local start, origin, moved = input.Position, button.Position, false
+			local move, done
+			move = UserInputService.InputChanged:Connect(function(change)
+				if change.UserInputType ~= Enum.UserInputType.Touch and change.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+				local delta = change.Position - start
+				if delta.Magnitude > 6 then moved = true end
+				if moved then button.Position = Offset(origin.X.Offset + delta.X, origin.Y.Offset + delta.Y) end
+			end)
+			done = input.Changed:Connect(function()
+				if input.UserInputState ~= Enum.UserInputState.End then return end
+				move:Disconnect()
+				done:Disconnect()
+				if not moved then win:Toggle() end
+			end)
+		end)
+		win.MobileButton = button
+	end
+
 	table.insert(win.Connections, UserInputService.InputBegan:Connect(function(input, processed)
 		if isClick(input) then
 			local point = mousePos()
@@ -4773,35 +4803,7 @@ function Blossom.Obsidian(defaults)
 		function WindowObject:Toggle() win:Toggle() end
 		function WindowObject:SetSize(x, y) win:SetSize(x, y) end
 
-		if UserInputService.TouchEnabled then
-			local button = new("ImageButton", {
-				Name = "MenuButton", Bg = "Background", AutoButtonColor = false, Size = Offset(44, 44), Position = Offset(16, 120),
-				Image = win.Logo or "", ScaleType = Enum.ScaleType.Fit, Radius = 8, Border = "Outline", ZIndex = 60,
-			}, win.Screen)
-			if win.Logo then
-				new("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6) }, button)
-			else
-				makeIcon(button, "logo", 24, "Accent", "Background", { Position = Offset(10, 10) })
-			end
-			button.InputBegan:Connect(function(input)
-				if input.UserInputType ~= Enum.UserInputType.Touch and input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-				local start, origin, moved = input.Position, button.Position, false
-				local move, done
-				move = UserInputService.InputChanged:Connect(function(change)
-					if change.UserInputType ~= Enum.UserInputType.Touch and change.UserInputType ~= Enum.UserInputType.MouseMovement then return end
-					local delta = change.Position - start
-					if delta.Magnitude > 6 then moved = true end
-					if moved then button.Position = Offset(origin.X.Offset + delta.X, origin.Y.Offset + delta.Y) end
-				end)
-				done = input.Changed:Connect(function()
-					if input.UserInputState ~= Enum.UserInputState.End then return end
-					move:Disconnect()
-					done:Disconnect()
-					if not moved then win:Toggle() end
-				end)
-			end)
-			Library.MobileButton = button
-		end
+		Library.MobileButton = win.MobileButton
 
 		task.delay(0.6, function()
 			if not win or not win.Hotkeys or #win.HotkeyOrder > 0 then return end
