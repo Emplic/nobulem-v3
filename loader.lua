@@ -177,6 +177,7 @@ local LuarmorScriptIds = {
     RagdollSoccer = "f1b0ee66f27e3a388688c3f069ded352",
     Fisch = "87217dca71aa4ee51f5f977113815ac6",
     BeeSwarm = "548c8e94838fad97c4350e3a4eb112e3",
+    RestaurantTycoon3BarberEmpire = "97e975ce4e83110947ebf4c59b916a38",
 }
 local LuarmorAdUrls = {
     Linkvertise = "https://ads.luarmor.net/get_key?for=Linkvertise-WNOSNrUbmMHZ",
@@ -192,6 +193,7 @@ local BloxFruitsWantedScriptId = LuarmorScriptIds.BloxFruitsWanted or ""
 local HypershotRivalsScriptId = LuarmorScriptIds.HypershotRivals or ""
 local ThrowFoodABizarreRunScriptId = LuarmorScriptIds.ThrowFoodABizarreRun or ""
 local UrbanReloadBeyondNenScriptId = LuarmorScriptIds.UrbanReloadBeyondNen or ""
+local RestaurantTycoon3BarberEmpireScriptId = LuarmorScriptIds.RestaurantTycoon3BarberEmpire or ""
 
 local Games = {
     {
@@ -398,6 +400,27 @@ local Games = {
         SaveFile        = "nobulem_key.txt",
         LuarmorScriptId = LuarmorScriptIds.BeeSwarm or "",
         GetKeyUrl       = LuarmorAdUrls.BeeSwarm or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 119048529960596, 99889627739043 },
+        SubplaceRoots   = { 119048529960596 },
+        UniverseId      = 7094518649,
+        GameName        = "Restaurant Tycoon 3",
+        PlaceNames      = {
+            [99889627739043] = "Restaurant Tycoon 3 (Testing World)",
+        },
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = RestaurantTycoon3BarberEmpireScriptId,
+        GetKeyUrl       = LuarmorAdUrls.RestaurantTycoon3BarberEmpire or LuarmorAdUrls.RestaurantTycoon3 or LuarmorAdUrls.Default or "",
+    },
+    {
+        PlaceIds        = { 129516203408961 },
+        SubplaceRoots   = { 129516203408961 },
+        UniverseId      = 10773971368,
+        GameName        = "Barber Empire",
+        SaveFile        = "nobulem_key.txt",
+        LuarmorScriptId = RestaurantTycoon3BarberEmpireScriptId,
+        GetKeyUrl       = LuarmorAdUrls.RestaurantTycoon3BarberEmpire or LuarmorAdUrls.BarberEmpire or LuarmorAdUrls.Default or "",
     },
 }
 
